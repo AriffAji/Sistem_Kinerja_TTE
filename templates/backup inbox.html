@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Inbox Disposisi — PPNP</title>
+    <style>
+        body { font-family:'Segoe UI',sans-serif; margin:0; background:#f4f7f6; display:flex; height:100vh; }
+
+        /* ====== SIDEBAR ====== */
+        .sidebar { width:250px; background:#2c3e50; color:white; padding-top:20px; display:flex; flex-direction:column; }
+        .sidebar h2 { text-align:center; font-size:1.2rem; margin-bottom:15px; border-bottom:1px solid #34495e; padding-bottom:15px; }
+        .sidebar a { color:#ecf0f1; text-decoration:none; padding:15px 20px; display:block; border-left:4px solid transparent; transition:0.3s; }
+        .sidebar a:hover, .sidebar a.aktif { background:#34495e; border-left:4px solid #3498db; }
+        .logout-btn { margin-top:auto; background:#c0392b; text-align:center; padding:15px; cursor:pointer; }
+        .logout-btn:hover { background:#e74c3c; }
+        .user-info-box { margin:0 15px 20px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:14px; display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#3498db,#2ecc71); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:800; color:white; flex-shrink:0; }
+        .user-detail .user-nama { font-size:0.85rem; font-weight:700; color:#ecf0f1; }
+        .user-detail .user-jabatan { font-size:0.72rem; color:#95a5a6; margin-top:2px; }
+        .user-detail .user-role-badge { display:inline-block; margin-top:5px; background:rgba(52,152,219,0.3); border:1px solid rgba(52,152,219,0.5); color:#74b9ff; font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:20px; text-transform:uppercase; }
+
+        /* ====== MAIN ====== */
+        .main-content { flex:1; padding:30px; overflow-y:auto; }
+        .card { background:white; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-bottom:20px; overflow:hidden; }
+        .card-header { padding:16px 24px; background:linear-gradient(135deg,#2c3e50,#34495e); color:white; display:flex; align-items:center; justify-content:space-between; }
+        .card-header h3 { margin:0; font-size:1rem; }
+
+        /* ====== TABEL ====== */
+        table { width:100%; border-collapse:collapse; }
+        th, td { border:1px solid #eee; padding:12px 16px; text-align:left; vertical-align:middle; }
+        th { background:#f8f9fa; color:#34495e; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; }
+
+        .badge { padding:3px 10px; border-radius:12px; font-size:0.72rem; font-weight:700; color:white; display:inline-block; }
+        .badge-eksternal  { background:#2980b9; }
+        .badge-internal   { background:#8e44ad; }
+        .badge-permohonan { background:#e67e22; }
+
+        .btn-preview { padding:6px 14px; background:#34495e; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; margin-right:5px; }
+        .btn-preview:hover { background:#2c3e50; }
+        .btn-ttd   { padding:6px 14px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:700; }
+        .btn-ttd:hover   { background:#c0392b; }
+        .btn-paraf { padding:6px 14px; background:#16a085; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:700; }
+        .btn-paraf:hover { background:#1abc9c; }
+
+        /* ====== MODAL ====== */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:9999; display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.aktif { opacity:1; visibility:visible; }
+        .modal-box { background:white; border-radius:16px; width:460px; max-width:95vw; box-shadow:0 25px 60px rgba(0,0,0,0.3); transform:translateY(20px) scale(0.97); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); overflow:hidden; }
+        .modal-overlay.aktif .modal-box { transform:translateY(0) scale(1); }
+        .modal-header        { background:linear-gradient(135deg,#c0392b,#e74c3c); padding:20px 24px; }
+        .modal-header.paraf  { background:linear-gradient(135deg,#16a085,#1abc9c); }
+        .modal-header h3 { margin:0; color:white; font-size:1.05rem; }
+        .modal-header p  { margin:4px 0 0; color:rgba(255,255,255,0.75); font-size:0.8rem; }
+        .modal-body { padding:24px; }
+
+        .pin-wrapper { display:flex; gap:10px; justify-content:center; margin:16px 0; }
+        .pin-digit { width:48px; height:56px; border:2px solid #ddd; border-radius:10px; text-align:center; font-size:1.4rem; font-weight:700; outline:none; transition:border 0.2s; }
+        .pin-digit:focus       { border-color:#e74c3c; box-shadow:0 0 0 3px rgba(231,76,60,0.15); }
+        .pin-digit.paraf:focus { border-color:#16a085; box-shadow:0 0 0 3px rgba(22,160,133,0.15); }
+
+        .input-catatan { width:100%; padding:10px; border:1.5px solid #ddd; border-radius:8px; font-size:0.88rem; resize:vertical; box-sizing:border-box; font-family:inherit; }
+        .input-catatan:focus { outline:none; border-color:#3498db; }
+        .input-nomor { width:100%; padding:10px; border:1.5px solid #f39c12; border-radius:8px; font-size:0.9rem; box-sizing:border-box; font-family:inherit; }
+        .input-nomor:focus { outline:none; border-color:#e67e22; }
+
+        .modal-footer { padding:0 24px 20px; display:flex; gap:10px; justify-content:flex-end; }
+        .btn-batal { background:#ecf0f1; color:#2c3e50; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; font-weight:700; }
+        .btn-konfirmasi { background:#e74c3c; color:white; border:none; border-radius:8px; padding:10px 24px; cursor:pointer; font-weight:700; }
+        .btn-konfirmasi:hover       { background:#c0392b; }
+        .btn-konfirmasi.paraf       { background:#16a085; }
+        .btn-konfirmasi.paraf:hover { background:#1abc9c; }
+
+        /* ====== NOTIF ====== */
+        .notif-container { position:fixed; top:20px; right:20px; z-index:10000; display:flex; flex-direction:column; gap:10px; }
+        .notif { display:flex; align-items:center; gap:10px; padding:12px 20px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); font-weight:600; font-size:0.9rem; animation:slideIn 0.3s ease; min-width:250px; }
+        .notif.sukses { background:#2ecc71; color:white; }
+        .notif.gagal  { background:#e74c3c; color:white; }
+        @keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+
+        .kosong-info { text-align:center; padding:40px; color:#95a5a6; }
+        .kosong-info .icon { font-size:3rem; display:block; margin-bottom:10px; }
+
+        /* ====== TAB INBOX ====== */
+        .tab-inbox {
+            padding:10px 20px; border:none;
+            background:#ecf0f1; cursor:pointer;
+            font-size:0.88rem; border-radius:8px 8px 0 0;
+            color:#2c3e50; font-weight:700;
+            transition:0.2s;
+        }
+        .tab-inbox.aktif {
+            background:white;
+            border-bottom:3px solid #3498db;
+            color:#3498db;
+            box-shadow:0 -2px 8px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+
+<div id="notif-container" class="notif-container"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>Sistem Kinerja<br>PPNP</h2>
+    <div class="user-info-box">
+        <div class="user-avatar"      id="userAvatar">?</div>
+        <div class="user-detail">
+            <div class="user-nama"        id="userNama">Memuat...</div>
+            <div class="user-jabatan"     id="userJabatan">—</div>
+            <span class="user-role-badge" id="userRole">—</span>
+        </div>
+    </div>
+    <a href="/dashboard">Dashboard Utama</a>
+    <a href="/surat">Manajemen Surat</a>
+    <a href="/inbox" class="aktif">📥 Inbox Disposisi</a>
+    <a href="/profil">👤 Profil & TTE Saya</a>
+    <div class="logout-btn" onclick="logout()">Keluar Aplikasi</div>
+</div>
+
+<!-- KONTEN UTAMA -->
+<div class="main-content">
+    <h2>📥 Inbox Disposisi</h2>
+
+    <!-- TAB NAVIGATION -->
+    <div style="display:flex; gap:5px; margin-bottom:0;">
+        <button class="tab-inbox aktif" id="tabBtnTTE"
+            onclick="gantiTabInbox('tte', this)">
+            ✍️ Menunggu TTE / Paraf
+            <span id="badgeTTE" style="background:#e74c3c; color:white;
+                  padding:1px 7px; border-radius:10px; font-size:0.7rem;
+                  margin-left:6px; display:none;">0</span>
+        </button>
+        <button class="tab-inbox" id="tabBtnMasuk"
+            onclick="gantiTabInbox('masuk', this)">
+            📬 Surat Diterima
+            <span id="badgeMasuk" style="background:#2ecc71; color:white;
+                  padding:1px 7px; border-radius:10px; font-size:0.7rem;
+                  margin-left:6px; display:none;">0</span>
+        </button>
+        <button class="tab-inbox" id="tabBtnRiwayat"
+            onclick="gantiTabInbox('riwayat', this)">
+            📋 Riwayat Saya
+            <span id="badgeRiwayat" style="background:#34495e; color:white;
+                padding:1px 7px; border-radius:10px; font-size:0.7rem;
+                margin-left:6px; display:none;">0</span>
+        </button>
+    </div>
+
+    <!-- TAB 1: MENUNGGU TTE -->
+    <div id="tabTTE" class="card" style="border-radius:0 8px 8px 8px;">
+        <div class="card-header">
+            <h3>Surat Menunggu Tanda Tangan Anda</h3>
+            <button onclick="muatInbox()"
+                style="background:rgba(255,255,255,0.15); color:white; border:none;
+                       border-radius:6px; padding:6px 16px; cursor:pointer; font-size:0.82rem;">
+                🔄 Refresh
+            </button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th><th>Jenis</th><th>Perihal</th>
+                    <th>Dari</th><th>Aksi Diperlukan</th><th>Tindakan</th>
+                </tr>
+            </thead>
+            <tbody id="tabelInbox">
+                <tr><td colspan="6">
+                    <div class="kosong-info">
+                        <span class="icon">⏳</span>Memuat data...
+                    </div>
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB 2: SURAT DITERIMA -->
+    <div id="tabMasuk" class="card" style="border-radius:0 8px 8px 8px; display:none;">
+        <div class="card-header">
+            <h3>Surat Masuk & Diterima</h3>
+            <button onclick="muatSuratMasuk()"
+                style="background:rgba(255,255,255,0.15); color:white; border:none;
+                       border-radius:6px; padding:6px 16px; cursor:pointer; font-size:0.82rem;">
+                🔄 Refresh
+            </button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th><th>Jenis</th><th>Perihal</th>
+                    <th>Dari / Asal</th><th>Keterangan</th><th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabelSuratMasuk">
+                <tr><td colspan="6">
+                    <div class="kosong-info">
+                        <span class="icon">📬</span>Memuat data...
+                    </div>
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="tabRiwayat" class="card" style="border-radius:0 8px 8px 8px; display:none;">
+    <div class="card-header">
+        <h3>Riwayat Tanda Tangan Saya</h3>
+        <button onclick="muatRiwayatTTD()"
+            style="background:rgba(255,255,255,0.15); color:white; border:none;
+                   border-radius:6px; padding:6px 16px; cursor:pointer; font-size:0.82rem;">
+            🔄 Refresh
+        </button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Tgl Proses</th><th>Jenis</th><th>Perihal</th>
+                <th>Dari</th><th>Aksi Saya</th><th>Status Surat</th><th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="tabelRiwayat">
+            <tr><td colspan="7">
+                <div class="kosong-info">
+                    <span class="icon">📋</span>Memuat riwayat...
+                </div>
+            </td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL PIN TTE / PARAF                                        -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="modalTTD">
+    <div class="modal-box">
+        <div class="modal-header" id="modalTTDHeader">
+            <h3 id="modalTTDJudul">Konfirmasi Tanda Tangan</h3>
+            <p  id="modalTTDSubjudul">Masukkan PIN TTE untuk melanjutkan</p>
+        </div>
+        <div class="modal-body">
+
+            <!-- Info perihal surat -->
+            <div style="background:#f8f9fa; border-radius:8px; padding:12px 16px; margin-bottom:16px;">
+                <div style="font-size:0.72rem; color:#95a5a6; text-transform:uppercase; font-weight:700; margin-bottom:3px;">Perihal Surat</div>
+                <div id="modalTTDPerihal" style="font-weight:600; color:#2c3e50;">—</div>
+            </div>
+
+            <!-- ✅ Field nomor surat — hanya muncul untuk TTE Utama permohonan -->
+            <div id="wrapNomorSuratInbox" style="display:none; margin-bottom:16px;">
+                <div style="background:#fff8e1; border-left:4px solid #f39c12;
+                            border-radius:4px; padding:10px 14px; margin-bottom:10px;
+                            font-size:0.83rem; color:#7f6000;">
+                    📋 Anda adalah penandatangan akhir. Mohon isi nomor surat sebelum TTE.
+                </div>
+                <label style="font-size:0.82rem; font-weight:700; color:#34495e; display:block; margin-bottom:6px;">
+                    Nomor Surat:
+                </label>
+                <input type="text" id="inputNomorSuratInbox" class="input-nomor"
+                       placeholder="Contoh: 001/PPNP/ST/IX/2026">
+            </div>
+
+            <!-- PIN Input -->
+            <div style="text-align:center; margin-bottom:8px; font-size:0.85rem; color:#7f8c8d;">
+                Masukkan PIN TTE 6 digit Anda:
+            </div>
+            <div class="pin-wrapper">
+                <input class="pin-digit" id="m1" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m2')" autocomplete="off">
+                <input class="pin-digit" id="m2" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m3')" onkeydown="hapusPin(event,this,'m1')" autocomplete="off">
+                <input class="pin-digit" id="m3" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m4')" onkeydown="hapusPin(event,this,'m2')" autocomplete="off">
+                <input class="pin-digit" id="m4" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m5')" onkeydown="hapusPin(event,this,'m3')" autocomplete="off">
+                <input class="pin-digit" id="m5" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m6')" onkeydown="hapusPin(event,this,'m4')" autocomplete="off">
+                <input class="pin-digit" id="m6" maxlength="1" type="password" inputmode="numeric" onkeydown="hapusPin(event,this,'m5')" autocomplete="off">
+            </div>
+
+            <!-- Catatan -->
+            <div style="margin-top:12px;">
+                <label style="font-size:0.82rem; font-weight:700; color:#34495e; display:block; margin-bottom:6px;">
+                    Catatan (opsional):
+                </label>
+                <textarea class="input-catatan" id="modalCatatan" rows="2"
+                    placeholder="Catatan atau keterangan tambahan..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalTTD()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiTTD" onclick="konfirmasiTTD()">
+                ✅ Konfirmasi
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // GUARD LOGIN
+    // ============================================================
+    const userDataStr = localStorage.getItem('user_ppnp');
+    if (!userDataStr) { window.location.href = '/'; }
+    const user = JSON.parse(userDataStr);
+
+    // State aktif
+    let persetujuanAktif = null; // { id, jenis, perihal, jenisSurat }
+
+    // ============================================================
+    // INISIALISASI
+    // ============================================================
+    window.addEventListener('load', function () {
+        renderSidebar();
+        muatInbox();
+        muatSuratMasuk();
+        muatRiwayatTTD();
+    });
+
+    function renderSidebar() {
+        const inisial = user.nama
+            ? user.nama.trim().split(' ').slice(0,2).map(k => k[0]).join('')
+            : '?';
+        const labelRole = {
+            'direktur' : '🏛️ Direktur',
+            'wadir_1'  : '📌 Wadir I',
+            'wadir_2'  : '📌 Wadir II',
+            'wadir_3'  : '📌 Wadir III',
+            'kabag'    : '🗂️ Kabag',
+            'kajur'    : '📚 Kajur',
+            'pimpinan' : '👔 Pimpinan',
+            'staf'     : '👤 Staf',
+        };
+        document.getElementById('userAvatar').textContent  = inisial;
+        document.getElementById('userNama').textContent    = user.nama    || '—';
+        document.getElementById('userJabatan').textContent = user.jabatan || '—';
+        document.getElementById('userRole').textContent    = labelRole[user.role_ppnp] || user.role_ppnp || '—';
+    }
+
+    // ============================================================
+    // MUAT INBOX
+    // ============================================================
+        async function muatInbox() {
+            try {
+                const res   = await fetch(`/api/inbox?nip=${user.nip}`);
+                const data  = await res.json();
+                const tbody = document.getElementById('tabelInbox');
+
+                // ✅ LETAKKAN DI SINI — setelah data didapat
+                const badgeTTE = document.getElementById('badgeTTE');
+                if (data.length > 0) {
+                    badgeTTE.textContent   = data.length;
+                    badgeTTE.style.display = 'inline';
+                } else {
+                    badgeTTE.style.display = 'none';
+                }
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6">
+                    <div class="kosong-info">
+                        <span class="icon">✅</span>
+                        <strong>Inbox kosong</strong><br>
+                        <span style="font-size:0.85rem;">Tidak ada surat yang menunggu tanda tangan Anda.</span>
+                    </div>
+                </td></tr>`;
+                return;
+            }
+
+            const badgeJenis = {
+                'eksternal' : 'badge-eksternal',
+                'internal'  : 'badge-internal',
+                'permohonan': 'badge-permohonan'
+            };
+
+            let html = '';
+            data.forEach(item => {
+                const tgl      = item.tanggal_dibuat.split('T')[0];
+                const isParaf  = item.jenis_ttd === 'Paraf';
+                const warnaTTD = isParaf ? '#16a085' : '#c0392b';
+                const labelTTD = isParaf ? '✍️ Paraf' : '🔏 TTE';
+                const btnClass = isParaf ? 'btn-paraf' : 'btn-ttd';
+                // ✅ Escape perihal untuk onclick attribute
+                const perihalEsc = item.perihal.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                html += `<tr>
+                    <td style="white-space:nowrap; font-size:0.85rem;">${tgl}</td>
+                    <td>
+                        <span class="badge ${badgeJenis[item.jenis_surat] || ''}">
+                            ${item.jenis_surat.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        <strong>${item.perihal}</strong><br>
+                        <small style="color:#95a5a6;">${item.nomor_surat || 'Belum ada nomor'}</small>
+                    </td>
+                    <td>
+                        <span style="font-size:0.85rem;">${item.nama_pembuat}</span><br>
+                        <small style="color:#95a5a6;">${item.jabatan_pembuat}</small>
+                    </td>
+                    <td>
+                        <span style="background:${warnaTTD}; color:white; padding:4px 12px;
+                                     border-radius:12px; font-size:0.75rem; font-weight:700;">
+                            ${labelTTD} — Urutan ke-${item.urutan}
+                        </span>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn-preview"
+                            onclick="previewSuratInbox(${item.surat_id})">
+                            👁️ Preview
+                        </button>
+                        <button class="${btnClass}"
+                            onclick="bukaTTD(${item.persetujuan_id}, '${item.jenis_ttd}', '${perihalEsc}', '${item.jenis_surat}')">
+                            ${labelTTD}
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+
+        } catch (err) {
+            console.error('Gagal muat inbox:', err);
+            document.getElementById('tabelInbox').innerHTML =
+                '<tr><td colspan="6" style="text-align:center; color:#e74c3c;">Gagal memuat inbox.</td></tr>';
+        }
+    }
+
+
+    // ============================================================
+    // PREVIEW SURAT DARI INBOX
+    // ============================================================
+    async function previewSuratInbox(suratId) {
+    try {
+        const res = await fetch(`/api/surat/${suratId}`);
+        if (!res.ok) throw new Error('Gagal');
+        const s = await res.json();
+
+        // ✅ TAMBAH DI SINI — shortcut eksternal
+        if (s.jenis_surat === 'eksternal') {
+            if (!s.file_surat) {
+                tampilNotif('File surat tidak ditemukan!', 'gagal');
+                return;
+            }
+            const ext = s.file_surat.split('.').pop().toLowerCase();
+            const url = `/uploads/surat/${s.file_surat}`;
+            if (ext === 'pdf') {
+                window.open(url, '_blank');
+            } else {
+                const jendela = window.open('', '_blank', 'width=960,height=980');
+                jendela.document.open();
+                jendela.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${s.perihal}</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#cbd5e0; }
+    .toolbar { position:fixed; top:0; left:0; right:0; background:#2c3e50; color:white;
+               padding:10px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .toolbar strong { display:block; font-size:0.95rem; }
+    .toolbar span { font-size:0.78rem; color:rgba(255,255,255,0.65); }
+    .btn-pdf { background:#2ecc71; color:white; border:none; padding:9px 24px;
+               border-radius:6px; cursor:pointer; font-weight:bold; }
+    .wrapper { padding:70px 20px 40px; display:flex; justify-content:center; }
+    img { max-width:210mm; box-shadow:0 6px 30px rgba(0,0,0,0.25); display:block; }
+    @media print { body{background:white;} .toolbar{display:none;} .wrapper{padding:0;} img{max-width:100%;} }
+    @page { size:A4; margin:10mm; }
+</style></head><body>
+    <div class="toolbar">
+        <div>
+            <strong>${s.perihal}</strong>
+            <span>EKSTERNAL — ${s.asal_surat || '—'}</span>
+        </div>
+        <button class="btn-pdf" onclick="window.print()">🖨️ Cetak / PDF</button>
+    </div>
+    <div class="wrapper"><img src="${url}" alt="${s.perihal}"></div>
+</body></html>`);
+                jendela.document.close();
+            }
+            return; // ✅ Stop di sini
+        }
+
+
+            // ✅ Gunakan kode_unit_kop (permohonan = D001/Direktur)
+            let urlKop = null;
+            const kodeKop = s.kode_unit_kop || s.kode_unit_pembuat;
+            if (kodeKop) {
+                const resKop  = await fetch(`/api/kop?kode_unit=${kodeKop}`);
+                const dataKop = await resKop.json();
+                if (dataKop.ada) urlKop = dataKop.url;
+            }
+
+            const tglFormatted = s.tanggal_surat
+                ? new Date(s.tanggal_surat + 'T00:00:00').toLocaleDateString('id-ID', {
+                    day:'numeric', month:'long', year:'numeric'
+                  })
+                : '—';
+
+            const kopHtml = urlKop
+                ? `<div style="text-align:center;">
+                       <img src="${window.location.origin}${urlKop}"
+                            style="width:100%; max-height:220px; object-fit:contain; display:block;">
+                   </div>`
+                : `<div style="text-align:center; padding:18px 0;">
+                       <p style="font-size:14pt; font-weight:bold; margin:0;">
+                           POLITEKNIK PERTANIAN NEGERI PAYAKUMBUH
+                       </p>
+                   </div>`;
+
+            const tujuanHtml = s.nama_tujuan
+                ? `<div style="margin-bottom:20px; font-size:12pt; line-height:1.8;">
+                       <p style="margin:0;">Yth.</p>
+                       <p style="margin:0; font-weight:bold;">${s.jabatan_tujuan || s.nama_tujuan}</p>
+                       ${s.tujuan_tambahan ? `<p style="margin:0;">${s.tujuan_tambahan}</p>` : ''}
+                   </div>`
+                : '';
+
+            const identitasHtml = `
+                <div style="margin-bottom:20px; font-size:11pt;">
+                    <div style="text-align:right; margin-bottom:16px;">
+                        Payakumbuh, ${tglFormatted}
+                    </div>
+                    <table style="line-height:2; border-collapse:collapse; margin-bottom:16px;">
+                        ${s.nomor_surat
+                            ? `<tr>
+                                   <td style="width:110px;">Nomor</td>
+                                   <td style="padding-right:8px;">:</td>
+                                   <td>${s.nomor_surat}</td>
+                               </tr>`
+                            : ''}
+                        <tr>
+                            <td>Perihal</td>
+                            <td style="padding-right:8px;">:</td>
+                            <td><strong>${s.perihal}</strong></td>
+                        </tr>
+                    </table>
+                    ${tujuanHtml}
+                </div>`;
+
+            const isiHtml = s.isi_surat
+                || '<p style="color:#aaa; font-style:italic;">Tidak ada isi surat.</p>';
+
+            // ✅ Blok status paraf — tampil jika ada chain persetujuan
+const parafHtml = (s.chain_persetujuan && s.chain_persetujuan.length > 1)
+    ? `<div style="margin-top:40px; margin-bottom:20px;">
+           <div style="font-size:7.5pt; text-transform:uppercase; letter-spacing:0.08em;
+                       color:#95a5a6; font-weight:700; margin-bottom:12px;
+                       padding-bottom:5px; border-bottom:1px solid #eee;">
+               Riwayat Paraf & Persetujuan
+           </div>
+           <div style="display:flex; gap:20px; flex-wrap:wrap;">
+               ${s.chain_persetujuan.filter(c => c.jenis_ttd === 'Paraf').map(c => `
+               <div style="text-align:center; min-width:150px;">
+                   <div style="font-size:8pt; color:#95a5a6; margin-bottom:4px;">
+                       ${c.status === 'disetujui' ? '✍️' : '⏳'} ${c.jenis_ttd}
+                   </div>
+                   ${c.status === 'disetujui'
+                       ? `<div style="border-bottom:1px solid #333; padding-bottom:4px; margin-bottom:4px;">
+                              <span style="font-size:8pt; color:#16a085; font-weight:700;">
+                                  ✅ Telah Diparaf
+                              </span>
+                          </div>`
+                       : `<div style="height:30px; border-bottom:1px dashed #ccc; margin-bottom:4px;"></div>`}
+                   <div style="font-size:8.5pt; font-weight:700;">${c.nama_pejabat}</div>
+                   <div style="font-size:7.5pt; color:#7f8c8d;">${c.jabatan_pejabat}</div>
+                   ${c.tanggal_proses
+                       ? `<div style="font-size:7pt; color:#27ae60; margin-top:2px;">
+                              ${new Date(c.tanggal_proses).toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'})}
+                          </div>`
+                       : ''}
+               </div>`).join('')}
+           </div>
+       </div>`
+    : '';
+
+            // ✅ TTD dengan QR Code menggunakan script json payload
+            const ttdHtml = s.nama_penandatangan ? `
+            ${parafHtml}
+                <div style="margin-top:50px; display:flex; justify-content:flex-end;">
+                    <div style="text-align:center; min-width:240px;">
+                        <p style="margin-bottom:4px; font-size:11pt;">Hormat kami,</p>
+                        <p style="margin:0 0 16px; font-size:11pt;">${s.jabatan_penandatangan || ''}</p>
+
+                        ${s.tte_selesai
+                            ? `<div id="qr-ttd" style="display:inline-block; margin-bottom:10px;"></div>
+                               <script type="application/json" id="qr-payload">${JSON.stringify({
+                                   kode   : s.kode_pelacakan     || '',
+                                   perihal: s.perihal            || '',
+                                   pejabat: s.nama_penandatangan || '',
+                                   tanggal: s.tanggal_tte        || 'Sistem TTE PPNP',
+                                   status : 'SAH - Ditandatangani Elektronik'
+                               })}<\/script>`
+                            : `<div style="height:80px; display:flex; align-items:center;
+                                           justify-content:center; color:#e67e22; font-size:8pt;">
+                                   ⏳ Menunggu Tanda Tangan
+                               </div>`}
+
+                        <p style="font-weight:bold; margin:0; border-top:1.5px solid #333; padding-top:6px; font-size:11pt;">
+                            ${s.nama_penandatangan}
+                        </p>
+                        <p style="margin:4px 0 0; font-size:10pt;">
+                            NIP. ${s.nip_penandatangan || '—'}
+                        </p>
+                    </div>
+                </div>
+                ${s.tte_selesai ? `
+                <div style="margin-top:30px; padding:10px 20px; border:1px dashed #27ae60;
+                            border-radius:6px; text-align:center; line-height:1.8;">
+                    <p style="margin:0; font-size:8pt; color:#555; font-style:italic;">
+                        Dokumen ini telah ditandatangani secara elektronik melalui<br>
+                        <strong>Sistem TTE Politeknik Pertanian Negeri Payakumbuh.</strong><br>
+                        Keabsahan dokumen dapat diverifikasi melalui QR Code.
+                    </p>
+                </div>` : ''}
+            ` : '';
+
+            // ✅ QR Script — gunakan script json payload & fetch blob untuk logo
+            const qrScript = s.tte_selesai ? `
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+                <script>
+                    window.onload = function() {
+                        var container = document.getElementById('qr-ttd');
+                        var payload   = document.getElementById('qr-payload');
+                        if (!container || !payload) return;
+
+                        var qrText = payload.textContent.trim();
+
+                        new QRCode(container, {
+                            text        : qrText,
+                            width       : 130,
+                            height      : 130,
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+
+                        setTimeout(function() {
+                            var canvas = container.querySelector('canvas');
+                            if (!canvas) return;
+
+                            fetch('/uploads/assets/logo.png')
+                                .then(function(r) { return r.blob(); })
+                                .then(function(blob) {
+                                    var blobUrl = URL.createObjectURL(blob);
+                                    var logo    = new Image();
+                                    logo.onload = function() {
+                                        var ctx  = canvas.getContext('2d');
+                                        var size = Math.floor(canvas.width * 0.22);
+                                        var x    = Math.floor((canvas.width  - size) / 2);
+                                        var y    = Math.floor((canvas.height - size) / 2);
+                                        ctx.fillStyle = 'white';
+                                        ctx.beginPath();
+                                        ctx.arc(x + size/2, y + size/2, size/2 + 4, 0, Math.PI * 2);
+                                        ctx.fill();
+                                        ctx.drawImage(logo, x, y, size, size);
+                                        var imgTag = container.querySelector('img');
+                                        if (imgTag) {
+                                            imgTag.src = canvas.toDataURL('image/png');
+                                            imgTag.style.display = 'block';
+                                            canvas.style.display = 'none';
+                                        }
+                                        URL.revokeObjectURL(blobUrl);
+                                    };
+                                    logo.src = blobUrl;
+                                })
+                                .catch(function(e) { console.log('Logo skip:', e); });
+                        }, 300);
+                    };
+                <\/script>
+            ` : '';
+
+            const htmlSurat = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Preview — ${s.perihal}</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#cbd5e0; font-family:'Times New Roman',Times,serif; font-size:12pt; }
+        .toolbar { position:fixed; top:0; left:0; right:0; background:#2c3e50; color:white;
+                   padding:10px 24px; display:flex; align-items:center; justify-content:space-between; z-index:1000; }
+        .toolbar-info strong { font-size:0.95rem; display:block; }
+        .toolbar-info span   { font-size:0.78rem; color:rgba(255,255,255,0.65); }
+        .btn-pdf { background:#2ecc71; color:white; border:none; padding:9px 24px;
+                   border-radius:6px; cursor:pointer; font-weight:bold; }
+        .halaman-wrapper { padding:70px 20px 40px; display:flex; justify-content:center; }
+        .kertas { width:210mm; min-height:297mm; background:white; box-shadow:0 6px 30px rgba(0,0,0,0.25); }
+        .area-kop { padding:8mm 15mm 0; }
+        .garis-kop { border:none; border-top:3px double #222; margin:4px 15mm 0; }
+        .area-isi { padding:8mm 25mm 20mm; }
+        .ql-toolbar  { display:none !important; }
+        .ql-container{ border:none !important; }
+        .ql-editor   { padding:0 !important; font-family:'Times New Roman',Times,serif !important; font-size:12pt !important; }
+        @media print {
+            body { background:white; }
+            .toolbar { display:none !important; }
+            .halaman-wrapper { padding:0; }
+            .kertas { box-shadow:none; width:100%; }
+        }
+        @page { size:A4; margin:15mm 20mm; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-info">
+            <strong>${s.perihal}</strong>
+            <span>${s.jenis_surat.toUpperCase()} — Preview dari Inbox</span>
+        </div>
+        <button class="btn-pdf" onclick="window.print()">🖨️ Cetak / PDF</button>
+    </div>
+    <div class="halaman-wrapper">
+        <div class="kertas">
+            <div class="area-kop">${kopHtml}</div>
+            <hr class="garis-kop">
+            <div class="area-isi">
+                ${identitasHtml}
+                <div class="ql-editor" style="line-height:1.8;">${isiHtml}</div>
+                ${ttdHtml}
+            </div>
+        </div>
+    </div>
+    ${qrScript}
+</body>
+</html>`;
+
+            const jendela = window.open('', '_blank', 'width=960,height=980');
+            jendela.document.open();
+            jendela.document.write(htmlSurat);
+            jendela.document.close();
+
+        } catch (err) {
+            tampilNotif('Gagal membuka preview!', 'gagal');
+            console.error(err);
+        }
+    }
+
+    // ============================================================
+    // BUKA MODAL TTD / PARAF
+    // ✅ Parameter tambahan: jenisSurat untuk deteksi permohonan
+    // ============================================================
+    function bukaTTD(persetujuanId, jenisTTD, perihal, jenisSurat) {
+        persetujuanAktif = { id: persetujuanId, jenis: jenisTTD, perihal, jenisSurat };
+
+        const isParaf  = jenisTTD === 'Paraf';
+        const header   = document.getElementById('modalTTDHeader');
+        const judul    = document.getElementById('modalTTDJudul');
+        const subjudul = document.getElementById('modalTTDSubjudul');
+        const btnKon   = document.getElementById('btnKonfirmasiTTD');
+
+        header.className     = isParaf ? 'modal-header paraf' : 'modal-header';
+        judul.textContent    = isParaf ? '✍️ Konfirmasi Paraf' : '🔏 Konfirmasi TTE';
+        subjudul.textContent = isParaf
+            ? 'Masukkan PIN untuk membubuhkan paraf'
+            : 'Masukkan PIN untuk membubuhkan Tanda Tangan Elektronik';
+        btnKon.className     = isParaf ? 'btn-konfirmasi paraf' : 'btn-konfirmasi';
+        btnKon.textContent   = isParaf ? '✍️ Paraf Sekarang' : '🔏 Tandatangani Sekarang';
+
+        document.getElementById('modalTTDPerihal').textContent = perihal;
+        document.getElementById('modalCatatan').value          = '';
+
+        // ✅ Tampilkan field nomor surat hanya untuk TTE Utama permohonan
+        const wrapNomor  = document.getElementById('wrapNomorSuratInbox');
+        const inputNomor = document.getElementById('inputNomorSuratInbox');
+        if (!isParaf && jenisSurat === 'permohonan') {
+            wrapNomor.style.display = 'block';
+            inputNomor.value        = '';
+        } else {
+            wrapNomor.style.display = 'none';
+            inputNomor.value        = '';
+        }
+
+        // Reset PIN
+        ['m1','m2','m3','m4','m5','m6'].forEach(id => {
+            document.getElementById(id).value     = '';
+            document.getElementById(id).className =
+                isParaf ? 'pin-digit paraf' : 'pin-digit';
+        });
+
+        document.getElementById('modalTTD').classList.add('aktif');
+        setTimeout(() => document.getElementById('m1').focus(), 300);
+    }
+
+    function tutupModalTTD() {
+        document.getElementById('modalTTD').classList.remove('aktif');
+        persetujuanAktif = null;
+    }
+
+    document.getElementById('modalTTD').addEventListener('click', function(e) {
+        if (e.target === this) tutupModalTTD();
+    });
+
+    // ============================================================
+    // KONFIRMASI TTD / PARAF
+    // ============================================================
+    async function konfirmasiTTD() {
+        if (!persetujuanAktif) return;
+
+        const pin = ['m1','m2','m3','m4','m5','m6']
+            .map(id => document.getElementById(id).value).join('');
+
+        if (pin.length !== 6) {
+            tampilNotif('Masukkan PIN 6 digit terlebih dahulu!', 'gagal');
+            return;
+        }
+
+        // ✅ Validasi nomor surat untuk TTE permohonan
+        const inputNomor = document.getElementById('inputNomorSuratInbox');
+        const nomorSurat = inputNomor ? inputNomor.value.trim() : '';
+        if (persetujuanAktif.jenisSurat === 'permohonan'
+                && persetujuanAktif.jenis === 'TTE Utama'
+                && !nomorSurat) {
+            tampilNotif('Nomor surat wajib diisi sebelum TTE!', 'gagal');
+            inputNomor.focus();
+            return;
+        }
+
+        const btn       = document.getElementById('btnKonfirmasiTTD');
+        btn.textContent = '⏳ Memproses...';
+        btn.disabled    = true;
+
+        const formData = new FormData();
+        formData.append('nip',         user.nip);
+        formData.append('pin',         pin);
+        formData.append('catatan',     document.getElementById('modalCatatan').value);
+        formData.append('nomor_surat', nomorSurat); // ✅ kirim nomor surat
+
+        try {
+            const res = await fetch(
+                `/api/tanda-tangan/${persetujuanAktif.id}`,
+                { method: 'POST', body: formData }
+            );
+
+            if (res.ok) {
+                const data = await res.json();
+                tutupModalTTD();
+                tampilNotif(data.message, 'sukses');
+                setTimeout(() => muatInbox(), 1000);
+            } else {
+                const err = await res.json().catch(() => ({}));
+                tampilNotif(err.detail || 'Gagal memproses!', 'gagal');
+                ['m1','m2','m3','m4','m5','m6'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                document.getElementById('m1').focus();
+            }
+        } catch (err) {
+            tampilNotif('Koneksi gagal!', 'gagal');
+            console.error(err);
+        }
+
+        btn.textContent = persetujuanAktif?.jenis === 'Paraf'
+            ? '✍️ Paraf Sekarang' : '🔏 Tandatangani Sekarang';
+        btn.disabled    = false;
+    }
+
+    // ============================================================
+    // PIN HELPERS
+    // ============================================================
+    function pindahPin(el, idBerikut) {
+        if (el.value.length === 1 && idBerikut) {
+            document.getElementById(idBerikut)?.focus();
+        }
+    }
+    function hapusPin(event, el, idSebelum) {
+        if (event.key === 'Backspace' && el.value === '' && idSebelum) {
+            document.getElementById(idSebelum)?.focus();
+        }
+    }
+
+    // ============================================================
+    // NOTIF & LOGOUT
+    // ============================================================
+    function tampilNotif(pesan, tipe = 'sukses') {
+        const container = document.getElementById('notif-container');
+        const notif     = document.createElement('div');
+        notif.className = `notif ${tipe}`;
+        notif.innerHTML = `<span>ℹ️</span><span>${pesan}</span>`;
+        container.appendChild(notif);
+        setTimeout(() => { notif.remove(); }, 4000);
+    }
+
+    function logout() {
+        localStorage.removeItem('user_ppnp');
+        window.location.href = '/';
+    }
+
+    // ============================================================
+// GANTI TAB INBOX
+// ============================================================
+function gantiTabInbox(tab, btn) {
+    document.querySelectorAll('.tab-inbox').forEach(b => b.classList.remove('aktif'));
+    btn.classList.add('aktif');
+    document.getElementById('tabTTE').style.display     = tab === 'tte'     ? 'block' : 'none';
+    document.getElementById('tabMasuk').style.display   = tab === 'masuk'   ? 'block' : 'none';
+    document.getElementById('tabRiwayat').style.display = tab === 'riwayat' ? 'block' : 'none';
+    if (tab === 'masuk')   muatSuratMasuk();
+    if (tab === 'riwayat') muatRiwayatTTD();
+}
+
+async function muatRiwayatTTD() {
+    try {
+        const res   = await fetch(`/api/riwayat-ttd?nip=${user.nip}`);
+        const data  = await res.json();
+        const tbody = document.getElementById('tabelRiwayat');
+
+        const badge = document.getElementById('badgeRiwayat');
+        if (data.length > 0) {
+            badge.textContent   = data.length;
+            badge.style.display = 'inline';
+        } else { badge.style.display = 'none'; }
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7">
+                <div class="kosong-info">
+                    <span class="icon">📋</span>
+                    <strong>Belum ada riwayat tanda tangan</strong>
+                </div>
+            </td></tr>`;
+            return;
+        }
+
+        const badgeJenis = {
+            'eksternal':'badge-eksternal','internal':'badge-internal','permohonan':'badge-permohonan'
+        };
+        const statusSuratMap = {
+            'menunggu': { warna:'#e67e22', label:'⏳ Berlanjut'  },
+            'selesai' : { warna:'#27ae60', label:'✅ Final'       },
+            'ditolak' : { warna:'#e74c3c', label:'❌ Ditolak'     },
+        };
+
+        let html = '';
+        data.forEach(item => {
+            const tgl        = item.tanggal_proses ? item.tanggal_proses.split('.')[0].replace('T',' ') : '—';
+            const aksiWarna  = item.jenis_ttd === 'Paraf' ? '#16a085' : '#c0392b';
+            const aksiLabel  = item.jenis_ttd === 'Paraf' ? '✍️ Paraf' : '🔏 TTE Utama';
+            const sts        = statusSuratMap[item.status_surat] || { warna:'#95a5a6', label: item.status_surat };
+
+            html += `<tr>
+                <td style="font-size:0.82rem; white-space:nowrap;">${tgl}</td>
+                <td>
+                    <span class="badge ${badgeJenis[item.jenis_surat] || ''}">
+                        ${item.jenis_surat.toUpperCase()}
+                    </span>
+                </td>
+                <td>
+                    <strong>${item.perihal}</strong><br>
+                    <small style="color:#95a5a6;">${item.nomor_surat || 'Belum ada nomor'}</small>
+                </td>
+                <td>
+                    <span style="font-size:0.85rem;">${item.nama_pembuat}</span><br>
+                    <small style="color:#95a5a6;">${item.jabatan_pembuat}</small>
+                </td>
+                <td>
+                    <span style="background:${aksiWarna}; color:white; padding:4px 12px;
+                                 border-radius:12px; font-size:0.75rem; font-weight:700;">
+                        ${aksiLabel}
+                    </span>
+                    ${item.catatan
+                        ? `<br><small style="color:#7f8c8d; font-style:italic;">💬 ${item.catatan}</small>`
+                        : ''}
+                </td>
+                <td>
+                    <span style="background:${sts.warna}; color:white; padding:3px 10px;
+                                 border-radius:12px; font-size:0.72rem; font-weight:700;">
+                        ${sts.label}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-preview" onclick="previewSuratInbox(${item.surat_id})">
+                        👁️ Preview
+                    </button>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+
+    } catch (err) {
+        console.error('Gagal muat riwayat:', err);
+    }
+}
+
+// ============================================================
+// MUAT SURAT DITERIMA
+// ============================================================
+async function muatSuratMasuk() {
+    try {
+        const res   = await fetch(`/api/surat-masuk?nip=${user.nip}`);
+        const data  = await res.json();
+        const tbody = document.getElementById('tabelSuratMasuk');
+
+        // Update badge
+        const badge = document.getElementById('badgeMasuk');
+        if (data.length > 0) {
+            badge.textContent    = data.length;
+            badge.style.display  = 'inline';
+        } else {
+            badge.style.display  = 'none';
+        }
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6">
+                <div class="kosong-info">
+                    <span class="icon">📭</span>
+                    <strong>Belum ada surat masuk</strong>
+                </div>
+            </td></tr>`;
+            return;
+        }
+
+        const badgeJenis = {
+            'eksternal' : 'badge-eksternal',
+            'internal'  : 'badge-internal',
+            'permohonan': 'badge-permohonan'
+        };
+
+        const infoKategori = {
+            'diterima' : { warna:'#8e44ad', label:'📨 Surat Masuk'    },
+            'disposisi': { warna:'#2980b9', label:'📋 Perlu Disposisi' },
+            'selesai'  : { warna:'#27ae60', label:'✅ Siap Download'   },
+        };
+
+        let html = '';
+        data.forEach(item => {
+            const tgl  = item.tanggal_dibuat.split('T')[0];
+            const info = infoKategori[item.kategori] || { warna:'#95a5a6', label:'—' };
+
+            html += `<tr>
+                <td style="white-space:nowrap; font-size:0.85rem;">${tgl}</td>
+                <td>
+                    <span class="badge ${badgeJenis[item.jenis_surat] || ''}">
+                        ${item.jenis_surat.toUpperCase()}
+                    </span>
+                </td>
+                <td>
+                    <strong>${item.perihal}</strong><br>
+                    <small style="color:#95a5a6;">${item.nomor_surat || 'Belum ada nomor'}</small>
+                </td>
+                <td>
+                    <span style="font-size:0.85rem;">
+                        ${item.asal_surat || item.nama_pengirim}
+                    </span><br>
+                    <small style="color:#95a5a6;">${item.jabatan_pengirim}</small>
+                </td>
+                <td>
+                    <span style="background:${info.warna}; color:white; padding:4px 12px;
+                                 border-radius:12px; font-size:0.75rem; font-weight:700;">
+                        ${info.label}
+                    </span>
+                </td>
+                <td style="white-space:nowrap;">
+                    <button class="btn-preview"
+                        onclick="previewSuratInbox(${item.surat_id})">
+                        👁️ Preview
+                    </button>
+                    ${item.kategori === 'selesai'
+                        ? `<button
+                               onclick="previewSuratInbox(${item.surat_id})"
+                               style="padding:6px 14px; background:#27ae60; color:white;
+                                      border:none; border-radius:4px; cursor:pointer;
+                                      font-size:0.82rem; font-weight:700; margin-left:5px;">
+                               📥 Download
+                           </button>`
+                        : ''}
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+
+    } catch (err) {
+        console.error('Gagal muat surat masuk:', err);
+        document.getElementById('tabelSuratMasuk').innerHTML =
+            '<tr><td colspan="6" style="text-align:center; color:#e74c3c;">Gagal memuat data.</td></tr>';
+    }
+}
+</script>
+</body>
+</html>

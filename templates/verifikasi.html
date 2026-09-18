@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Verifikasi Surat - PPNP</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f7f6;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 480px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            padding: 28px 30px 24px;
+            text-align: center;
+            color: white;
+        }
+        .header.sah { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .header.gagal { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+        .header .logo {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: white;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header .logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; box-sizing: border-box; }
+        .header .icon { font-size: 2.4rem; margin-bottom: 8px; }
+        .header h2 { margin: 0; font-size: 1.25rem; }
+        .header p { margin: 4px 0 0; font-size: 0.8rem; opacity: 0.9; }
+        .body { padding: 24px 30px; }
+        .row { margin-bottom: 16px; }
+        .row:last-child { margin-bottom: 0; }
+        .row label {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #95a5a6;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .row .val { font-size: 0.98rem; color: #2c3e50; font-weight: 600; }
+        .divider { border: none; border-top: 1px dashed #e0e6e4; margin: 18px 0; }
+        .footer {
+            padding: 14px 30px 18px;
+            background: #f8f9fa;
+            font-size: 0.72rem;
+            color: #95a5a6;
+            text-align: center;
+            line-height: 1.6;
+        }
+        .footer strong { color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        {% if valid %}
+        <div class="header sah">
+            <div class="logo"><img src="/uploads/assets/logo.png" alt="Logo PPNP"></div>
+            <h2>✅ Dokumen Sah</h2>
+            <p>Politeknik Pertanian Negeri Payakumbuh</p>
+        </div>
+        <div class="body">
+            <div class="row">
+                <label>Kode Pelacakan</label>
+                <div class="val">{{ kode }}</div>
+            </div>
+            <div class="row">
+                <label>Nomor Surat</label>
+                <div class="val">{{ nomor_surat }}</div>
+            </div>
+            <div class="row">
+                <label>Jenis Surat</label>
+                <div class="val">{{ jenis_surat }}</div>
+            </div>
+            <div class="row">
+                <label>Perihal</label>
+                <div class="val">{{ perihal }}</div>
+            </div>
+
+            <hr class="divider">
+
+            <div class="row">
+                <label>Ditandatangani Oleh</label>
+                <div class="val">{{ nama_pejabat }}</div>
+                <div style="font-size:0.85rem; color:#7f8c8d; margin-top:2px;">{{ jabatan }}</div>
+            </div>
+            <div class="row">
+                <label>Unit</label>
+                <div class="val">{{ unit_pejabat }}</div>
+            </div>
+            <div class="row">
+                <label>Tanggal Tanda Tangan</label>
+                <div class="val">{{ tanggal_tte }}</div>
+            </div>
+        </div>
+        <div class="footer">
+            Dokumen ini telah diverifikasi melalui <strong>Sistem TTE Politeknik Pertanian Negeri Payakumbuh</strong>.<br>
+            Diperiksa pada: {{ waktu_akses }}
+        </div>
+        {% else %}
+        <div class="header gagal">
+            <div class="logo"><img src="/uploads/assets/logo.png" alt="Logo PPNP"></div>
+            <h2>❌ Verifikasi Gagal</h2>
+        </div>
+        <div class="body">
+            <p style="text-align:center; color:#7f8c8d; margin:0;">{{ pesan }}</p>
+        </div>
+        <div class="footer">
+            Sistem TTE Politeknik Pertanian Negeri Payakumbuh
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

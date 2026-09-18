@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistem Kinerja PPNP</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        .login-card h2 { color: #2c3e50; margin-bottom: 5px; }
+        .login-card p { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-weight: bold; color: #34495e; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-login { width: 100%; padding: 10px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: 0.3s; }
+        .btn-login:hover { background-color: #2980b9; }
+        .error-msg { color: #e74c3c; font-size: 0.85rem; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>Sistem Kinerja TTE</h2>
+        <p>Politeknik Pertanian Negeri Payakumbuh</p>
+        
+        <form id="formLogin" onsubmit="lakukanLogin(event)">
+            <div class="form-group">
+                <label>Nomor Induk Pegawai (NIP)</label>
+                <input type="text" id="nip" placeholder="Masukkan NIP Anda" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Masukkan Password" required>
+            </div>
+            <button type="submit" class="btn-login" id="btnSubmit">Login</button>
+            <div id="pesanError" class="error-msg">NIP atau Password Salah!</div>
+        </form>
+    </div>
+
+    <script>
+        // Cek apakah sudah login, jika ya, langsung tendang ke dashboard
+        if(localStorage.getItem('user_ppnp')) {
+            window.location.href = '/surat';
+        }
+
+        async function lakukanLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            const err = document.getElementById('pesanError');
+            
+            btn.innerText = "Memeriksa...";
+            err.style.display = 'none';
+
+            const payload = {
+                nip: document.getElementById('nip').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const dataUser = await response.json();
+                    // Simpan identitas ke Local Storage
+                    localStorage.setItem('user_ppnp', JSON.stringify(dataUser));
+                    // Pindah ke halaman manajemen surat
+                    window.location.href = '/surat';
+                } else {
+                    err.style.display = 'block';
+                    btn.innerText = "Login";
+                }
+            } catch (error) {
+                err.innerText = "Koneksi ke server gagal!";
+                err.style.display = 'block';
+                btn.innerText = "Login";
+            }
+        }
+    </script>
+</body>
+</html>
