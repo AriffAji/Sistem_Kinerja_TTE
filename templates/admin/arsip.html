@@ -1,195 +1,359 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Arsip Surat - PPNP</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; display: flex; height: 100vh; }
+{% extends "base.html" %}
 
-        /* ---- Sidebar (sama dengan halaman lain) ---- */
-        .sidebar { width: 250px; background-color: #2c3e50; color: white; padding-top: 20px; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar h2 { text-align: center; font-size: 1.2rem; margin-bottom: 15px; border-bottom: 1px solid #34495e; padding-bottom: 15px; }
-        .sidebar a { color: #ecf0f1; text-decoration: none; padding: 15px 20px; display: block; border-left: 4px solid transparent; transition: 0.3s; }
-        .sidebar a:hover, .sidebar a.aktif { background-color: #34495e; border-left: 4px solid #3498db; }
-        .logout-btn { margin-top: auto; background-color: #c0392b; text-align: center; padding: 15px; cursor: pointer; transition: 0.3s; }
-        .logout-btn:hover { background-color: #e74c3c; }
-        .user-info-box { margin: 0 15px 20px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px; }
-        .user-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3498db, #2ecc71); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; color: white; flex-shrink: 0; text-transform: uppercase; }
-        .user-detail { overflow: hidden; }
-        .user-detail .user-nama { font-size: 0.85rem; font-weight: 700; color: #ecf0f1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-detail .user-jabatan { font-size: 0.72rem; color: #95a5a6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        .user-detail .user-role-badge { display: inline-block; margin-top: 5px; background: rgba(52,152,219,0.3); border: 1px solid rgba(52,152,219,0.5); color: #74b9ff; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+{% block title %}Arsip Surat - PPNP{% endblock %}
+{% block page_title %}Arsip Surat{% endblock %}
 
-        /* ---- Konten ---- */
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .selector-box { background: #e8f4f8; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin-bottom: 20px; }
-        .filter { display: flex; gap: 10px; flex-wrap: wrap; }
-        .filter input, .filter select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; font-family: inherit; }
-        .filter input[type=text] { flex: 1; min-width: 200px; }
-        .btn-submit { background-color: #2ecc71; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-submit:hover { background-color: #27ae60; }
-        .btn-sekunder { background: #34495e; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-sekunder:disabled { opacity: 0.4; cursor: default; }
+{% block extra_head %}
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+  mark.sorot { background: #f6e7a8; color: #102c15; padding: 0 2px; border-radius: 3px; }
+  .chip-jalur { transition: transform .2s ease; }
+  .chip-jalur:hover { transform: translateY(-1px); }
+</style>
+{% endblock %}
 
-        .judul { font-weight: 700; font-size: 1rem; color: #2c3e50; margin-bottom: 4px; }
-        .meta { font-size: 0.82rem; color: #7f8c8d; line-height: 1.7; }
-        .alasan { background: #f8f9fa; border-left: 4px solid #95a5a6; border-radius: 0 4px 4px 0; padding: 8px 12px; margin-top: 10px; font-size: 0.85rem; color: #2c3e50; }
-        .jalur { font-size: 0.78rem; color: #7f8c8d; margin-top: 8px; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; color: white; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; margin-right: 8px; }
-        .aksi a { display: inline-block; margin-top: 10px; padding: 6px 12px; background: #34495e; color: white; text-decoration: none; border-radius: 4px; font-size: 0.82rem; font-weight: 700; }
-        .kosong { text-align: center; color: #95a5a6; padding: 40px; }
-        .nav { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 10px; font-size: 0.88rem; color: #2c3e50; }
-    </style>
-    <link rel="stylesheet" href="/static/tema-ppnp.css">
-</head>
-<body>
+{% block content %}
+<div class="max-w-full mx-auto space-y-6">
 
-    <div class="sidebar">
-        <h2>Sistem Kinerja<br>PPNP</h2>
-
-        <div class="user-info-box">
-            <div class="user-avatar" id="userAvatar">?</div>
-            <div class="user-detail">
-                <div class="user-nama" id="userNama">Memuat...</div>
-                <div class="user-jabatan" id="userJabatan">—</div>
-                <span class="user-role-badge" id="userRole">—</span>
-            </div>
-        </div>
-
-        <a href="/dashboard">Dashboard Utama</a>
-        <a href="/surat">Manajemen Surat</a>
-        <a href="/inbox">📥 Inbox Disposisi</a>
-        <a href="/arsip" class="aktif">🗄️ Arsip Surat</a>
-        <a href="/profil">👤 Profil & TTE Saya</a>
-        <div class="logout-btn" onclick="logout()">Keluar Aplikasi</div>
+  <!-- Banner info -->
+  <section data-aos="fade-up"
+           class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-hijau-600 to-hijau-800 text-white p-6 shadow-lg">
+    <div class="absolute inset-0 bg-pola-hijau"></div>
+    <div class="absolute -right-6 -bottom-8 opacity-10">
+      <span class="material-icons-round" style="font-size:160px">archive</span>
     </div>
-
-    <div class="main-content">
-        <h2>Arsip Surat</h2>
-
-        <div class="selector-box">
-            <strong style="color:#2980b9;">🗄️ Surat yang diarsipkan pada jalur disposisi yang Anda terlibat di dalamnya.</strong>
-            <div style="font-size:0.82rem; color:#7f8c8d; margin-top:4px;">
-                Arsip hanya terlihat oleh pejabat di jalur disposisi, dari Direktur sampai pejabat yang mengarsipkan.
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="filter">
-                <input type="text" id="cari" placeholder="🔍 Cari perihal, asal surat, nomor, atau alasan arsip...">
-                <select id="tahun"><option value="">Semua tahun</option></select>
-                <button class="btn-submit" onclick="muat(1)">Cari</button>
-            </div>
-            <small id="info" style="display:block; margin-top:8px; color:#95a5a6;"></small>
-        </div>
-
-        <div id="daftar"></div>
-
-        <div class="nav">
-            <button class="btn-sekunder" id="btnPrev" onclick="muat(halaman-1)">◀ Sebelumnya</button>
-            <span id="infoHal"></span>
-            <button class="btn-sekunder" id="btnNext" onclick="muat(halaman+1)">Berikutnya ▶</button>
-        </div>
+    <div class="relative flex items-start gap-4">
+      <div class="w-12 h-12 shrink-0 rounded-xl bg-emas-500 text-hijau-900 flex items-center justify-center">
+        <span class="material-icons-round">archive</span>
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold leading-tight">Surat yang diarsipkan pada jalur disposisi Anda</h2>
+        <p class="text-sm text-white/75 mt-1">
+          Arsip hanya terlihat oleh pejabat di jalur disposisi, dari Direktur sampai pejabat yang mengarsipkan.
+        </p>
+      </div>
     </div>
+  </section>
 
+  <!-- Filter -->
+  <section data-aos="fade-up" data-aos-delay="80"
+           class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+      <div class="relative md:col-span-5">
+        <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+        <input id="cari" type="text" autocomplete="off"
+               placeholder="Cari perihal, asal surat, nomor, atau alasan arsip..."
+               class="w-full pl-11 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm bg-white
+                      focus:outline-none focus:ring-2 focus:ring-hijau-400 focus:border-hijau-500">
+      </div>
+      <select id="jenis"
+              class="md:col-span-2 px-3 py-2.5 rounded-xl border border-slate-300 text-sm bg-white
+                     focus:outline-none focus:ring-2 focus:ring-hijau-400 focus:border-hijau-500">
+        <option value="">Semua jenis</option>
+        <option value="eksternal">Eksternal</option>
+        <option value="internal">Internal</option>
+        <option value="permohonan">Permohonan</option>
+      </select>
+      <select id="tahun"
+              class="md:col-span-2 px-3 py-2.5 rounded-xl border border-slate-300 text-sm bg-white
+                     focus:outline-none focus:ring-2 focus:ring-hijau-400 focus:border-hijau-500">
+        <option value="">Semua tahun</option>
+      </select>
+      <div class="md:col-span-3 flex gap-2">
+        <button id="btnCari" type="button"
+                class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold
+                       bg-hijau-600 text-white hover:bg-hijau-700 active:scale-95 transition">
+          <span class="material-icons-round text-[20px]">search</span> Cari
+        </button>
+        <button id="btnReset" type="button" title="Reset filter"
+                class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-bold
+                       bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition">
+          <span class="material-icons-round text-[20px]">restart_alt</span> Reset
+        </button>
+      </div>
+    </div>
+    <p id="info" class="mt-3 text-xs font-medium text-slate-500 min-h-[1rem]"></p>
+  </section>
+
+  <!-- Daftar -->
+  <section id="daftar" class="space-y-4" aria-live="polite"></section>
+
+  <!-- Pagination -->
+  <nav id="paging" class="flex flex-wrap items-center justify-center gap-1.5 pt-2" aria-label="Halaman"></nav>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <script>
-    const userStr = localStorage.getItem('user_ppnp');
-    if (!userStr) { window.location.href = '/'; }
-    const user = JSON.parse(userStr);
-    const $ = id => document.getElementById(id);
-    const WARNA = { eksternal: '#2980b9', internal: '#8e44ad', permohonan: '#e67e22' };
-    let halaman = 1, totalHal = 1;
+  AOS.init({ duration: 600, easing: 'ease-out-cubic', once: true, offset: 40 });
 
-    function logout() { localStorage.removeItem('user_ppnp'); window.location.href = '/'; }
+  const user = JSON.parse(localStorage.getItem('user_ppnp') || '{}');
+  const $ = id => document.getElementById(id);
+  const PER_HALAMAN = 10;
 
-    function renderInfoUser() {
-        const inisial = user.nama ? user.nama.trim().split(' ').slice(0, 2).map(k => k[0]).join('') : '?';
-        const labelRole = {
-            'direktur': '🏛️ Direktur', 'wadir_1': '📌 Wakil Direktur I', 'wadir_2': '📌 Wakil Direktur II',
-            'wadir_3': '📌 Wakil Direktur III', 'kabag': '🗂️ Kepala Bagian', 'kajur': '📚 Ketua Jurusan',
-            'pimpinan': '👔 Pimpinan Unit', 'staf': '👤 Staf'
-        };
-        $('userAvatar').textContent  = inisial;
-        $('userNama').textContent    = user.nama || 'Nama tidak tersedia';
-        $('userJabatan').textContent = user.jabatan || 'Jabatan tidak tersedia';
-        $('userRole').textContent    = labelRole[user.role_ppnp] || user.role_ppnp || 'Pengguna';
-    }
-    renderInfoUser();
+  const JENIS = {
+    eksternal:  { ikon: 'public',          kelas: 'bg-sky-100 text-sky-700' },
+    internal:   { ikon: 'apartment',       kelas: 'bg-violet-100 text-violet-700' },
+    permohonan: { ikon: 'drive_file_move', kelas: 'bg-amber-100 text-amber-700' }
+  };
 
-    const th = new Date().getFullYear();
-    for (let t = th; t >= th - 5; t--) {
-        const o = document.createElement('option'); o.value = t; o.textContent = t;
-        $('tahun').appendChild(o);
-    }
-    $('cari').addEventListener('keydown', e => { if (e.key === 'Enter') muat(1); });
+  let halaman = 1, totalHal = 1, permintaanKe = 0;
 
-    function el(tag, cls, teks) {
-        const x = document.createElement(tag);
-        if (cls) x.className = cls;
-        if (teks !== undefined) x.textContent = teks;
-        return x;
-    }
+  // ---------- Helper DOM ----------
+  function el(tag, cls, teks) {
+    const x = document.createElement(tag);
+    if (cls) x.className = cls;
+    if (teks !== undefined && teks !== null) x.textContent = teks;
+    return x;
+  }
+  function ikon(nama, cls) { return el('span', 'material-icons-round ' + (cls || ''), nama); }
 
-    async function muat(hal) {
-        halaman = Math.max(1, hal);
-        const p = new URLSearchParams({ nip: user.nip, q: $('cari').value.trim(), halaman, per_halaman: 10 });
-        if ($('tahun').value) p.set('tahun', $('tahun').value);
+  // Teks dengan kata kunci disorot (aman: tanpa innerHTML)
+  function sorot(teks, kata) {
+    const frag = document.createDocumentFragment();
+    teks = teks == null ? '' : String(teks);
+    if (!kata) { frag.appendChild(document.createTextNode(teks)); return frag; }
+    const re = new RegExp('(' + kata.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+    teks.split(re).forEach((bagian, i) => {
+      if (i % 2 === 1) frag.appendChild(el('mark', 'sorot', bagian));
+      else if (bagian) frag.appendChild(document.createTextNode(bagian));
+    });
+    return frag;
+  }
 
-        $('daftar').innerHTML = '<div class="kosong">⏳ Memuat...</div>';
-        try {
-            const res = await fetch('/api/arsip?' + p);
-            if (!res.ok) throw new Error();
-            const d = await res.json();
-            totalHal = Math.max(1, Math.ceil(d.total / d.per_halaman));
-            render(d);
-        } catch (e) {
-            $('daftar').innerHTML = '<div class="kosong" style="color:#e74c3c;">Gagal memuat arsip.</div>';
-        }
-    }
-
-    function render(d) {
-        $('info').textContent = d.total + ' surat diarsipkan';
-        $('infoHal').textContent = 'Halaman ' + d.halaman + ' / ' + totalHal;
-        $('btnPrev').disabled = d.halaman <= 1;
-        $('btnNext').disabled = d.halaman >= totalHal;
-
-        const wadah = $('daftar');
-        wadah.innerHTML = '';
-        if (!d.item.length) { wadah.appendChild(el('div', 'kosong', 'Tidak ada arsip yang ditemukan.')); return; }
-
-        d.item.forEach(a => {
-            const k = el('div', 'card');
-            const j = el('div', 'judul');
-            const b = el('span', 'badge', a.jenis_surat.toUpperCase());
-            b.style.background = WARNA[a.jenis_surat] || '#34495e';
-            j.append(b, document.createTextNode(a.perihal));
-            k.appendChild(j);
-
-            const m = el('div', 'meta');
-            m.textContent = [
-                a.asal_surat ? 'Asal: ' + a.asal_surat : null,
-                a.nomor_surat ? 'Nomor: ' + a.nomor_surat : null,
-                a.tanggal_diterima ? 'Diterima: ' + a.tanggal_diterima : null,
-                'Diarsipkan oleh ' + a.pengarsip + ' pada ' + (a.tanggal_arsip || '-') + ' WIB'
-            ].filter(Boolean).join(' • ');
-            k.appendChild(m);
-
-            k.appendChild(el('div', 'alasan', 'Alasan arsip: ' + (a.alasan || '-')));
-            k.appendChild(el('div', 'jalur', 'Jalur disposisi: ' + a.jalur.join(' → ')));
-
-            if (a.url_berkas) {
-                const aksi = el('div', 'aksi');
-                const l = el('a', '', '📄 Lihat Surat');
-                l.href = a.url_berkas; l.target = '_blank';
-                aksi.appendChild(l); k.appendChild(aksi);
-            }
-            wadah.appendChild(k);
-        });
-    }
-
+  // ---------- Init filter ----------
+  const thSekarang = new Date().getFullYear();
+  for (let t = thSekarang; t >= thSekarang - 5; t--) {
+    const o = el('option', '', t); o.value = t; $('tahun').appendChild(o);
+  }
+  $('cari').addEventListener('keydown', e => { if (e.key === 'Enter') muat(1); });
+  $('btnCari').addEventListener('click', () => muat(1));
+  $('jenis').addEventListener('change', () => muat(1));
+  $('tahun').addEventListener('change', () => muat(1));
+  $('btnReset').addEventListener('click', () => {
+    $('cari').value = ''; $('jenis').value = ''; $('tahun').value = '';
     muat(1);
+  });
+
+  // ---------- Skeleton ----------
+  function tampilSkeleton() {
+    const wadah = $('daftar');
+    wadah.innerHTML = '';
+    $('paging').innerHTML = '';
+    for (let i = 0; i < 4; i++) {
+      const k = el('div', 'bg-white rounded-2xl border border-slate-200 p-5 space-y-3');
+      k.innerHTML =
+        '<div class="flex items-center gap-3">' +
+          '<div class="skeleton h-6 w-24 rounded-full"></div>' +
+          '<div class="skeleton h-5 w-2/3 rounded-md"></div>' +
+        '</div>' +
+        '<div class="skeleton h-3.5 w-full rounded-md"></div>' +
+        '<div class="skeleton h-3.5 w-4/5 rounded-md"></div>' +
+        '<div class="skeleton h-12 w-full rounded-xl"></div>' +
+        '<div class="flex gap-2">' +
+          '<div class="skeleton h-8 w-28 rounded-full"></div>' +
+          '<div class="skeleton h-8 w-28 rounded-full"></div>' +
+          '<div class="skeleton h-8 w-28 rounded-full"></div>' +
+        '</div>';
+      wadah.appendChild(k);
+    }
+  }
+
+  // ---------- Muat data ----------
+  async function muat(hal) {
+    halaman = Math.max(1, hal || 1);
+    const kata = $('cari').value.trim();
+    const p = new URLSearchParams({ nip: user.nip, q: kata, halaman, per_halaman: PER_HALAMAN });
+    if ($('tahun').value) p.set('tahun', $('tahun').value);
+    if ($('jenis').value) p.set('jenis', $('jenis').value);
+
+    const ke = ++permintaanKe;
+    $('info').textContent = 'Memuat arsip...';
+    tampilSkeleton();
+
+    try {
+      const res = await fetch('/api/arsip?' + p);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const d = await res.json();
+      if (ke !== permintaanKe) return; // abaikan respons usang
+      totalHal = Math.max(1, Math.ceil(d.total / d.per_halaman));
+      render(d, kata);
+    } catch (e) {
+      if (ke !== permintaanKe) return;
+      renderGalat();
+    }
+  }
+
+  function renderGalat() {
+    $('info').textContent = '';
+    $('paging').innerHTML = '';
+    const wadah = $('daftar');
+    wadah.innerHTML = '';
+    const box = el('div', 'bg-white rounded-2xl border border-merah-100 p-10 text-center');
+    const lingkar = el('div', 'w-14 h-14 mx-auto rounded-full bg-merah-50 text-merah-500 flex items-center justify-center mb-3');
+    lingkar.appendChild(ikon('error_outline', 'text-[28px]'));
+    const tombol = el('button',
+      'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-hijau-600 text-white hover:bg-hijau-700 active:scale-95 transition');
+    tombol.append(ikon('refresh', 'text-[18px]'), document.createTextNode('Coba lagi'));
+    tombol.addEventListener('click', () => muat(halaman));
+    box.append(lingkar,
+      el('p', 'font-bold text-slate-700', 'Gagal memuat arsip'),
+      el('p', 'text-sm text-slate-500 mt-1 mb-4', 'Periksa koneksi Anda lalu coba lagi.'),
+      tombol);
+    wadah.appendChild(box);
+  }
+
+  // ---------- Render ----------
+  function render(d, kata) {
+    $('info').textContent = d.total + ' surat diarsipkan';
+    const wadah = $('daftar');
+    wadah.innerHTML = '';
+
+    if (!d.item.length) {
+      const box = el('div', 'bg-white rounded-2xl border border-slate-200 p-12 text-center');
+      const lingkar = el('div', 'w-16 h-16 mx-auto rounded-full bg-hijau-50 text-hijau-600 flex items-center justify-center mb-3');
+      lingkar.appendChild(ikon('inventory_2', 'text-[32px]'));
+      box.append(lingkar,
+        el('p', 'font-bold text-slate-700', 'Tidak ada arsip yang ditemukan'),
+        el('p', 'text-sm text-slate-500 mt-1', 'Coba ubah kata kunci, jenis surat, atau tahun.'));
+      wadah.appendChild(box);
+      $('paging').innerHTML = '';
+      return;
+    }
+
+    d.item.forEach((a, i) => wadah.appendChild(buatKartu(a, kata, i)));
+    renderPaging(d.halaman);
+    if (window.AOS) AOS.refreshHard();
+  }
+
+  function metaItem(namaIkon, teks) {
+    const s = el('span', 'inline-flex items-center gap-1');
+    s.append(ikon(namaIkon, 'text-[16px] text-slate-400'), document.createTextNode(teks));
+    return s;
+  }
+
+  function buatKartu(a, kata, i) {
+    const jenis = (a.jenis_surat || '').toLowerCase();
+    const cfg = JENIS[jenis] || { ikon: 'description', kelas: 'bg-slate-100 text-slate-700' };
+
+    const k = el('article',
+      'group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-hijau-200 transition p-5');
+    k.setAttribute('data-aos', 'fade-up');
+    k.setAttribute('data-aos-delay', String(Math.min(i, 5) * 60));
+
+    // Judul + badge jenis
+    const kepala = el('div', 'flex flex-wrap items-start gap-x-3 gap-y-2');
+    const badge = el('span',
+      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold tracking-wide ' + cfg.kelas);
+    badge.append(ikon(cfg.ikon, 'text-[14px]'), document.createTextNode(jenis.toUpperCase() || 'SURAT'));
+    const judul = el('h3', 'flex-1 min-w-[200px] font-bold text-slate-800 leading-snug');
+    judul.appendChild(sorot(a.perihal, kata));
+    kepala.append(badge, judul);
+    k.appendChild(kepala);
+
+    // Meta
+    const meta = el('div', 'mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-slate-500');
+    if (a.asal_surat) {
+      const s = metaItem('business', 'Asal: ');
+      s.appendChild(sorot(a.asal_surat, kata));
+      meta.appendChild(s);
+    }
+    if (a.nomor_surat) {
+      const s = metaItem('tag', 'Nomor: ');
+      s.appendChild(sorot(a.nomor_surat, kata));
+      meta.appendChild(s);
+    }
+    if (a.tanggal_diterima) meta.appendChild(metaItem('event', 'Diterima: ' + a.tanggal_diterima));
+    meta.appendChild(metaItem('inventory_2',
+      'Diarsipkan oleh ' + (a.pengarsip || '-') + ' pada ' + (a.tanggal_arsip || '-') + ' WIB'));
+    k.appendChild(meta);
+
+    // Alasan
+    const alasan = el('div', 'mt-4 rounded-xl bg-slate-50 border-l-4 border-emas-500 px-4 py-3 text-sm text-slate-700');
+    alasan.appendChild(el('span', 'font-bold text-hijau-700', 'Alasan arsip: '));
+    alasan.appendChild(sorot(a.alasan || '-', kata));
+    k.appendChild(alasan);
+
+    // Jalur disposisi (stepper)
+    const jalur = Array.isArray(a.jalur) ? a.jalur : [];
+    if (jalur.length) {
+      const blok = el('div', 'mt-4');
+      blok.appendChild(el('p', 'text-[10px] font-semibold uppercase tracking-[.2em] text-slate-400 mb-2', 'Jalur disposisi'));
+      const baris = el('div', 'flex flex-wrap items-center gap-y-2');
+      jalur.forEach((nama, n) => {
+        const akhir = n === jalur.length - 1;
+        const chip = el('div',
+          'chip-jalur inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-xs font-semibold border ' +
+          (akhir ? 'bg-emas-500/10 border-emas-500 text-hijau-900' : 'bg-hijau-50 border-hijau-100 text-hijau-800'));
+        const no = el('span',
+          'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold ' +
+          (akhir ? 'bg-emas-500 text-hijau-900' : 'bg-hijau-600 text-white'), n + 1);
+        chip.append(no, document.createTextNode(nama));
+        baris.appendChild(chip);
+        if (!akhir) baris.appendChild(ikon('chevron_right', 'text-slate-300 text-[20px] mx-0.5'));
+      });
+      blok.appendChild(baris);
+      k.appendChild(blok);
+    }
+
+    // Aksi
+    if (a.url_berkas) {
+      const aksi = el('div', 'mt-4 pt-4 border-t border-slate-100 flex justify-end');
+      const l = el('a',
+        'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-hijau-600 text-white hover:bg-hijau-700 active:scale-95 transition');
+      l.href = a.url_berkas; l.target = '_blank'; l.rel = 'noopener';
+      l.append(ikon('picture_as_pdf', 'text-[18px]'), document.createTextNode('Lihat Surat'));
+      aksi.appendChild(l);
+      k.appendChild(aksi);
+    }
+    return k;
+  }
+
+  // ---------- Pagination nomor ----------
+  function daftarHalaman(sekarang, total) {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const s = new Set([1, total, sekarang, sekarang - 1, sekarang + 1]);
+    if (sekarang <= 3) { s.add(2); s.add(3); s.add(4); }
+    if (sekarang >= total - 2) { s.add(total - 1); s.add(total - 2); s.add(total - 3); }
+    const urut = [...s].filter(n => n >= 1 && n <= total).sort((a, b) => a - b);
+    const hasil = [];
+    urut.forEach((n, i) => {
+      if (i && n - urut[i - 1] > 1) hasil.push('...');
+      hasil.push(n);
+    });
+    return hasil;
+  }
+
+  function renderPaging(sekarang) {
+    const nav = $('paging');
+    nav.innerHTML = '';
+    if (totalHal <= 1) return;
+
+    const dasar = 'min-w-[40px] h-10 px-3 inline-flex items-center justify-center rounded-xl text-sm font-bold transition ';
+    const tombol = (isi, tujuan, nonaktif, aktif) => {
+      const b = el('button', dasar + (aktif
+        ? 'bg-hijau-600 text-white shadow'
+        : nonaktif
+          ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+          : 'bg-white border border-slate-200 text-slate-700 hover:bg-hijau-50 hover:border-hijau-200 active:scale-95'));
+      b.type = 'button';
+      if (typeof isi === 'string' && isi.startsWith('@')) b.appendChild(ikon(isi.slice(1), 'text-[20px]'));
+      else b.textContent = isi;
+      if (aktif) b.setAttribute('aria-current', 'page');
+      if (nonaktif || aktif) b.disabled = true;
+      else b.addEventListener('click', () => { muat(tujuan); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      return b;
+    };
+
+    nav.appendChild(tombol('@chevron_left', sekarang - 1, sekarang <= 1, false));
+    daftarHalaman(sekarang, totalHal).forEach(n => {
+      if (n === '...') nav.appendChild(el('span', 'px-1 text-slate-400 font-bold', '…'));
+      else nav.appendChild(tombol(n, n, false, n === sekarang));
+    });
+    nav.appendChild(tombol('@chevron_right', sekarang + 1, sekarang >= totalHal, false));
+  }
+
+  muat(1);
 </script>
-</body>
-</html>
+{% endblock %}

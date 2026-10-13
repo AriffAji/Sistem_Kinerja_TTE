@@ -555,7 +555,7 @@ def halaman_manajemen_surat(request: Request):
 
 @app.get("/profil", response_class=HTMLResponse)
 def halaman_profil(request: Request):
-    return templates.TemplateResponse(request=request, name="profil.html")
+    return templates.TemplateResponse(request=request, name="admin/profil.html")
 
 
 @app.get("/inbox", response_class=HTMLResponse)
@@ -5666,7 +5666,7 @@ def _rantai_disposisi(d, db: Session) -> list:
 
 @app.get("/arsip", response_class=HTMLResponse)
 def halaman_arsip(request: Request):
-    return templates.TemplateResponse(request=request, name="arsip.html")
+    return templates.TemplateResponse(request=request, name="admin/arsip.html")
 
 
 @app.get("/api/arsip")

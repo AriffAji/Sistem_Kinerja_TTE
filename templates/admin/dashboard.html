@@ -60,18 +60,27 @@
 {% endblock %}
 
 {% block content %}
-  <!-- Sapaan -->
-  <div class="mb-6" data-aos="fade-down">
-    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="judulSapaan">
-      <span class="skeleton inline-block h-6 w-72 align-middle"></span>
-    </h2>
-    <p id="sapaan" class="text-sm text-slate-500 mt-1">
-      <span class="skeleton inline-block h-3 w-80 align-middle"></span>
-    </p>
-  </div>
-
-  <div class="banner" id="bannerTTE" style="display:none;"></div>
-  <div class="banner" id="bannerDelegasi" style="display:none;"></div>
+  
+  <!-- Banner info -->
+  <section data-aos="fade-up"
+          class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-hijau-600 to-hijau-800 text-white p-6 shadow-lg mb-8">
+    <div class="absolute inset-0 bg-pola-hijau"></div>
+    <div class="absolute -right-6 -bottom-8 opacity-10">
+      <span class="material-icons-round" style="font-size:160px">dashboard</span>
+    </div>
+    <div class="relative flex items-start gap-4">
+      <div class="w-12 h-12 shrink-0 rounded-xl bg-emas-500 text-hijau-900 flex items-center justify-center">
+        <span class="material-icons-round">dashboard</span>
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold leading-tight">Ringkasan pekerjaan Anda hari ini</h2>
+        <p class="text-sm text-white/75 mt-1">
+          Pantau surat yang perlu ditindak, tugas, rapat, dan nilai kinerja Anda dalam satu tempat.
+        </p>
+      </div>
+    </div>
+  </section>
+  
 
   <!-- Statistik -->
   <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8" data-aos="fade-up">

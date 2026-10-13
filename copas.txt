@@ -1,0 +1,2844 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inbox Disposisi — PPNP</title>
+    <style>
+        body { font-family:'Segoe UI',sans-serif; margin:0; background:#f4f7f6; display:flex; height:100vh; }
+
+        /* ---------- Sidebar ---------- */
+        .sidebar { width:250px; background:#2c3e50; color:white; padding-top:20px; display:flex; flex-direction:column; }
+        .sidebar h2 { text-align:center; font-size:1.2rem; margin-bottom:15px; border-bottom:1px solid #34495e; padding-bottom:15px; }
+        .sidebar a { color:#ecf0f1; text-decoration:none; padding:15px 20px; display:block; border-left:4px solid transparent; transition:0.3s; }
+        .sidebar a:hover, .sidebar a.aktif { background:#34495e; border-left:4px solid #3498db; }
+        .logout-btn { margin-top:auto; background:#c0392b; text-align:center; padding:15px; cursor:pointer; }
+        .logout-btn:hover { background:#e74c3c; }
+        .user-info-box { margin:0 15px 20px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+            border-radius:10px; padding:14px; display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#3498db,#2ecc71);
+            display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:800; color:white; flex-shrink:0; }
+        .user-detail .user-nama    { font-size:0.85rem; font-weight:700; color:#ecf0f1; }
+        .user-detail .user-jabatan { font-size:0.72rem; color:#95a5a6; margin-top:2px; }
+        .user-detail .user-role-badge { display:inline-block; margin-top:5px; background:rgba(52,152,219,0.3);
+            border:1px solid rgba(52,152,219,0.5); color:#74b9ff; font-size:0.65rem; font-weight:700;
+            padding:2px 7px; border-radius:20px; text-transform:uppercase; }
+
+        /* ---------- Konten ---------- */
+        .main-content { flex:1; padding:30px; overflow-y:auto; }
+        .card { background:white; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-bottom:20px; overflow:hidden; }
+        .card-header { padding:16px 24px; background:linear-gradient(135deg,#2c3e50,#34495e); color:white;
+            display:flex; align-items:center; justify-content:space-between; }
+        .card-header h3 { margin:0; font-size:1rem; }
+        .btn-refresh { background:rgba(255,255,255,0.15); color:white; border:none; border-radius:6px;
+            padding:6px 16px; cursor:pointer; font-size:0.82rem; }
+        .filter-select { padding:6px 10px; border-radius:6px; border:none; font-size:0.8rem; }
+
+        table { width:100%; border-collapse:collapse; }
+        th, td { border:1px solid #eee; padding:12px 16px; text-align:left; vertical-align:middle; }
+        th { background:#f8f9fa; color:#34495e; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; }
+
+        .badge { padding:3px 10px; border-radius:12px; font-size:0.72rem; font-weight:700; color:white; display:inline-block; }
+        .badge-eksternal  { background:#2980b9; }
+        .badge-internal   { background:#8e44ad; }
+        .badge-permohonan { background:#e67e22; }
+
+        .btn-preview { padding:6px 14px; background:#34495e; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; margin-right:5px; }
+        .btn-preview:hover { background:#2c3e50; }
+        .btn-ttd   { padding:6px 14px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:700; }
+        .btn-ttd:hover { background:#c0392b; }
+        .btn-paraf { padding:6px 14px; background:#16a085; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:700; }
+        .btn-paraf:hover { background:#1abc9c; }
+        .btn-disposisi { padding:6px 14px; background:#2980b9; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:700; margin-left:5px; }
+        .btn-disposisi:hover { background:#21618c; }
+        .btn-tugaskan { padding:6px 14px; background:#e67e22; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:700; margin-left:5px; }
+        .btn-tugaskan:hover { background:#ca6f1e; }
+        a.btn-preview { text-decoration:none; display:inline-block; }
+
+        /* Kolom aksi rapi */
+        .aksi-wrap { display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-width:230px; max-width:340px; }
+        .aksi-wrap .btn-preview, .aksi-wrap .btn-ttd, .aksi-wrap .btn-paraf,
+        .aksi-wrap .btn-disposisi, .aksi-wrap .btn-tugaskan { margin:0; white-space:nowrap; }
+        .aksi-info { flex-basis:100%; white-space:normal; font-size:0.72rem; line-height:1.4; margin:0; }
+
+        /* ---------- Modal ---------- */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:9999;
+            display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden;
+            transition:opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.aktif { opacity:1; visibility:visible; }
+        .modal-box { background:white; border-radius:16px; width:460px; max-width:95vw; box-shadow:0 25px 60px rgba(0,0,0,0.3);
+            transform:translateY(20px) scale(0.97); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); overflow:hidden; }
+        .modal-overlay.aktif .modal-box { transform:translateY(0) scale(1); }
+        .modal-header { background:linear-gradient(135deg,#c0392b,#e74c3c); padding:20px 24px; display:flex; align-items:center; gap:14px; }
+        .modal-header.paraf { background:linear-gradient(135deg,#16a085,#1abc9c); }
+        .modal-header h3 { margin:0; color:white; font-size:1.05rem; }
+        .modal-header p  { margin:4px 0 0; color:rgba(255,255,255,0.75); font-size:0.8rem; }
+        .icon-besar { font-size:1.8rem; }
+        .modal-body { padding:24px; }
+        .modal-footer { padding:0 24px 20px; display:flex; gap:10px; justify-content:flex-end; }
+        .btn-batal { background:#ecf0f1; color:#2c3e50; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; font-weight:700; }
+        .btn-konfirmasi { background:#e74c3c; color:white; border:none; border-radius:8px; padding:10px 24px; cursor:pointer; font-weight:700; }
+        .btn-konfirmasi:hover { background:#c0392b; }
+        .btn-konfirmasi.paraf { background:#16a085; }
+        .btn-konfirmasi.paraf:hover { background:#1abc9c; }
+        .btn-konfirmasi:disabled { opacity:0.6; cursor:not-allowed; }
+
+        .lbl { font-size:0.82rem; font-weight:700; color:#34495e; display:block; margin-bottom:6px; }
+        .kotak-info { background:#f8f9fa; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:0.84rem; color:#2c3e50; line-height:1.7; }
+        .kotak-kuning { background:#fff8e1; border-left:4px solid #f39c12; border-radius:4px; padding:10px 14px; margin-bottom:14px; font-size:0.8rem; color:#7f6000; line-height:1.5; }
+        .baris-item { display:flex; justify-content:space-between; align-items:center; gap:8px; background:white;
+            border:1px solid #e0e6e4; border-radius:8px; padding:7px 12px; margin-bottom:5px; }
+        .btn-x { background:#fdf2f2; color:#e74c3c; border:1px solid #fcc; border-radius:4px; padding:2px 8px; cursor:pointer; font-size:0.75rem; font-weight:700; }
+
+        .pin-wrapper { display:flex; gap:10px; justify-content:center; margin:16px 0; }
+        .pin-digit { width:48px; height:56px; border:2px solid #ddd; border-radius:10px; text-align:center;
+            font-size:1.4rem; font-weight:700; outline:none; transition:border 0.2s; }
+        .pin-digit:focus { border-color:#e74c3c; box-shadow:0 0 0 3px rgba(231,76,60,0.15); }
+        .pin-digit.paraf:focus { border-color:#16a085; box-shadow:0 0 0 3px rgba(22,160,133,0.15); }
+        .input-catatan { width:100%; padding:10px; border:1.5px solid #ddd; border-radius:8px; font-size:0.88rem;
+            resize:vertical; box-sizing:border-box; font-family:inherit; }
+        .input-catatan:focus { outline:none; border-color:#3498db; }
+        .input-pin { text-align:center; letter-spacing:10px; font-size:1.3rem; }
+        .input-nomor { width:100%; padding:10px; border:1.5px solid #f39c12; border-radius:8px; font-size:0.9rem; box-sizing:border-box; font-family:inherit; }
+        .input-nomor:focus { outline:none; border-color:#e67e22; }
+        .select-modal { width:100%; padding:10px; border:1.5px solid #ddd; border-radius:8px; font-size:0.9rem; }
+
+        /* ---------- Notifikasi ---------- */
+        .notif-container { position:fixed; top:20px; right:20px; z-index:10000; display:flex; flex-direction:column; gap:10px; }
+        .notif { display:flex; align-items:center; gap:10px; padding:12px 20px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15);
+            font-weight:600; font-size:0.9rem; animation:slideIn 0.3s ease; min-width:250px; }
+        .notif.sukses { background:#2ecc71; color:white; }
+        .notif.gagal  { background:#e74c3c; color:white; }
+        @keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+
+        .kosong-info { text-align:center; padding:40px; color:#95a5a6; }
+        .kosong-info .icon { font-size:3rem; display:block; margin-bottom:10px; }
+
+        /* ---------- Tab ---------- */
+        .tab-inbox { padding:10px 20px; border:none; background:#ecf0f1; cursor:pointer; font-size:0.88rem;
+            border-radius:8px 8px 0 0; color:#2c3e50; font-weight:700; transition:0.2s; }
+        .tab-inbox.aktif { background:white; border-bottom:3px solid #3498db; color:#3498db; box-shadow:0 -2px 8px rgba(0,0,0,0.05); }
+
+        .tipe-aksi-toggle { display:flex; gap:8px; margin-bottom:16px; }
+        .tipe-aksi-btn { flex:1; padding:10px; border:2px solid #ddd; border-radius:8px; background:white; color:#7f8c8d;
+            cursor:pointer; font-weight:700; font-size:0.85rem; }
+        .tipe-aksi-btn.aktif-disposisi { background:#2980b9; border-color:#2980b9; color:white; }
+        .tipe-aksi-btn.aktif-tugaskan  { background:#e67e22; border-color:#e67e22; color:white; }
+
+        /* ---------- Timeline ---------- */
+        .timeline { list-style:none; padding:0; margin:0; position:relative; }
+        .timeline::before { content:''; position:absolute; left:18px; top:0; bottom:0; width:2px; background:#e0e6ea; }
+        .timeline-item { display:flex; gap:16px; margin-bottom:20px; position:relative; }
+        .timeline-dot { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-size:1rem; flex-shrink:0; z-index:1; }
+        .timeline-dot.selesai  { background:#eafaf1; border:2px solid #2ecc71; }
+        .timeline-dot.menunggu { background:#fef9e7; border:2px solid #f39c12; }
+        .timeline-dot.ditolak  { background:#fdf2f2; border:2px solid #e74c3c; }
+        .timeline-dot.awal     { background:#eaf4fd; border:2px solid #3498db; }
+        .timeline-dot.tujuan   { background:#f4f0fb; border:2px solid #8e44ad; }
+        .timeline-konten { flex:1; }
+        .tl-judul    { font-weight:700; font-size:0.9rem; color:#2c3e50; }
+        .tl-subjudul { font-size:0.78rem; color:#7f8c8d; margin-top:2px; }
+        .tl-waktu    { font-size:0.72rem; color:#bdc3c7; margin-top:3px; }
+        .tl-catatan  { font-size:0.78rem; color:#7f8c8d; background:#f8f9fa; border-left:3px solid #ddd;
+            padding:4px 10px; border-radius:0 4px 4px 0; margin-top:6px; }
+
+        /* ---------- Dropdown dengan pencarian ---------- */
+        .ss-wrap { position:relative; width:100%; }
+        .ss-input { width:100%; padding:10px; border:1.5px solid #ddd; border-radius:8px; font-size:0.9rem; box-sizing:border-box; font-family:inherit; }
+        .ss-input:focus { outline:none; border-color:#3498db; }
+        .ss-list { position:fixed; background:white; border:1px solid #ccc; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.18); overflow-y:auto; z-index:20000; display:none; }
+        .ss-item { padding:8px 12px; font-size:0.85rem; cursor:pointer; color:#2c3e50; }
+        .ss-item:hover, .ss-item.aktif { background:#eaf4fd; }
+        .ss-group { padding:6px 12px; font-size:0.72rem; font-weight:700; color:#95a5a6; background:#f8f9fa; text-transform:uppercase; }
+        .ss-kosong { padding:12px; text-align:center; color:#95a5a6; font-size:0.82rem; }
+    
+        /* Riwayat berkelompok */
+        .grup-baris td { background:#f1f5f9; border-top:2px solid #cfd8dc; cursor:pointer; padding:12px 16px; }
+        .grup-baris:hover td { background:#e8eef3; }
+        .grup-judul { font-weight:800; color:#2c3e50; font-size:0.92rem; }
+        .grup-meta { font-size:0.74rem; color:#7f8c8d; margin-top:3px; }
+        .caret { display:inline-block; width:18px; transition:transform .2s; color:#7f8c8d; }
+        .grup-baris.terbuka .caret { transform:rotate(90deg); }
+        .langkah-baris td:first-child { border-left:4px solid #3498db; }
+        .stepper { display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:7px; }
+        .tahap { font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; }
+        .tahap-selesai  { background:#eafaf1; color:#1e8449; border:1px solid #2ecc71; }
+        .tahap-berjalan { background:#fef9e7; color:#b9770e; border:1px solid #f39c12; }
+        .tahap-belum    { background:#f4f6f7; color:#95a5a6; border:1px solid #d5dbdb; }
+        .menunggu-box { margin-top:8px; background:#fff8e1; border-left:4px solid #f39c12; border-radius:0 6px 6px 0; padding:7px 12px; font-size:0.76rem; color:#7f6000; }
+        .menunggu-box summary { cursor:pointer; font-weight:700; color:#b9770e; }
+        .menunggu-item { margin-top:5px; line-height:1.45; color:#2c3e50; }
+        .menunggu-item .hari { color:#c0392b; font-weight:700; }
+
+        /* Pohon tracking */
+.pn { margin:0; }
+.pn > summary { list-style:none; cursor:pointer; }
+.pn > summary::-webkit-details-marker { display:none; }
+.pn-anak { margin-left:17px; padding-left:18px; border-left:2px dashed #cfd8dc; }
+.pn-kepala { display:flex; gap:10px; align-items:flex-start; padding:7px 0; }
+.pn-dot { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; background:#f4f6f7; border:2px solid #d5dbdb; }
+.pn-dot.pn-selesai  { background:#eafaf1; border-color:#2ecc71; }
+.pn-dot.pn-berjalan { background:#fef9e7; border-color:#f39c12; }
+.pn-dot.pn-batal    { background:#fdf2f2; border-color:#e74c3c; }
+.pn-dot.pn-info     { background:#eaf4fd; border-color:#3498db; }
+.pn-isi { min-width:0; flex:1; }
+.pn-judul { font-weight:700; font-size:0.86rem; color:#2c3e50; }
+.pn-sub { font-size:0.75rem; color:#7f8c8d; margin-top:2px; line-height:1.4; }
+.pn-tgl { font-size:0.7rem; color:#b2bec3; margin-top:2px; }
+.pn-badge { font-size:0.62rem; font-weight:700; padding:1px 7px; border-radius:9px; margin-left:6px; vertical-align:middle; }
+.pn-badge.pn-selesai  { background:#2ecc71; color:white; }
+.pn-badge.pn-berjalan { background:#f39c12; color:white; }
+.pn-badge.pn-batal    { background:#e74c3c; color:white; }
+.pn-badge.pn-belum    { background:#bdc3c7; color:white; }
+.pn-badge.pn-info     { background:#3498db; color:white; }
+.pn-aksi { margin-top:5px; display:flex; flex-wrap:wrap; gap:5px; }
+.pn-aksi .btn-preview { padding:3px 10px; font-size:0.72rem; margin:0; }
+.pn-daun .pn-kepala { padding-left:0; }
+.pn-caret { width:14px; flex-shrink:0; color:#95a5a6; font-size:0.65rem; margin-top:10px; transition:transform .15s; }
+details.pn[open] > summary .pn-caret { transform:rotate(90deg); }
+
+    </style>
+</head>
+<body>
+
+<div id="notif-container" class="notif-container"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>Sistem Kinerja<br>PPNP</h2>
+    <div class="user-info-box">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-detail">
+            <div class="user-nama" id="userNama">Memuat...</div>
+            <div class="user-jabatan" id="userJabatan">—</div>
+            <span class="user-role-badge" id="userRole">—</span>
+        </div>
+    </div>
+    <a href="/dashboard">Dashboard Utama</a>
+    <a href="/surat">Manajemen Surat</a>
+    <a href="/inbox" class="aktif">📥 Inbox Disposisi</a>
+    <a href="/arsip">🗄️ Arsip Surat</a>
+    <a href="/profil">👤 Profil & TTE Saya</a>
+    <div class="logout-btn" onclick="logout()">Keluar Aplikasi</div>
+</div>
+
+<!-- KONTEN UTAMA -->
+<div class="main-content">
+    <h2>📥 Inbox Disposisi</h2>
+
+    <div style="display:flex; gap:5px;">
+        <button class="tab-inbox aktif" onclick="gantiTabInbox('perlutindakan', this)">
+            🔔 Perlu Tindakan
+            <span id="badgePerluTindakan" style="background:#e74c3c; color:white; padding:1px 7px; border-radius:10px; font-size:0.7rem; margin-left:6px; display:none;">0</span>
+        </button>
+        <button class="tab-inbox" onclick="gantiTabInbox('masuk', this)">
+            📬 Surat Diterima
+            <span id="badgeMasuk" style="background:#2ecc71; color:white; padding:1px 7px; border-radius:10px; font-size:0.7rem; margin-left:6px; display:none;">0</span>
+        </button>
+        <button class="tab-inbox" onclick="gantiTabInbox('riwayat', this)">📜 Riwayat Saya</button>
+        <button class="tab-inbox" id="tabBtnSemuaKasus" style="display:none;" onclick="gantiTabInbox('semuakasus', this)">🏛️ Semua Kasus</button>
+    </div>
+
+    <!-- TAB: PERLU TINDAKAN -->
+    <div id="tabPerluTindakan" class="card" style="border-radius:0 8px 8px 8px;">
+        <div class="card-header">
+            <h3>Item yang Membutuhkan Tindakan Anda</h3>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <select id="filterPerluTindakan" class="filter-select" onchange="renderTabelPerluTindakan()">
+                    <option value="semua">Semua Jenis</option>
+                    <option value="tte">✍️ TTE / Paraf</option>
+                    <option value="notulen_ttd">🔏 TTE Notulensi</option>
+                    <option value="disposisi_baru">📋 Disposisi Baru</option>
+                    <option value="disposisi_lanjut">📤 Disposisi Lanjutan</option>
+                    <option value="tugas_lapor">📝 Tugas / Laporan / Rapat</option>
+                    <option value="tugas_nilai">⭐ Perlu Dinilai</option>
+                </select>
+                <button class="btn-refresh" onclick="muatPerluTindakan()">🔄 Refresh</button>
+            </div>
+        </div>
+        <table>
+            <thead><tr><th>Tanggal</th><th>Jenis Aksi</th><th>Perihal</th><th>Dari / Perintah</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelPerluTindakan">
+                <tr><td colspan="5"><div class="kosong-info"><span class="icon">⏳</span>Memuat data...</div></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB: SURAT DITERIMA -->
+    <div id="tabMasuk" class="card" style="border-radius:0 8px 8px 8px; display:none;">
+        <div class="card-header">
+            <h3>Surat Masuk & Diterima</h3>
+            <button class="btn-refresh" onclick="muatSuratMasuk()">🔄 Refresh</button>
+        </div>
+        <table>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Perihal</th><th>Dari / Asal</th><th>Keterangan</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelSuratMasuk">
+                <tr><td colspan="6"><div class="kosong-info"><span class="icon">📬</span>Memuat data...</div></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB: RIWAYAT SAYA -->
+    <div id="tabRiwayatSaya" class="card" style="border-radius:0 8px 8px 8px; display:none;">
+        <div class="card-header" style="background:linear-gradient(135deg,#2c3e50,#7f8c8d);">
+            <h3>Riwayat Seluruh Aktivitas Saya</h3>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <select id="filterRiwayat" class="filter-select" onchange="renderTabelRiwayat()">
+                    <option value="semua">Semua Jenis</option>
+                    <option value="tte">✍️ TTE / Paraf</option>
+                    <option value="disposisi">📤 Disposisi</option>
+                    <option value="tugas">📝 Tugas</option>
+                    <option value="nilai_diberikan">⭐ Nilai Diberikan</option>
+                    <option value="nilai_diterima">🌟 Nilai Diterima</option>
+                </select>
+                <button class="btn-refresh" onclick="muatRiwayatSayaLengkap()">🔄 Refresh</button>
+            </div>
+        </div>
+        <table>
+            <thead><tr><th>Tanggal</th><th>Langkah</th><th>Pihak Terkait</th><th>Catatan</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelRiwayatSaya">
+                <tr><td colspan="5"><div class="kosong-info"><span class="icon">📜</span>Memuat data...</div></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB: SEMUA KASUS (Direktur) -->
+    <div id="tabSemuaKasus" class="card" style="border-radius:0 8px 8px 8px; display:none;">
+        <div class="card-header" style="background:linear-gradient(135deg,#2c3e50,#8e44ad);">
+            <h3>Seluruh Kasus Surat (akses Direktur)</h3>
+            <button class="btn-refresh" onclick="muatSemuaKasus()">🔄 Refresh</button>
+        </div>
+        <table>
+            <thead><tr><th>Tanggal</th><th>Kasus</th><th>Progres</th><th>Sedang Menunggu</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelSemuaKasus">
+                <tr><td colspan="5"><div class="kosong-info"><span class="icon">🏛️</span>Memuat data...</div></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>  <!-- penutup main-content -->
+
+<!-- ============================================================ -->
+<!-- MODAL-MODAL                                                  -->
+<!-- ============================================================ -->
+
+<!-- MODAL PIN TTE / PARAF -->
+<div class="modal-overlay" id="modalTTD">
+    <div class="modal-box">
+        <div class="modal-header" id="modalTTDHeader">
+            <div>
+                <h3 id="modalTTDJudul">Konfirmasi Tanda Tangan</h3>
+                <p id="modalTTDSubjudul">Masukkan PIN TTE untuk melanjutkan</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="kotak-info">
+                <div style="font-size:0.72rem; color:#95a5a6; text-transform:uppercase; font-weight:700; margin-bottom:3px;">Perihal Surat</div>
+                <div id="modalTTDPerihal" style="font-weight:600;">—</div>
+            </div>
+            <div id="wrapNomorSuratInbox" style="display:none; margin-bottom:16px;">
+                <div class="kotak-kuning">📋 Anda adalah penandatangan akhir. Mohon isi nomor surat sebelum TTE.</div>
+                <label class="lbl">Nomor Surat:</label>
+                <input type="text" id="inputNomorSuratInbox" class="input-nomor" placeholder="Contoh: 001/PPNP/ST/IX/2026">
+            </div>
+            <div id="wrapPinTTD">
+                <div style="text-align:center; margin-bottom:8px; font-size:0.85rem; color:#7f8c8d;">Masukkan PIN TTE 6 digit Anda:</div>
+                <div class="pin-wrapper">
+                    <input class="pin-digit" id="m1" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m2')" autocomplete="off">
+                    <input class="pin-digit" id="m2" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m3')" onkeydown="hapusPin(event,this,'m1')" autocomplete="off">
+                    <input class="pin-digit" id="m3" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m4')" onkeydown="hapusPin(event,this,'m2')" autocomplete="off">
+                    <input class="pin-digit" id="m4" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m5')" onkeydown="hapusPin(event,this,'m3')" autocomplete="off">
+                    <input class="pin-digit" id="m5" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'m6')" onkeydown="hapusPin(event,this,'m4')" autocomplete="off">
+                    <input class="pin-digit" id="m6" maxlength="1" type="password" inputmode="numeric" onkeydown="hapusPin(event,this,'m5')" autocomplete="off">
+                </div>
+                <div style="margin-top:12px;">
+                    <label class="lbl">Catatan (opsional):</label>
+                    <textarea class="input-catatan" id="modalCatatan" rows="2" placeholder="Catatan atau keterangan tambahan..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalTTD()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiTTD" onclick="konfirmasiTTD()">✅ Konfirmasi</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KOREKSI PENUGASAN (pemberi tugas) -->
+<div class="modal-overlay" id="modalKoreksiTugas">
+    <div class="modal-box">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#e67e22);">
+            <div>
+                <h3 id="koreksiJudul">✏️ Koreksi Tugas</h3>
+                <p id="koreksiPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div id="koreksiWrapEdit">
+                <label class="lbl">Deskripsi Tugas:</label>
+                <textarea class="input-catatan" id="koreksiDeskripsi" rows="4" style="margin-bottom:14px;"></textarea>
+                <label class="lbl">Deadline (opsional):</label>
+                <input type="date" id="koreksiDeadline" class="input-catatan">
+            </div>
+            <div id="koreksiWrapGanti" style="display:none;">
+                <div class="kotak-info">Penerima saat ini: <strong id="koreksiPenerimaLama">—</strong></div>
+                <label class="lbl">Penerima Baru:</label>
+                <select id="selectPenerimaKoreksi" class="select-modal"><option value="">-- Memuat... --</option></select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupKoreksiTugas()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiKoreksi" onclick="konfirmasiKoreksiTugas()" style="background:#e67e22;">💾 Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL POHON TRACKING -->
+<div class="modal-overlay" id="modalPohon">
+    <div class="modal-box" style="width:760px;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#27ae60);">
+            <div class="icon-besar">🌳</div>
+            <div>
+                <h3>Alur Kasus Surat</h3>
+                <p id="pohonJudul">—</p>
+            </div>
+        </div>
+        <div class="modal-body" style="max-height:72vh; overflow-y:auto;">
+            <div id="pohonRingkas" style="margin-bottom:12px;"></div>
+            <div id="pohonIsi">Memuat...</div>
+            <div style="font-size:0.7rem; color:#95a5a6; margin-top:12px;">
+                ✅ selesai &nbsp; ⏳ berjalan &nbsp; ○ belum &nbsp; ❌ ditolak. Klik node bercabang untuk melipat/membuka.
+                Notulen hanya terlihat oleh pimpinan rapat dan Direktur.
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn-batal" onclick="tutupPohon()">Tutup</button></div>
+    </div>
+</div>
+
+<!-- MODAL TRACKING SURAT -->
+<div class="modal-overlay" id="modalTracking">
+    <div class="modal-box" style="width:520px;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#3498db);">
+            <div class="icon-besar">🔍</div>
+            <div>
+                <h3>Riwayat Perjalanan Surat</h3>
+                <p id="trackingPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body" style="max-height:420px; overflow-y:auto;">
+            <ul class="timeline" id="timelineTracking"><li style="text-align:center; color:#95a5a6;">Memuat...</li></ul>
+        </div>
+        <div class="modal-footer"><button class="btn-batal" onclick="tutupTracking()">Tutup</button></div>
+    </div>
+</div>
+
+<!-- MODAL DISPOSISI / PENUGASAN -->
+<div class="modal-overlay" id="modalDisposisiTugas">
+    <div class="modal-box" style="width:500px;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#2980b9);">
+            <div>
+                <h3 id="judulModalDT">Teruskan / Tugaskan Surat</h3>
+                <p id="perihalModalDT">—</p>
+            </div>
+        </div>
+        <div class="modal-body" style="max-height:72vh; overflow-y:auto;">
+            <div class="tipe-aksi-toggle">
+                <button type="button" class="tipe-aksi-btn aktif-disposisi" id="btnPilihDisposisi" onclick="pilihTipeAksi('disposisi')">📤 Disposisi (Teruskan)</button>
+                <button type="button" class="tipe-aksi-btn" id="btnPilihTugaskan" onclick="pilihTipeAksi('penugasan')">📝 Beri Tugas Langsung</button>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label class="lbl">Pilih Penerima:</label>
+                <select id="selectPenerimaDT" class="select-modal"><option value="">-- Memuat daftar penerima... --</option></select>
+            </div>
+
+            <div id="wrapCatatanDisposisi" style="margin-bottom:16px;">
+                <div style="margin-bottom:8px;">
+                    <label class="lbl">Catatan untuk Penerima di Atas:</label>
+                    <textarea class="input-catatan" id="catatanDisposisiInput" rows="2" placeholder="Catatan singkat untuk penerima ini..."></textarea>
+                </div>
+                <button type="button" onclick="tambahPenerimaDisposisi()"
+                    style="width:100%; padding:9px; background:#eaf4fd; color:#2980b9; border:1.5px dashed #3498db; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.85rem; margin-bottom:10px;">
+                    ➕ Tambah Penerima ke Daftar
+                </button>
+                <div id="daftarPenerimaDisposisi"></div>
+            </div>
+
+            <div id="wrapFormPenugasan" style="display:none;">
+                <button type="button" onclick="tambahPenerimaTugas()"
+                    style="width:100%; padding:9px; background:#fdf2e9; color:#e67e22; border:1.5px dashed #e67e22; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.85rem; margin-bottom:10px;">
+                    ➕ Tambah Penerima ke Daftar
+                </button>
+                <div id="daftarPenerimaTugas" style="margin-bottom:14px;"></div>
+                <div style="margin-bottom:15px;">
+                    <label class="lbl">Deskripsi Tugas:</label>
+                    <textarea class="input-catatan" id="deskripsiTugasInput" rows="3" placeholder="Jelaskan apa yang harus dikerjakan..."></textarea>
+                </div>
+                <div>
+                    <label class="lbl">Deadline (opsional):</label>
+                    <input type="date" id="deadlineTugasInput" style="width:100%; padding:10px; border:1.5px solid #ddd; border-radius:8px; box-sizing:border-box;">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalDT()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiDT" onclick="konfirmasiDisposisiTugas()" style="background:#2980b9;">📤 Kirim Disposisi</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ARSIPKAN DISPOSISI -->
+<div class="modal-overlay" id="modalArsipkan">
+    <div class="modal-box">
+        <div class="modal-header" style="background:linear-gradient(135deg,#7f8c8d,#95a5a6);">
+            <div>
+                <h3>🗄️ Arsipkan Disposisi</h3>
+                <p>Surat ini cukup diarsipkan tanpa penugasan lebih lanjut</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="kotak-info">
+                <div style="font-size:0.72rem; color:#95a5a6; text-transform:uppercase; font-weight:700; margin-bottom:3px;">Perihal Surat</div>
+                <div id="arsipkanPerihal" style="font-weight:600;">—</div>
+            </div>
+            <label class="lbl">Catatan / Alasan Arsip:</label>
+            <textarea class="input-catatan" id="arsipkanCatatan" rows="3" placeholder='Contoh: "Dapat diarsipkan untuk bahan rujukan"'></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalArsipkan()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiArsipkan" onclick="konfirmasiArsipkan()" style="background:#7f8c8d;">🗄️ Arsipkan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LAPOR TUGAS -->
+<div class="modal-overlay" id="modalLaporTugas">
+    <div class="modal-box">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#e67e22);">
+            <div>
+                <h3>📝 Kirim Laporan Tugas</h3>
+                <p id="laporTugasPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <label class="lbl">Isi Laporan <small style="font-weight:normal; color:#95a5a6;">(opsional, ringkasan singkat)</small>:</label>
+            <textarea class="input-catatan" id="isiLaporanInput" rows="3" placeholder="Jelaskan hasil pengerjaan tugas..." style="margin-bottom:14px;"></textarea>
+
+            <div id="wrapSuratTugasLapor" style="display:none; background:#eafaf1; border-left:4px solid #27ae60; border-radius:4px; padding:10px 14px; margin-bottom:14px; font-size:0.83rem; color:#1e8449;"></div>
+
+            <label class="lbl">File Bukti <span id="tandaWajibBukti" style="color:#e74c3c;">*wajib</span>:</label>
+            <div class="kotak-kuning" style="margin-bottom:10px;">
+                📄 Wajib format <strong>PDF</strong>. Jika ada beberapa file (foto dokumentasi, laporan, dll),
+                gabungkan semuanya menjadi <strong>satu file PDF</strong> sebelum diupload.
+            </div>
+            <input type="file" id="fileBuktiInput" accept=".pdf" style="width:100%; margin-bottom:6px;">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalLaporTugas()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiLapor" onclick="konfirmasiLaporTugas()" style="background:#e67e22;">📤 Kirim Laporan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LAPOR PERJALANAN DINAS (susun / edit) -->
+<div class="modal-overlay" id="modalLaporPD">
+    <div class="modal-box" style="width:580px;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#e67e22);">
+            <div>
+                <h3 id="laporPDJudul">✈️ Laporan Perjalanan Dinas</h3>
+                <p id="laporPDPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
+            <div id="laporPDInfo" class="kotak-info">Memuat...</div>
+
+            <div style="font-size:0.78rem; font-weight:700; color:#34495e; margin-bottom:6px;">Peserta:</div>
+            <div id="laporPDPeserta" style="margin-bottom:14px;"></div>
+
+            <label class="lbl">Tempat <span style="color:#e74c3c;">*wajib</span>:</label>
+            <input type="text" id="laporPDTempat" class="input-catatan" style="margin-bottom:14px;" placeholder="Contoh: Hotel Pangeran, Pekanbaru">
+
+            <label class="lbl">Hasil Kegiatan <span style="color:#e74c3c;">*wajib</span>:</label>
+            <textarea class="input-catatan" id="laporPDHasil" rows="8" placeholder="Uraikan jalannya kegiatan, materi, dan hasil yang diperoleh..."></textarea>
+
+            <label class="lbl" style="margin:14px 0 4px;">Lampiran Bukti <span style="font-weight:normal; color:#95a5a6;">(opsional)</span></label>
+            <div style="font-size:0.76rem; color:#7f8c8d; margin-bottom:6px; line-height:1.5;">
+                Tiket, kwitansi menginap, struk BBM, dan bukti lain jika ada. Format PDF, JPG, atau PNG, maksimal 10 MB per berkas.
+            </div>
+            <input type="file" id="laporPDFileInput" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="unggahLampiranPD(this)" style="width:100%; margin-bottom:6px;">
+            <div id="laporPDLampiran" style="margin-bottom:6px;"></div>
+            <small id="laporPDCatatan" style="color:#7f8c8d; display:block; margin-top:8px; line-height:1.5;"></small>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalLaporPD()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiLaporPD" onclick="konfirmasiLaporPD()" style="background:#e67e22;">💾 Simpan Laporan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TANDA TANGAN LAPORAN PERJALANAN DINAS -->
+<div class="modal-overlay" id="modalTTDLaporan">
+    <div class="modal-box">
+        <div class="modal-header paraf">
+            <div>
+                <h3>✍️ Tanda Tangan Laporan</h3>
+                <p id="ttdLaporanPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div id="ttdLaporanInfo" class="kotak-info">Memuat...</div>
+            <label class="lbl">PIN TTE (6 digit):</label>
+            <input type="password" id="ttdLaporanPin" maxlength="6" inputmode="numeric" autocomplete="off" class="input-catatan input-pin">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalTTDLaporan()">Batal</button>
+            <button class="btn-konfirmasi paraf" id="btnKonfirmasiTTDLaporan" onclick="konfirmasiTTDLaporan()">✍️ Tandatangani</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL NILAI TUGAS -->
+<div class="modal-overlay" id="modalNilaiTugas">
+    <div class="modal-box">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#8e44ad);">
+            <div>
+                <h3>⭐ Nilai Hasil Tugas</h3>
+                <p id="nilaiTugasPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="kotak-info" style="margin-bottom:16px;">
+                <div style="font-size:0.72rem; color:#95a5a6; text-transform:uppercase; font-weight:700; margin-bottom:3px;">Isi Laporan</div>
+                <div id="nilaiTugasIsiLaporan" style="white-space:pre-wrap;">—</div>
+                <div id="nilaiTugasFileBukti" style="margin-top:8px;"></div>
+            </div>
+            <label class="lbl">Skala Penilaian:</label>
+            <select id="skalaNilaiInput" class="select-modal" style="margin-bottom:14px;">
+                <option value="sangat_baik">🌟 Sangat Baik</option>
+                <option value="baik">👍 Baik</option>
+                <option value="cukup">🙂 Cukup</option>
+                <option value="kurang">👎 Kurang</option>
+            </select>
+            <label class="lbl">Catatan (opsional):</label>
+            <textarea class="input-catatan" id="catatanNilaiInput" rows="2" placeholder="Catatan penilaian..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalNilaiTugas()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiNilai" onclick="konfirmasiNilaiTugas()" style="background:#8e44ad;">⭐ Simpan Penilaian</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ABSENSI RAPAT -->
+<div class="modal-overlay" id="modalAbsenRapat">
+    <div class="modal-box">
+        <div class="modal-header paraf">
+            <div>
+                <h3>✅ Absensi Rapat</h3>
+                <p id="absenRapatPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div id="absenRapatInfo" class="kotak-info"></div>
+            <label class="lbl">PIN TTE (6 digit) sebagai bukti kehadiran:</label>
+            <input type="password" id="absenRapatPin" maxlength="6" inputmode="numeric" autocomplete="off" class="input-catatan input-pin">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalAbsenRapat()">Batal</button>
+            <button class="btn-konfirmasi paraf" id="btnKonfirmasiAbsenRapat" onclick="konfirmasiAbsenRapat()">✅ Konfirmasi Hadir</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KIRIM PERWAKILAN RAPAT -->
+<div class="modal-overlay" id="modalPerwakilan">
+    <div class="modal-box">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#e67e22);">
+            <div>
+                <h3>👥 Kirim Perwakilan</h3>
+                <p id="perwakilanPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="kotak-kuning">
+                Perwakilan harus dari <strong>unit Anda atau bawahan</strong>. Beliau otomatis menerima tugas
+                menghadiri rapat dan mengisi absensinya sendiri. Namanya tercatat di daftar hadir.
+            </div>
+            <label class="lbl">Pilih Perwakilan:</label>
+            <select id="selectPerwakilanRapat" class="select-modal" style="margin-bottom:14px;"><option value="">-- Memuat... --</option></select>
+            <label class="lbl">Alasan Berhalangan Hadir <span style="color:#e74c3c;">*wajib</span>:</label>
+            <textarea class="input-catatan" id="alasanPerwakilanRapat" rows="3" placeholder="Contoh: Sedang dinas luar kota pada waktu yang sama"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalPerwakilan()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiPerwakilan" onclick="konfirmasiPerwakilan()" style="background:#e67e22;">👥 Kirim Perwakilan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL UBAH JADWAL RAPAT (notulen) -->
+<div class="modal-overlay" id="modalUbahJadwal">
+    <div class="modal-box">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#16a085);">
+            <div>
+                <h3>🕐 Ubah Jadwal Rapat</h3>
+                <p id="ubahJadwalPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="kotak-info">
+                <div style="font-size:0.72rem; color:#95a5a6; text-transform:uppercase; font-weight:700; margin-bottom:3px;">Jadwal Saat Ini</div>
+                <div id="ubahJadwalSaatIni" style="font-weight:600;">—</div>
+            </div>
+            <div class="kotak-kuning">
+                Surat undangan yang sudah ditandatangani tidak berubah. Jadwal baru berlaku di sistem
+                (tombol absensi) dan perubahannya tercatat beserta alasannya.
+            </div>
+            <label class="lbl">Tanggal Rapat Baru <span style="color:#e74c3c;">*wajib</span>:</label>
+            <input type="date" id="ubahJadwalTanggal" class="input-catatan" style="margin-bottom:12px;">
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label class="lbl">Jam Mulai <span style="color:#e74c3c;">*wajib</span>:</label>
+                    <input type="time" id="ubahJadwalMulai" class="input-catatan">
+                </div>
+                <div style="flex:1;">
+                    <label class="lbl">Jam Selesai <small style="font-weight:normal; color:#95a5a6;">(kosong = s.d. selesai)</small>:</label>
+                    <input type="time" id="ubahJadwalSelesai" class="input-catatan">
+                </div>
+            </div>
+            <label class="lbl">Alasan <span style="color:#e74c3c;">*wajib</span>:</label>
+            <textarea class="input-catatan" id="ubahJadwalAlasan" rows="3" placeholder="Contoh: Pimpinan rapat meminta rapat dimajukan karena ada agenda lain"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalUbahJadwal()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiUbahJadwal" onclick="konfirmasiUbahJadwal()" style="background:#16a085;">🕐 Simpan Jadwal</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL NOTULENSI RAPAT (notulen menyusun) -->
+<div class="modal-overlay" id="modalNotulensi">
+    <div class="modal-box" style="width:640px;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2c3e50,#8e44ad);">
+            <div>
+                <h3>📝 Notulensi Rapat</h3>
+                <p id="notulenPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body" style="max-height:72vh; overflow-y:auto;">
+            <div id="notulenInfo" class="kotak-info">Memuat...</div>
+            <div id="notulenRevisi" style="display:none; background:#fdf2f2; border-left:4px solid #e74c3c; border-radius:4px; padding:10px 14px; margin-bottom:14px; font-size:0.83rem; color:#922b21;"></div>
+
+            <div style="font-size:0.78rem; font-weight:700; color:#34495e; margin-bottom:6px;">Kehadiran Peserta:</div>
+            <div id="notulenPeserta" style="margin-bottom:14px;"></div>
+
+            <div style="font-size:0.78rem; font-weight:700; color:#34495e; margin-bottom:6px;">
+                Peserta dari Luar <small style="font-weight:normal; color:#95a5a6;">(dicatat oleh notulen)</small>:
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+                <input type="text" id="tamuNama" class="input-catatan" placeholder="Nama" style="flex:1;">
+                <input type="text" id="tamuInstansi" class="input-catatan" placeholder="Instansi" style="flex:1;">
+                <button type="button" onclick="tambahTamuNotulen()" style="padding:0 14px; background:#2980b9; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:700;">➕</button>
+            </div>
+            <div id="notulenTamu" style="margin-bottom:14px;"></div>
+
+            <label class="lbl">Hasil Rapat <span style="color:#e74c3c;">*wajib</span>:</label>
+            <textarea class="input-catatan" id="notulenHasil" rows="9" placeholder="Tuliskan pembahasan, kesimpulan, keputusan, dan tindak lanjut rapat..."></textarea>
+
+            <div id="notulenLink" style="margin-top:12px; font-size:0.82rem;"></div>
+            <small style="color:#7f8c8d; display:block; margin-top:8px; line-height:1.5;">
+                Peserta yang belum absen saat notulensi dikirim otomatis tercatat <strong>Tidak hadir</strong>.
+                Tekan <strong>Simpan Draft</strong> untuk memperbarui PDF pratinjau.
+            </small>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalNotulensi()">Tutup</button>
+            <button class="btn-konfirmasi" id="btnSimpanNotulen" onclick="simpanNotulensi(false)" style="background:#7f8c8d;">💾 Simpan Draft</button>
+            <button class="btn-konfirmasi" id="btnKirimNotulen" onclick="simpanNotulensi(true)" style="background:#8e44ad;">📤 Kirim ke Pimpinan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TTE NOTULENSI (pimpinan rapat) -->
+<div class="modal-overlay" id="modalTTDNotulen">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div>
+                <h3>🔏 TTE Notulensi Rapat</h3>
+                <p id="ttdNotulenPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="kotak-kuning">Periksa dulu notulen dan daftar hadir (PDF). Setelah ditandatangani, notulensi final dan terkunci.</div>
+            <label class="lbl">PIN TTE (6 digit):</label>
+            <input type="password" id="ttdNotulenPin" maxlength="6" inputmode="numeric" autocomplete="off" class="input-catatan input-pin">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalTTDNotulen()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiTTDNotulen" onclick="konfirmasiTTDNotulen()">🔏 Tandatangani</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL REVISI NOTULENSI (pimpinan rapat) -->
+<div class="modal-overlay" id="modalRevisiNotulen">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div>
+                <h3>↩️ Minta Revisi Notulensi</h3>
+                <p id="revisiNotulenPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <label class="lbl">Catatan revisi <span style="color:#e74c3c;">*wajib</span>:</label>
+            <textarea class="input-catatan" id="revisiNotulenCatatan" rows="4" placeholder="Bagian mana yang perlu diperbaiki oleh notulen..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalRevisiNotulen()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiRevisiNotulen" onclick="konfirmasiRevisiNotulen()">↩️ Kembalikan ke Notulen</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PENILAIAN LAYANAN -->
+<div class="modal-overlay" id="modalNilaiLayanan">
+    <div class="modal-box">
+        <div class="modal-header" style="background:linear-gradient(135deg,#f39c12,#e67e22);">
+            <div>
+                <h3>⭐ Beri Nilai & Tutup Utas</h3>
+                <p id="nilaiLayananPerihal">—</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.85rem; color:#7f8c8d; margin-top:0; margin-bottom:16px;">
+                Nilai kualitas pelayanan/tanggapan yang Anda terima untuk keseluruhan surat-menyurat ini.
+            </p>
+            <div style="text-align:center; margin-bottom:18px;">
+                <div id="bintangPicker" style="font-size:2.2rem; letter-spacing:6px; cursor:pointer;">
+                    <span data-nilai="1">☆</span><span data-nilai="2">☆</span><span data-nilai="3">☆</span><span data-nilai="4">☆</span><span data-nilai="5">☆</span>
+                </div>
+            </div>
+            <label class="lbl">Catatan (opsional):</label>
+            <textarea class="input-catatan" id="catatanNilaiLayananInput" rows="2" placeholder="Masukan atau apresiasi..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-batal" onclick="tutupModalNilaiLayanan()">Batal</button>
+            <button class="btn-konfirmasi" id="btnKonfirmasiNilaiLayanan" onclick="konfirmasiNilaiLayanan()" style="background:#e67e22;">⭐ Simpan Penilaian</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// ================================================================
+// GUARD LOGIN, HELPER UMUM & VARIABEL GLOBAL
+// ================================================================
+const userDataStr = localStorage.getItem('user_ppnp');
+if (!userDataStr) { window.location.href = '/'; }
+const user = JSON.parse(userDataStr);
+
+// Escape teks untuk disisipkan ke HTML
+const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// Escape teks untuk dipakai sebagai argumen string di atribut onclick="fn(...)"
+const arg = t => esc(JSON.stringify(String(t ?? '')));
+
+let persetujuanAktif = null;
+let dtSuratId = null, dtTipeAksi = 'disposisi', dtDisposisiId = null;
+let daftarPenerimaTerpilih = [], daftarPenugasanTerpilih = [];
+let arsipkanDisposisiId = null;
+let laporTugasPenugasanId = null, laporSuratTugasId = null;
+let nilaiTugasPenugasanId = null;
+let nilaiLayananSuratId = null, bintangTerpilih = 0;
+let cachePerluTindakan = [], cacheRiwayatSaya = [];
+
+let punyaDelegasi = false;
+let levelUnitUser = null;      // level unit (1-5); level >= 4 tidak boleh disposisi
+let atasanTujuan  = { ada: false };
+
+async function ambilJson(url, bawaan) {
+    try {
+        const res = await fetch(url);
+        return res.ok ? await res.json() : bawaan;
+    } catch (e) { return bawaan; }
+}
+
+window.addEventListener('load', async function () {
+    renderSidebar();
+    jadikanSearchable('selectPenerimaDT');
+    jadikanSearchable('selectPerwakilanRapat');
+    jadikanSearchable('selectPenerimaKoreksi');
+    // Pejabat (non-staf) bebas mengelola surat; staf hanya jika punya delegasi aktif
+    punyaDelegasi = user.role_ppnp !== 'staf'
+        || ((await ambilJson(`/api/delegasi-saya?nip=${user.nip}`, {})).punya_delegasi === true);
+    atasanTujuan  = await ambilJson(`/api/atasan-tujuan?nip=${user.nip}`, { ada: false });
+    levelUnitUser = (await ambilJson(`/api/unit-info?kode_unit=${user.kode_unit}`, {})).level ?? null;
+        if (levelUnitUser === 1) document.getElementById('tabBtnSemuaKasus').style.display = '';
+    muatPerluTindakan();
+    muatSuratMasuk();
+});
+
+// ================================================================
+// DROPDOWN DENGAN PENCARIAN
+// ================================================================
+function jadikanSearchable(selectId) {
+    const sel = document.getElementById(selectId);
+    if (!sel || sel.dataset.ss) return;
+    sel.dataset.ss = '1';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'ss-wrap';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'ss-input';
+    inp.autocomplete = 'off';
+    inp.placeholder = 'Ketik nama untuk mencari...';
+    const list = document.createElement('div');
+    list.className = 'ss-list';
+
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(inp);
+    wrap.appendChild(sel);
+    document.body.appendChild(list);
+    sel.style.display = 'none';
+
+    const descValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+    let aktifIdx = -1;
+
+    function syncInput() {
+        const o = sel.options[sel.selectedIndex];
+        inp.value = (o && o.value && !o.disabled) ? o.text.trim() : '';
+    }
+
+    // Kode lain yang mengubah sel.value ikut menyegarkan kotak ketik
+    Object.defineProperty(sel, 'value', {
+        get() { return descValue.get.call(sel); },
+        set(v) { descValue.set.call(sel, v); syncInput(); }
+    });
+
+    function render(q) {
+        const kata = q.toLowerCase().split(/\s+/).filter(Boolean);
+        let html = '', ada = false;
+        Array.from(sel.options).forEach(o => {
+            const t = o.text.trim();
+            if (o.disabled) {
+                if (kata.length === 0) html += `<div class="ss-group">${esc(t)}</div>`;
+                return;
+            }
+            if (o.value === '') return;
+            if (kata.every(k => t.toLowerCase().includes(k))) {
+                ada = true;
+                html += `<div class="ss-item" data-v="${esc(o.value)}">${esc(t)}</div>`;
+            }
+        });
+        list.innerHTML = ada ? html : '<div class="ss-kosong">Tidak ada hasil</div>';
+        aktifIdx = -1;
+    }
+
+    function buka() {
+        const r = inp.getBoundingClientRect();
+        const bawah = window.innerHeight - r.bottom - 10;
+        list.style.left = r.left + 'px';
+        list.style.top = (r.bottom + 2) + 'px';
+        list.style.width = r.width + 'px';
+        list.style.maxHeight = Math.max(120, Math.min(260, bawah)) + 'px';
+        list.style.display = 'block';
+    }
+    function tutup() { list.style.display = 'none'; }
+    function pilih(v) { sel.value = v; sel.dispatchEvent(new Event('change')); tutup(); inp.blur(); }
+    function sorot(idx) {
+        const items = list.querySelectorAll('.ss-item');
+        if (items.length === 0) return;
+        aktifIdx = (idx + items.length) % items.length;
+        items.forEach((el, i) => el.classList.toggle('aktif', i === aktifIdx));
+        items[aktifIdx].scrollIntoView({ block: 'nearest' });
+    }
+
+    inp.addEventListener('focus', () => { inp.select(); render(''); buka(); });
+    inp.addEventListener('input', () => { render(inp.value); buka(); });
+    inp.addEventListener('keydown', e => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); sorot(aktifIdx + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); sorot(aktifIdx - 1); }
+        else if (e.key === 'Enter') {
+            e.preventDefault();
+            const items = list.querySelectorAll('.ss-item');
+            const target = aktifIdx >= 0 ? items[aktifIdx] : (items.length === 1 ? items[0] : null);
+            if (target) pilih(target.dataset.v);
+        } else if (e.key === 'Escape') { tutup(); inp.blur(); }
+    });
+    inp.addEventListener('blur', () => {
+        tutup();
+        if (inp.value.trim() === '' && sel.value !== '') sel.value = '';
+        else syncInput();
+    });
+    list.addEventListener('mousedown', e => e.preventDefault());
+    list.addEventListener('click', e => { const el = e.target.closest('.ss-item'); if (el) pilih(el.dataset.v); });
+    window.addEventListener('scroll', e => { if (!list.contains(e.target)) tutup(); }, true);
+    window.addEventListener('resize', tutup);
+
+    // Jika isi <select> diganti oleh kode lain (fetch), kotak ketik ikut menyesuaikan
+    new MutationObserver(() => { syncInput(); if (list.style.display === 'block') render(inp.value); })
+        .observe(sel, { childList: true });
+    syncInput();
+}
+
+// ================================================================
+// SIDEBAR, TAB, NOTIFIKASI, LOGOUT
+// ================================================================
+function renderSidebar() {
+    const inisial = user.nama ? user.nama.trim().split(' ').slice(0, 2).map(k => k[0]).join('') : '?';
+    const labelRole = {
+        'direktur': '🏛️ Direktur', 'wadir_1': '📌 Wadir I', 'wadir_2': '📌 Wadir II', 'wadir_3': '📌 Wadir III',
+        'kabag': '🗂️ Kabag', 'kajur': '📚 Kajur', 'pimpinan': '👔 Pimpinan', 'staf': '👤 Staf',
+    };
+    document.getElementById('userAvatar').textContent  = inisial;
+    document.getElementById('userNama').textContent    = user.nama    || '—';
+    document.getElementById('userJabatan').textContent = user.jabatan || '—';
+    document.getElementById('userRole').textContent    = labelRole[user.role_ppnp] || user.role_ppnp || '—';
+}
+
+function gantiTabInbox(tab, btn) {
+    document.querySelectorAll('.tab-inbox').forEach(b => b.classList.remove('aktif'));
+    btn.classList.add('aktif');
+    document.getElementById('tabPerluTindakan').style.display = tab === 'perlutindakan' ? 'block' : 'none';
+    document.getElementById('tabMasuk').style.display        = tab === 'masuk'         ? 'block' : 'none';
+    document.getElementById('tabRiwayatSaya').style.display  = tab === 'riwayat'       ? 'block' : 'none';
+    document.getElementById('tabSemuaKasus').style.display   = tab === 'semuakasus'    ? 'block' : 'none';
+    if (tab === 'perlutindakan') muatPerluTindakan();
+    if (tab === 'masuk')         muatSuratMasuk();
+    if (tab === 'riwayat')       muatRiwayatSayaLengkap();
+    if (tab === 'semuakasus')    muatSemuaKasus();
+}
+
+function tampilNotif(pesan, tipe = 'sukses') {
+    const notif = document.createElement('div');
+    notif.className = `notif ${tipe}`;
+    const ikon = document.createElement('span'); ikon.textContent = 'ℹ️';
+    const teks = document.createElement('span'); teks.textContent = pesan;
+    notif.append(ikon, teks);
+    document.getElementById('notif-container').appendChild(notif);
+    setTimeout(() => notif.remove(), 4000);
+}
+
+function logout() {
+    localStorage.removeItem('user_ppnp');
+    window.location.href = '/';
+}
+
+// Tutup modal bila klik area gelap di luar kotak
+function pasangTutupLuar(idModal, fungsiTutup) {
+    document.getElementById(idModal).addEventListener('click', function (e) { if (e.target === this) fungsiTutup(); });
+}
+
+// Helper umum untuk tombol aksi yang memanggil API
+async function kirimAksi(btn, teksProses, fungsi) {
+    const teksAwal = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = teksProses;
+    try { await fungsi(); }
+    catch (e) { tampilNotif(e.message || 'Koneksi gagal!', 'gagal'); }
+    btn.disabled = false;
+    btn.innerHTML = teksAwal;
+}
+
+function segarkanSemua() {
+    muatPerluTindakan();
+    muatRiwayatSayaLengkap();
+    muatSuratMasuk();
+}
+
+// ================================================================
+// TAB: PERLU TINDAKAN
+// ================================================================
+async function muatPerluTindakan() {
+    try {
+        const res = await fetch(`/api/perlu-tindakan?nip=${user.nip}`);
+        cachePerluTindakan = (await res.json()).filter(i => i.tipe_aksi !== 'tugas');
+        const badge = document.getElementById('badgePerluTindakan');
+        badge.textContent = cachePerluTindakan.length;
+        badge.style.display = cachePerluTindakan.length > 0 ? 'inline' : 'none';
+        renderTabelPerluTindakan();
+    } catch (err) {
+        console.error('Gagal muat perlu tindakan:', err);
+        document.getElementById('tabelPerluTindakan').innerHTML =
+            '<tr><td colspan="5" style="text-align:center; color:#e74c3c;">Gagal memuat data.</td></tr>';
+    }
+}
+
+function aksiTugasLapor(item, perihalArg) {
+    let html = '';
+    const stId     = item.extra.surat_tugas_id;
+    const stStatus = item.extra.surat_tugas_status;
+
+    if (item.extra.jenis_tugas === 'rapat') {
+        const rp = item.extra.rapat || {};
+        if (rp.rapat_status_saya === 'belum') {
+            html += rp.rapat_absen_buka
+                ? `<button class="btn-disposisi" onclick="bukaModalAbsenRapat(${item.ref_id}, ${perihalArg})">✅ Absensi</button>`
+                : `<button class="btn-disposisi" disabled style="opacity:0.45; cursor:not-allowed;">✅ Absensi</button>`;
+            html += `<button class="btn-tugaskan" onclick="bukaModalPerwakilan(${item.ref_id}, ${perihalArg})">👥 Kirim Perwakilan</button>`;
+            if (!rp.rapat_absen_buka && rp.rapat_ket_absen) {
+                html += `<div class="aksi-info" style="color:#e67e22;">⏳ ${esc(rp.rapat_ket_absen)}</div>`;
+            }
+        } else if (rp.rapat_status_saya === 'hadir') {
+            html += `<span style="font-size:0.78rem; color:#27ae60; font-weight:700;">✅ Sudah absen</span>`;
+        }
+
+        if (rp.rapat_notulen && (!rp.rapat_laporan_status || rp.rapat_laporan_status === 'draft')) {
+            html += `<button class="btn-tugaskan" style="background:#16a085;" onclick="bukaModalUbahJadwal(${item.ref_id}, ${perihalArg})">🕐 Ubah Jadwal</button>`;
+        }
+        if (rp.rapat_notulen) {
+            const stLap = rp.rapat_laporan_status;
+            if (rp.rapat_status_saya !== 'hadir') {
+                html += `<div class="aksi-info" style="color:#8e44ad; font-weight:700;">📝 Anda ditunjuk sebagai notulen. Absen dulu, lalu susun notulensi.</div>`;
+            } else if (stLap === 'menunggu_ttd') {
+                html += `<button class="btn-preview" style="background:#8e44ad;" onclick="bukaModalNotulensi(${item.ref_id}, ${perihalArg})">📄 Lihat Notulensi</button>
+                         <span style="font-size:0.74rem; color:#e67e22; font-weight:700;">⏳ Menunggu TTE pimpinan</span>`;
+            } else {
+                html += `<button class="btn-tugaskan" style="background:#8e44ad;" onclick="bukaModalNotulensi(${item.ref_id}, ${perihalArg})">${stLap === 'revisi' ? '✏️ Revisi Notulensi' : '📝 Notulensi'}</button>`;
+            }
+        }
+
+        // Catatan perubahan jadwal: taruh paling bawah, ringkas, dan bisa dibuka lengkap
+        if (rp.rapat_catatan_jadwal) {
+            const baris = String(rp.rapat_catatan_jadwal).split('\n');
+            const terakhir = baris[baris.length - 1];
+            html += `<details class="aksi-info" style="color:#16a085;">
+                        <summary style="cursor:pointer; font-weight:700;">🕐 Jadwal diubah${baris.length > 1 ? ` (${baris.length}x)` : ''}</summary>
+                        <div style="margin-top:4px; color:#2c3e50;">${esc(terakhir)}</div>
+                     </details>`;
+        }
+    } else if (item.extra.jenis_tugas === 'perjalanan_dinas') {
+        const pd = item.extra.pd || {};
+        if (!pd.laporan_pd_id) {
+            html += ` <button class="btn-disposisi" onclick="bukaModalLaporPD(${item.ref_id}, ${perihalArg})">✈️ Susun Laporan Perjalanan Dinas</button>`;
+        } else {
+            html += ` <a href="/api/laporan-pd/${pd.laporan_pd_id}/pdf" target="_blank" class="btn-preview" style="background:#27ae60;">📄 Lihat Laporan</a>`;
+            html += ` <button class="btn-disposisi" onclick="bukaModalTTDLaporan(${item.ref_id}, ${perihalArg})">✍️ Tanda Tangan Laporan (${pd.jml_ttd}/${pd.jml_peserta})</button>`;
+            html += ` <button class="btn-tugaskan" onclick="bukaModalLaporPD(${item.ref_id}, ${perihalArg})">✏️ Edit</button>`;
+        }
+    } else if (stId && stStatus === 'selesai') {
+        html += ` <button class="btn-preview" style="background:#27ae60;" onclick="previewSuratInbox(${stId})">📄 Surat Tugas Selesai</button>`;
+        html += ` <button class="btn-disposisi" onclick="bukaModalLaporTugas(${item.ref_id}, ${perihalArg}, ${stId})">📤 Kirim Laporan</button>`;
+    } else if (stId) {
+        html += ` <span style="font-size:0.78rem; color:#e67e22; font-weight:700;">⏳ Surat tugas sedang diproses<br><small style="color:#95a5a6; font-weight:normal;">(cek di Manajemen Surat)</small></span>`;
+    } else {
+        html += ` <button class="btn-disposisi" onclick="bukaModalLaporTugas(${item.ref_id}, ${perihalArg})">📝 Lapor</button>`;
+        if (punyaDelegasi) html += ` <button class="btn-tugaskan" onclick="buatSuratTugasDariTugas(${item.ref_id})">📝 Surat Tugas</button>`;
+    }
+    return html;
+}
+
+function kolomDiketahui(item) {
+    // Perintah atasan (disposisi lanjutan & penugasan)
+    if ((item.tipe_aksi === 'disposisi_lanjut' || item.tipe_aksi === 'tugas_lapor') && item.extra && item.extra.catatan) {
+        return `<div style="padding:8px 10px; background:#fff8e1; border-left:3px solid #f39c12; border-radius:0 6px 6px 0; margin-top:8px;">
+            <div style="font-size:0.68rem; font-weight:700; color:#e67e22; text-transform:uppercase; margin-bottom:3px;">💬 Perintah</div>
+            <div style="font-size:0.85rem; color:#2c3e50; white-space:pre-wrap;">${esc(item.extra.catatan)}</div>
+        </div>`;
+    }
+    // Rantai paraf/TTE yang sudah selesai sebelum giliran ini
+    if (item.tipe_aksi === 'tte') {
+        const chain = (item.extra && item.extra.chain_diketahui) || [];
+        if (chain.length === 0) return '';
+        return chain.map(step => {
+            const tglStep   = step.tanggal ? step.tanggal.replace('T', ' ').slice(0, 16) : '';
+            const clrBorder = { 'Paraf': '#16a085', 'Mengetahui': '#3498db' }[step.jenis_ttd] || '#e74c3c';
+            const icoJenis  = { 'Paraf': '✍️ Paraf', 'Mengetahui': '👁️ Mengetahui' }[step.jenis_ttd] || '🔏 TTE';
+            const catatanEl = (step.catatan && step.jenis_ttd !== 'Mengetahui')
+                ? `<div style="font-size:0.67rem; color:#7f8c8d; font-style:italic; margin-top:3px; padding-top:3px; border-top:1px dashed #ddd;">💬 ${esc(step.catatan)}</div>` : '';
+            return `<div style="margin-bottom:5px; padding:6px 8px; background:#f8f9fa; border-radius:6px; border-left:3px solid ${clrBorder};">
+                <div style="font-size:0.78rem; font-weight:700; color:#2c3e50;">${esc(step.nama)}</div>
+                <div style="font-size:0.7rem; color:#7f8c8d;">${esc(step.jabatan)}</div>
+                <div style="font-size:0.68rem; color:${clrBorder}; font-weight:700; margin-top:2px;">${icoJenis}${tglStep ? ' · ' + esc(tglStep) : ''}</div>
+                ${catatanEl}
+            </div>`;
+        }).join('');
+    }
+    return '';
+}
+
+function renderTabelPerluTindakan() {
+    const filter = document.getElementById('filterPerluTindakan').value;
+    const data   = filter === 'semua' ? cachePerluTindakan : cachePerluTindakan.filter(i => i.tipe_aksi === filter);
+    const tbody  = document.getElementById('tabelPerluTindakan');
+
+    if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="kosong-info"><span class="icon">✅</span><strong>Tidak ada yang perlu ditindaklanjuti</strong></div></td></tr>`;
+        return;
+    }
+
+    let html = '';
+    data.forEach(item => {
+        const tgl = item.tanggal ? item.tanggal.split(' ')[0] : '—';
+        const perihalArg = arg(item.perihal);
+        let aksiHtml = `<button class="btn-preview" onclick="previewSuratInbox(${item.surat_id})">👁️ Preview</button>`;
+
+        if (item.tipe_aksi === 'tte') {
+            const jenisTtd = item.extra.jenis_ttd;
+            const btnClass = jenisTtd === 'TTE Utama' ? 'btn-ttd' : 'btn-paraf';
+            const labelTtd = { 'Paraf': '✍️ Paraf', 'Mengetahui': '👁️ Mengetahui' }[jenisTtd] || '🔏 TTE';
+            aksiHtml += ` <button class="${btnClass}" onclick="bukaTTD(${item.ref_id}, ${arg(jenisTtd)}, ${perihalArg}, ${arg(item.jenis_surat)})">${labelTtd}</button>`;
+        } else if (item.tipe_aksi === 'disposisi_baru') {
+            aksiHtml += ` <button class="btn-disposisi" onclick="bukaModalDisposisiTugas(${item.surat_id}, ${perihalArg})">📤 Proses Disposisi</button>`;
+            if (item.jenis_surat === 'eksternal') {
+                aksiHtml += ` <button class="btn-tugaskan" style="background:#c0392b;" onclick="kembalikanSurat(${item.surat_id})">↩️ Kembalikan</button>`;
+            }
+        } else if (item.tipe_aksi === 'disposisi_lanjut') {
+            aksiHtml += ` <button class="btn-disposisi" onclick="bukaModalDisposisiTugas(${item.surat_id}, ${perihalArg}, ${item.ref_id})">📤 Proses</button>
+                          <button class="btn-tugaskan" style="background:#7f8c8d;" onclick="bukaModalArsipkan(${item.ref_id}, ${perihalArg})">🗄️ Arsipkan</button>`;
+        } else if (item.tipe_aksi === 'tugas_lapor') {
+            aksiHtml += aksiTugasLapor(item, perihalArg);
+        } else if (item.tipe_aksi === 'notulen_ttd') {
+const un = item.extra.url_notulen, fh = item.extra.file_daftar_hadir;
+if (un) aksiHtml += ` <a href="${esc(un)}" target="_blank" class="btn-preview" style="background:#1a1a1a;">📄 Lihat Notulen</a>`;
+            if (fh) aksiHtml += ` <a href="/uploads/${esc(fh)}" target="_blank" class="btn-preview" style="background:#1a1a1a;">📋 Lihat Daftar Hadir</a>`;
+            aksiHtml += ` <button class="btn-ttd" onclick="bukaModalTTDNotulen(${item.ref_id}, ${perihalArg})">🔏 TTE Notulensi</button>
+                          <button class="btn-tugaskan" style="background:#c0392b;" onclick="bukaModalRevisiNotulen(${item.ref_id}, ${perihalArg})">↩️ Minta Revisi</button>`;
+        } else if (item.tipe_aksi === 'tugas_nilai') {
+            aksiHtml += ` <button class="btn-tugaskan" onclick="bukaModalNilaiTugas(${item.ref_id})">⭐ Nilai</button>`;
+        }
+
+        const jt = (item.extra && item.extra.jenis_tugas) || null;
+        const badgeTugas = jt === 'perjalanan_dinas'
+            ? `<span style="background:#2980b9; color:white; padding:2px 8px; border-radius:4px; font-size:0.68rem; font-weight:700; display:inline-block; margin-bottom:4px;">✈️ PERJALANAN DINAS</span><br>`
+            : jt === 'rapat'
+            ? `<span style="background:#8e44ad; color:white; padding:2px 8px; border-radius:4px; font-size:0.68rem; font-weight:700; display:inline-block; margin-bottom:4px;">📅 AGENDA RAPAT</span><br>`
+            : '';
+
+        html += `<tr>
+            <td style="white-space:nowrap; font-size:0.85rem;">${esc(tgl)}</td>
+            <td><span style="background:#e67e22; color:white; padding:3px 10px; border-radius:12px; font-size:0.72rem; font-weight:700;">${esc(item.label_aksi)}</span></td>
+            <td>${badgeTugas}<strong>${esc(item.perihal)}</strong><br><small style="color:#95a5a6;">${esc(item.nomor_surat || '')}</small></td>
+            <td style="min-width:260px; max-width:340px; vertical-align:top; padding:10px 14px;">
+                <div style="font-size:0.88rem; font-weight:700; color:#2c3e50;">${esc(item.pihak_terkait)}</div>
+                <div style="font-size:0.75rem; color:#95a5a6;">${esc(item.jabatan_terkait || '')}</div>
+                ${kolomDiketahui(item)}
+            </td>
+        <td style="vertical-align:top; padding:10px 14px;"><div class="aksi-wrap">${aksiHtml}</div></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+// ================================================================
+// TAB: SURAT DITERIMA
+// ================================================================
+async function muatSuratMasuk() {
+    const tbody = document.getElementById('tabelSuratMasuk');
+    try {
+        const res  = await fetch(`/api/surat-masuk?nip=${user.nip}`);
+        const data = await res.json();
+        const badge = document.getElementById('badgeMasuk');
+        badge.textContent = data.length;
+        badge.style.display = data.length > 0 ? 'inline' : 'none';
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6"><div class="kosong-info"><span class="icon">📭</span><strong>Belum ada surat masuk</strong></div></td></tr>`;
+            return;
+        }
+        const badgeJenis = { 'eksternal': 'badge-eksternal', 'internal': 'badge-internal', 'permohonan': 'badge-permohonan' };
+        const infoKategori = {
+            'diterima' : { warna: '#8e44ad', label: '📨 Surat Masuk' },
+            'disposisi': { warna: '#2980b9', label: '📋 Perlu Disposisi' },
+            'selesai'  : { warna: '#27ae60', label: '✅ Siap Download' },
+        };
+        const btnGaya = (warna) => `padding:6px 14px; background:${warna}; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:700; margin-left:5px;`;
+
+        let html = '';
+        data.forEach(item => {
+            const tgl  = item.tanggal_dibuat ? item.tanggal_dibuat.split(' ')[0] : '—';
+            const info = infoKategori[item.kategori] || { warna: '#95a5a6', label: '—' };
+            const perihalArg = arg(item.perihal);
+            html += `<tr>
+                <td style="white-space:nowrap; font-size:0.85rem;">${esc(tgl)}</td>
+                <td><span class="badge ${badgeJenis[item.jenis_surat] || ''}">${esc((item.jenis_surat || '').toUpperCase())}</span></td>
+                <td>
+                    <strong>${esc(item.perihal)}</strong><br>
+                    <small style="color:#95a5a6;">${esc(item.nomor_surat || 'Belum ada nomor')}</small>
+                    ${item.surat_asal_id ? `<div style="margin-top:4px;"><small style="color:#2980b9; font-style:italic;">📎 Lampiran: ${esc(item.perihal_asal || '—')}</small></div>` : ''}
+                </td>
+                <td><span style="font-size:0.85rem;">${esc(item.asal_surat || item.nama_pengirim)}</span><br><small style="color:#95a5a6;">${esc(item.jabatan_pengirim || '')}</small></td>
+                <td><span style="background:${info.warna}; color:white; padding:4px 12px; border-radius:12px; font-size:0.75rem; font-weight:700;">${info.label}</span></td>
+                <td style="white-space:nowrap;">
+                    <button class="btn-preview" onclick="previewSuratInbox(${item.surat_id})">👁️ Preview</button>
+                    ${item.kategori === 'disposisi'
+                        ? `<button class="btn-disposisi" onclick="bukaModalDisposisiTugas(${item.surat_id}, ${perihalArg})">📤 Proses Disposisi</button>` : ''}
+                    ${item.kategori === 'selesai'
+                        ? `<button style="${btnGaya('#27ae60')}" onclick="previewSuratInbox(${item.surat_id})">📥 Download</button>` : ''}
+                    ${item.kategori === 'diterima' && item.jenis_surat === 'internal'
+                        ? `<button style="${btnGaya('#16a085')}" onclick="balasSuratLangsung(${item.surat_id})">↩️ Balas Langsung</button>
+                           ${atasanTujuan.ada ? `<button style="${btnGaya('#2980b9')}" title="Tujuan: ${esc(atasanTujuan.nama || '')}" onclick="buatSuratLanjutan(${item.surat_id})">⬆️ Lanjutkan ke Atasan</button>` : ''}` : ''}
+                    ${item.bisa_dinilai && !item.sudah_dinilai
+                        ? `<button style="${btnGaya('#f39c12')}" onclick="bukaModalNilaiLayanan(${item.surat_id}, ${perihalArg})">⭐ Nilai & Tutup</button>` : ''}
+                    ${item.bisa_dinilai && item.sudah_dinilai
+                        ? `<small style="color:#f39c12; margin-left:8px; font-weight:700;">✅ Sudah Dinilai</small>` : ''}
+                    ${item.surat_asal_id
+                        ? `<button style="${btnGaya('#8e44ad')}" onclick="previewSuratInbox(${item.surat_asal_id})">📎 Lihat Lampiran</button>` : ''}
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    } catch (err) {
+        console.error('Gagal muat surat masuk:', err);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#e74c3c;">Gagal memuat data.</td></tr>';
+    }
+}
+
+// ================================================================
+// TAB: RIWAYAT SAYA
+// ================================================================
+let grupTerbuka = new Set();
+
+async function muatRiwayatSayaLengkap() {
+    try {
+        const res = await fetch(`/api/riwayat-kasus?nip=${user.nip}`);
+        cacheRiwayatSaya = await res.json();
+        renderTabelRiwayat();
+    } catch (err) {
+        console.error('Gagal muat riwayat saya:', err);
+        document.getElementById('tabelRiwayatSaya').innerHTML =
+            '<tr><td colspan="5" style="text-align:center; color:#e74c3c;">Gagal memuat data.</td></tr>';
+    }
+}
+
+function toggleGrup(key) {
+    if (grupTerbuka.has(key)) grupTerbuka.delete(key); else grupTerbuka.add(key);
+    renderTabelRiwayat();
+}
+
+function renderTabelRiwayat() {
+    const filter = document.getElementById('filterRiwayat').value;
+    const tbody  = document.getElementById('tabelRiwayatSaya');
+    const badgeJenis = { eksternal: 'badge-eksternal', internal: 'badge-internal', permohonan: 'badge-permohonan' };
+    const statusKasus = {
+        selesai : { warna: '#27ae60', label: '✅ SELESAI' },
+        berjalan: { warna: '#e67e22', label: '⏳ BERJALAN' },
+        lain    : { warna: '#95a5a6', label: 'LAINNYA' },
+    };
+    const ikonTahap = { selesai: '✓', berjalan: '⏳', belum: '○' };
+
+    const flat = [];      // dipakai tombol Tracking (indeks = urutan baris langkah yang tampil)
+    let html = '';
+
+    cacheRiwayatSaya.forEach(g => {
+        const langkah = filter === 'semua' ? g.langkah : g.langkah.filter(i => i.tipe_aksi === filter);
+        if (langkah.length === 0) return;
+
+        const key  = String(g.kasus_id ?? 'lain');
+        const buka = grupTerbuka.has(key);
+        const sk   = statusKasus[g.status_kasus] || statusKasus.lain;
+        const tglTerakhir = g.tanggal_terakhir ? g.tanggal_terakhir.split(' ')[0] : '—';
+        const tunggu = g.menunggu || [];
+        const teksTunggu = h => `${h.nama}: ${h.apa}${h.hari !== null ? ` (${h.hari} hari)` : ''}`;
+        const stepper = (g.tahap || []).map(t => {
+            const ket = tunggu.filter(h => h.tahap === t.kode).map(teksTunggu).join('\n');
+            return `<span class="tahap tahap-${esc(t.status)}" title="${esc(ket)}">${ikonTahap[t.status] || ''} ${esc(t.label)}</span>`;
+        }).join('<span style="color:#bdc3c7; font-size:0.7rem;">›</span>');
+        const kotakTunggu = tunggu.length ? `
+            <details class="menunggu-box" onclick="event.stopPropagation()" ${tunggu.length <= 2 ? 'open' : ''}>
+                <summary>⏳ Sedang menunggu (${tunggu.length})</summary>
+                ${tunggu.map(h => `<div class="menunggu-item">
+                    <strong>${esc(h.nama)}</strong>${h.jabatan ? ` <span style="color:#95a5a6;">· ${esc(h.jabatan)}</span>` : ''}<br>
+                    ${esc(h.apa)}${h.hari !== null ? ` <span class="hari">· ${h.hari} hari</span>` : ''}
+                </div>`).join('')}
+            </details>` : '';
+
+        html += `<tr class="grup-baris ${buka ? 'terbuka' : ''}" onclick="toggleGrup(${arg(key)})">
+            <td colspan="5">
+                <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+                    <div style="min-width:0;">
+                        <div class="grup-judul"><span class="caret">▶</span>
+                            ${g.jenis_surat ? `<span class="badge ${badgeJenis[g.jenis_surat] || ''}" style="margin-right:8px;">${esc(g.jenis_surat.toUpperCase())}</span>` : ''}
+                            ${esc(g.judul)}</div>
+                        ${g.nomor_surat ? `<div class="grup-meta">${esc(g.nomor_surat)}</div>` : ''}
+                        ${stepper ? `<div class="stepper">${stepper}</div>` : ''}
+                        ${kotakTunggu}
+                    </div>
+                    <div style="text-align:right; white-space:nowrap;">
+                        <span class="badge" style="background:${sk.warna};">${sk.label}</span>
+                        ${g.kasus_id ? `<button class="btn-preview" style="background:#27ae60; margin:6px 0 0 8px;" onclick="event.stopPropagation(); bukaPohon(${g.kasus_id})">🌳 Lihat Alur</button>` : ''}
+                        <div class="grup-meta">${langkah.length} langkah · terakhir ${esc(tglTerakhir)}</div>
+                    </div>
+                </div>
+            </td></tr>`;
+
+        if (!buka) return;
+
+        langkah.forEach(item => {
+            const idx = flat.push(item) - 1;
+            const tgl = item.tanggal ? item.tanggal.split(' ')[0] : '—';
+
+            let aksiHtml = '';
+            if (item.surat_id) {
+                aksiHtml += `<button class="btn-preview" onclick="previewSuratInbox(${item.surat_id})">👁️ Preview</button>
+                             <button class="btn-preview" style="background:#8e44ad;" onclick="lihatTrackingRiwayat(${item.surat_id}, ${idx})">🔍 Tracking</button>`;
+            }
+            if (item.penerima_list) {
+                item.penerima_list.filter(p => p.bisa_ditarik).forEach(p => {
+                    const teks = item.penerima_list.length > 1
+                        ? `↩️ Tarik: ${esc(p.nama.split(/[ ,]/)[0])}` : '↩️ Tarik Kembali';
+                    aksiHtml += ` <button class="btn-preview" style="background:#c0392b;" onclick="tarikDisposisi(${p.disposisi_id})">${teks}</button>`;
+                });
+            }
+            if (item.bisa_dikoreksi && item.penugasan_id) {
+                aksiHtml += ` <button class="btn-preview" style="background:#e67e22;" onclick="bukaKoreksiTugas(${idx}, 'edit')">✏️ Edit Tugas</button>
+                              <button class="btn-preview" style="background:#16a085;" onclick="bukaKoreksiTugas(${idx}, 'ganti')">🔁 Ganti Penerima</button>
+                              <button class="btn-preview" style="background:#c0392b;" onclick="hapusPenugasan(${idx})">🗑️ Hapus</button>`;
+            }
+            if (item.url_notulen) {
+                aksiHtml += ` <a href="${esc(item.url_notulen)}" target="_blank" class="btn-preview" style="background:#1a1a1a;">📄 Lihat Notulen</a>`;
+            }
+            if (item.file_daftar_hadir) {
+                aksiHtml += ` <a href="/uploads/${esc(item.file_daftar_hadir)}" target="_blank" class="btn-preview" style="background:#1a1a1a;">📋 Lihat Daftar Hadir</a>`;
+            }
+            if (item.laporan_pd_id && item.file_laporan) {
+                aksiHtml += ` <a href="/api/laporan-pd/${item.laporan_pd_id}/pdf" target="_blank" class="btn-preview" style="background:#27ae60;">📄 Laporan</a>`;
+                if (!item.laporan_pd_final) {
+                    aksiHtml += ` <button class="btn-preview" style="background:#e67e22;" onclick="bukaModalLaporPD(${item.penugasan_id}, ${arg(item.perihal)})">✏️ Edit</button>`;
+                }
+            }
+
+            html += `<tr class="langkah-baris">
+                <td style="font-size:0.82rem; white-space:nowrap;">${esc(tgl)}</td>
+                <td>
+                    <span title="${esc(item.label_aksi)}" style="background:#34495e; color:white; padding:3px 10px; border-radius:12px; font-size:0.72rem; font-weight:700; white-space:nowrap;">${esc(item.judul_ringkas || item.label_aksi)}</span>
+                    ${item.detail_label ? `<div style="font-size:0.74rem; color:#7f8c8d; margin-top:5px;">${esc(item.detail_label)}</div>` : ''}
+                    ${item.perihal && item.perihal !== g.judul ? `<div style="font-size:0.74rem; color:#95a5a6; margin-top:3px;">${esc(item.perihal)}</div>` : ''}
+                </td>
+                <td>${kolomPihakRiwayat(item)}</td>
+                <td>${kolomCatatanRiwayat(item)}</td>
+                <td style="vertical-align:top; padding:10px 14px;"><div class="aksi-wrap">${aksiHtml}</div></td>
+            </tr>`;
+        });
+    });
+
+    window._riwayatDataCache = flat;
+    tbody.innerHTML = html || `<tr><td colspan="5"><div class="kosong-info"><span class="icon">📜</span><strong>Belum ada riwayat</strong></div></td></tr>`;
+}
+
+
+function kolomPihakRiwayat(item) {
+    if (item.penerima_list && item.penerima_list.length > 0) {
+        return item.penerima_list.map(p => `
+            <div style="margin-bottom:6px;">
+                <div style="font-size:0.85rem; font-weight:700; color:#2c3e50;">${esc(p.nama)}</div>
+                <div style="font-size:0.75rem; color:#95a5a6;">${esc(p.jabatan || '')}</div>
+            </div>`).join('');
+    }
+    return `<span style="font-size:0.85rem;">${esc(item.pihak_terkait)}</span><br><small style="color:#95a5a6;">${esc(item.jabatan_terkait || '')}</small>`;
+}
+
+function kolomCatatanRiwayat(item) {
+    if (item.penerima_list && item.penerima_list.length > 1) {
+        return item.penerima_list.map(p => `
+            <div style="margin-bottom:6px;">
+                <small style="color:#2c3e50; font-weight:700;">${esc(p.nama.split(',')[0])}:</small>
+                <small style="color:#7f8c8d; font-style:italic;"> ${esc(p.catatan)}</small>
+            </div>`).join('');
+    }
+    return `<small style="color:#7f8c8d; font-style:italic;">${esc(item.catatan || '—')}</small>`;
+}
+
+
+async function tarikDisposisi(disposisiId) {
+    if (!confirm('Tarik disposisi ini? Disposisi akan hilang dari inbox penerima, lalu Anda bisa mengirim ulang ke orang yang benar.')) return;
+    try {
+        const res = await fetch(`/api/disposisi/${disposisiId}/tarik`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nip_pengirim: user.nip })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Disposisi ditarik', 'sukses'); segarkanSemua(); }
+        else tampilNotif(data.detail || 'Gagal menarik disposisi', 'gagal');
+    } catch (e) { tampilNotif('Koneksi gagal!', 'gagal'); }
+}
+
+// ================================================================
+// PREVIEW SURAT
+// ================================================================
+async function previewSuratInbox(suratId) {
+    try {
+        const res = await fetch(`/api/surat/${suratId}`);
+        if (!res.ok) throw new Error('Gagal');
+        const s = await res.json();
+        const perihal = esc(s.perihal);
+
+        // Surat upload PDF
+        if (s.tipe_input === 'upload') {
+            const urlPDF = s.file_final ? `/uploads/${s.file_final}` : (s.file_upload ? `/uploads/${s.file_upload}` : null);
+            if (!urlPDF) { tampilNotif('File PDF tidak ditemukan!', 'gagal'); return; }
+            window.open(urlPDF, '_blank');
+            return;
+        }
+
+        // Surat eksternal: tampilkan file scan
+        if (s.jenis_surat === 'eksternal') {
+            if (!s.file_surat) { tampilNotif('File surat tidak ditemukan!', 'gagal'); return; }
+            const ext = s.file_surat.split('.').pop().toLowerCase();
+            const url = `/uploads/${s.file_surat}`;
+            if (ext === 'pdf') { window.open(url, '_blank'); return; }
+            const jendela = window.open('', '_blank', 'width=960,height=980');
+            if (!jendela) { tampilNotif('Pop-up diblokir browser!', 'gagal'); return; }
+            jendela.document.open();
+            jendela.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${perihal}</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#cbd5e0; }
+    .toolbar { position:fixed; top:0; left:0; right:0; background:#2c3e50; color:white; padding:10px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .toolbar strong { display:block; font-size:0.95rem; }
+    .toolbar span { font-size:0.78rem; color:rgba(255,255,255,0.65); }
+    .btn-pdf { background:#2ecc71; color:white; border:none; padding:9px 24px; border-radius:6px; cursor:pointer; font-weight:bold; }
+    .wrapper { padding:70px 20px 40px; display:flex; justify-content:center; }
+    img { max-width:210mm; box-shadow:0 6px 30px rgba(0,0,0,0.25); display:block; }
+</style></head><body>
+    <div class="toolbar">
+        <div><strong>${perihal}</strong><span>EKSTERNAL — ${esc(s.asal_surat || '—')}</span></div>
+        <button class="btn-pdf" onclick="window.print()">🖨️ Cetak / PDF</button>
+    </div>
+    <div class="wrapper"><img src="${esc(url)}" alt="${perihal}"></div>
+</body></html>`);
+            jendela.document.close();
+            return;
+        }
+
+        // Surat internal / permohonan (editor): render HTML A4
+        let urlKop = null;
+        const kodeKop = s.kode_unit_kop || s.kode_unit_pembuat;
+        if (kodeKop) {
+            const dataKop = await ambilJson(`/api/kop?kode_unit=${kodeKop}`, {});
+            if (dataKop.ada) urlKop = dataKop.url;
+        }
+
+        const tglFormatted = s.tanggal_surat
+            ? new Date(s.tanggal_surat + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+            : '—';
+
+        const kopHtml = urlKop
+            ? `<div style="text-align:center;"><img src="${window.location.origin}${esc(urlKop)}" style="width:100%; max-height:220px; object-fit:contain; display:block;"></div>` : '';
+
+        const tujuanHtml = s.nama_tujuan
+            ? `<div style="margin-bottom:20px; font-size:12pt; line-height:1.8;">
+                   <p style="margin:0;">Yth.</p>
+                   <p style="margin:0; font-weight:bold;">${esc(s.jabatan_tujuan || s.nama_tujuan)}</p>
+                   ${s.tujuan_tambahan ? `<p style="margin:0;">${esc(s.tujuan_tambahan)}</p>` : ''}
+               </div>` : '';
+
+        const identitasHtml = `
+            <div style="margin-bottom:20px; font-size:11pt;">
+                <div style="text-align:right; margin-bottom:16px;">Payakumbuh, ${tglFormatted}</div>
+                <table style="line-height:2; border-collapse:collapse; margin-bottom:16px;">
+                    ${s.nomor_surat ? `<tr><td style="width:110px;">Nomor</td><td style="padding-right:8px;">:</td><td>${esc(s.nomor_surat)}</td></tr>` : ''}
+                    <tr><td>Perihal</td><td style="padding-right:8px;">:</td><td><strong>${perihal}</strong></td></tr>
+                </table>
+                ${tujuanHtml}
+            </div>`;
+
+        const isiHtml = s.isi_surat || '<p style="color:#aaa; font-style:italic;">Tidak ada isi surat.</p>';
+
+        const ttdHtml = s.nama_penandatangan ? `
+            <div style="margin-top:50px; display:flex; justify-content:flex-end;">
+                <div style="text-align:center; min-width:240px;">
+                    <p style="margin:0 0 16px; font-size:11pt;">${esc(s.jabatan_penandatangan || '')}</p>
+                    ${s.tte_selesai && s.url_verifikasi
+                        ? (() => {
+                            const [kodeVerif, sigVerif] = s.url_verifikasi.split('|');
+                            const urlLengkap = `${window.location.origin}/verifikasi?kode=${encodeURIComponent(kodeVerif)}&sig=${encodeURIComponent(sigVerif)}`;
+                            return `<div id="qr-ttd" style="display:inline-block; margin-bottom:10px;"></div>
+                                    <script type="application/json" id="qr-payload">${JSON.stringify(urlLengkap)}<\/script>`;
+                          })()
+                        : `<div style="height:80px; display:flex; align-items:center; justify-content:center; color:#e67e22; font-size:8pt;">⏳ Menunggu Tanda Tangan</div>`}
+                    <p style="font-weight:bold; margin:0; border-top:1.5px solid #333; padding-top:6px; font-size:11pt;">${esc(s.nama_penandatangan)}</p>
+                    <p style="margin:4px 0 0; font-size:10pt;">NIP. ${esc(s.nip_penandatangan || '—')}</p>
+                    ${s.tte_selesai ? `<p style="margin:4px 0 0; font-size:7.5pt; color:#27ae60;">SAH · Ditandatangani Elektronik — Verifikasi via QR Code</p>` : ''}
+                </div>
+            </div>` : '';
+
+        const qrScript = s.tte_selesai ? `
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+            <script>
+                window.onload = function() {
+                    var container = document.getElementById('qr-ttd');
+                    var payload   = document.getElementById('qr-payload');
+                    if (!container || !payload) return;
+                    var qrText = JSON.parse(payload.textContent.trim());
+                    new QRCode(container, { text: qrText, width: 130, height: 130, correctLevel: QRCode.CorrectLevel.M });
+                    setTimeout(function() {
+                        var canvas = container.querySelector('canvas');
+                        if (!canvas) return;
+                        fetch('/uploads/assets/logo.png')
+                            .then(function(r) { return r.blob(); })
+                            .then(function(blob) {
+                                var blobUrl = URL.createObjectURL(blob);
+                                var logo = new Image();
+                                logo.onload = function() {
+                                    var ctx  = canvas.getContext('2d');
+                                    var size = Math.floor(canvas.width * 0.22);
+                                    var x    = Math.floor((canvas.width  - size) / 2);
+                                    var y    = Math.floor((canvas.height - size) / 2);
+                                    ctx.fillStyle = 'white';
+                                    ctx.beginPath();
+                                    ctx.arc(x + size / 2, y + size / 2, size / 2 + 4, 0, Math.PI * 2);
+                                    ctx.fill();
+                                    ctx.drawImage(logo, x, y, size, size);
+                                    var imgTag = container.querySelector('img');
+                                    if (imgTag) {
+                                        imgTag.src = canvas.toDataURL('image/png');
+                                        imgTag.style.display = 'block';
+                                        canvas.style.display = 'none';
+                                    }
+                                    URL.revokeObjectURL(blobUrl);
+                                };
+                                logo.src = blobUrl;
+                            })
+                            .catch(function(e) { console.log('Logo skip:', e); });
+                    }, 300);
+                };
+            <\/script>` : '';
+
+        const htmlSurat = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Preview — ${perihal}</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#cbd5e0; font-family:'Times New Roman',Times,serif; font-size:12pt; }
+        .toolbar { position:fixed; top:0; left:0; right:0; background:#2c3e50; color:white; padding:10px 24px; display:flex; align-items:center; justify-content:space-between; z-index:1000; }
+        .toolbar-info strong { font-size:0.95rem; display:block; }
+        .toolbar-info span { font-size:0.78rem; color:rgba(255,255,255,0.65); }
+        .btn-pdf { background:#2ecc71; color:white; border:none; padding:9px 24px; border-radius:6px; cursor:pointer; font-weight:bold; }
+        .halaman-wrapper { padding:70px 20px 40px; display:flex; justify-content:center; }
+        .kertas { width:210mm; min-height:297mm; background:white; box-shadow:0 6px 30px rgba(0,0,0,0.25); }
+        .area-kop { padding:8mm 15mm 0; }
+        .garis-kop { border:none; border-top:3px double #222; margin:4px 15mm 0; }
+        .area-isi { padding:8mm 15mm 20mm; }
+        .ql-toolbar { display:none !important; }
+        .ql-container { border:none !important; }
+        .ql-editor { padding:0 !important; font-family:'Times New Roman',Times,serif !important; font-size:12pt !important; }
+        @media print { body{background:white;} .toolbar{display:none!important;} .halaman-wrapper{padding:0;} .kertas{box-shadow:none; width:100%;} }
+        @page { size:A4; margin:10mm 10mm; }
+    </style>
+</head>
+<body>
+<div class="toolbar">
+    <div class="toolbar-info">
+        <strong>${perihal}</strong>
+        <span>${esc((s.jenis_surat || '').toUpperCase())} — Preview dari Inbox</span>
+    </div>
+    <div style="text-align:right;">
+        <button class="btn-pdf" onclick="window.print()">🖨️ Cetak / PDF</button>
+        <div style="font-size:0.68rem; color:rgba(255,255,255,0.6); margin-top:4px;">💡 Matikan "Headers and footers" di setelan print</div>
+    </div>
+</div>
+<div class="halaman-wrapper">
+    <div class="kertas">
+        <div class="area-kop">${kopHtml}</div>
+        ${urlKop ? '<hr class="garis-kop">' : ''}
+        <div class="area-isi">
+            ${identitasHtml}
+            <div class="ql-editor" style="line-height:1.8;">${isiHtml}</div>
+            ${ttdHtml}
+        </div>
+    </div>
+</div>
+${qrScript}
+</body>
+</html>`;
+
+        const jendela = window.open('', '_blank', 'width=960,height=980');
+        if (!jendela) { tampilNotif('Pop-up diblokir browser!', 'gagal'); return; }
+        jendela.document.open();
+        jendela.document.write(htmlSurat);
+        jendela.document.close();
+    } catch (err) {
+        tampilNotif('Gagal membuka preview!', 'gagal');
+        console.error(err);
+    }
+}
+
+// ================================================================
+// TRACKING SURAT
+// ================================================================
+function lihatTrackingRiwayat(suratId, idx) {
+    const item = window._riwayatDataCache ? window._riwayatDataCache[idx] : null;
+    lihatTracking(suratId, item ? (item.catatan || null) : null, item ? (item.label_aksi || null) : null);
+}
+
+async function lihatTracking(suratId, extraCatatan = null, extraLabel = null) {
+    document.getElementById('trackingPerihal').textContent = 'Memuat...';
+    document.getElementById('timelineTracking').innerHTML = '<li style="text-align:center; padding:20px; color:#95a5a6;">⏳ Memuat riwayat...</li>';
+    document.getElementById('modalTracking').classList.add('aktif');
+    try {
+        const res  = await fetch(`/api/surat/${suratId}/tracking`);
+        const data = await res.json();
+        document.getElementById('trackingPerihal').textContent = data.perihal;
+        const formatTgl = tgl => tgl ? new Date(tgl).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+
+        let items = `<li class="timeline-item">
+            <div class="timeline-dot awal">📝</div>
+            <div class="timeline-konten">
+                <div class="tl-judul">Surat Dibuat</div>
+                <div class="tl-subjudul">${esc(data.nama_pembuat)} — ${esc(data.jabatan_pembuat)}</div>
+                <div class="tl-waktu">${esc(formatTgl(data.tanggal_dibuat) || '—')}</div>
+            </div></li>`;
+
+        data.chain.forEach(c => {
+            const icoMap = {
+                'menunggu' : { ico: '⏳', cls: 'menunggu' },
+                'disetujui': { ico: c.jenis_ttd === 'Paraf' ? '✍️' : '🔏', cls: 'selesai' },
+                'ditolak'  : { ico: '❌', cls: 'ditolak' }
+            };
+            const ico = icoMap[c.status] || { ico: '❓', cls: 'menunggu' };
+            items += `<li class="timeline-item">
+                <div class="timeline-dot ${ico.cls}">${ico.ico}</div>
+                <div class="timeline-konten">
+                    <div class="tl-judul">${esc(c.jenis_ttd)} <span style="font-size:0.72rem; color:#95a5a6; font-weight:normal;">— Urutan ${c.urutan}</span></div>
+                    <div class="tl-subjudul">${esc(c.nama_pejabat)} — ${esc(c.jabatan_pejabat)}</div>
+                    <div class="tl-waktu">${c.tanggal_proses ? esc(formatTgl(c.tanggal_proses)) : '<span style="color:#e67e22;">Belum diproses</span>'}</div>
+                    ${c.catatan ? `<div class="tl-catatan">💬 ${esc(c.catatan)}</div>` : ''}
+                </div></li>`;
+        });
+
+        if (data.tujuan && data.status === 'selesai') {
+            items += `<li class="timeline-item">
+                <div class="timeline-dot tujuan">📬</div>
+                <div class="timeline-konten">
+                    <div class="tl-judul">Diterima Penerima</div>
+                    <div class="tl-subjudul">${esc(data.tujuan.nama)} — ${esc(data.tujuan.jabatan)}</div>
+                    <div class="tl-waktu" style="color:#27ae60;">✅ Surat telah final & terkirim</div>
+                </div></li>`;
+        }
+
+        // Node tambahan dari Riwayat Saya (disposisi, tugas, penilaian)
+        if (extraCatatan && extraCatatan !== '—' && extraCatatan !== 'null') {
+            const meta = {
+                disposisi      : { ico: '📤', warna: '#2980b9', judul: 'Tindak Lanjut' },
+                tugas          : { ico: '📝', warna: '#e67e22', judul: 'Penugasan' },
+                nilai_diberikan: { ico: '⭐', warna: '#f39c12', judul: 'Penilaian Diberikan' },
+                nilai_diterima : { ico: '🌟', warna: '#8e44ad', judul: 'Penilaian Diterima' },
+            };
+            let tipe = 'disposisi';
+            if (extraLabel) {
+                if (extraLabel.includes('Tugas')) tipe = 'tugas';
+                else if (extraLabel.includes('Memberi Nilai')) tipe = 'nilai_diberikan';
+                else if (extraLabel.includes('Menerima Nilai')) tipe = 'nilai_diterima';
+            }
+            const m = meta[tipe];
+            items += `<li class="timeline-item">
+                <div class="timeline-dot selesai" style="border-color:${m.warna};">${m.ico}</div>
+                <div class="timeline-konten">
+                    <div class="tl-judul" style="color:${m.warna};">${m.judul}</div>
+                    <div style="margin-top:6px; background:#f0f9ff; border-left:3px solid ${m.warna}; border-radius:0 6px 6px 0; padding:8px 12px; font-size:0.82rem; color:#2c3e50;">${esc(extraCatatan)}</div>
+                </div></li>`;
+        }
+        document.getElementById('timelineTracking').innerHTML = items;
+    } catch (err) {
+        document.getElementById('timelineTracking').innerHTML = '<li style="text-align:center; color:#e74c3c; padding:20px;">Gagal memuat tracking.</li>';
+    }
+}
+function tutupTracking() { document.getElementById('modalTracking').classList.remove('aktif'); }
+pasangTutupLuar('modalTracking', tutupTracking);
+
+// ================================================================
+// TTD / PARAF SURAT
+// ================================================================
+function bukaTTD(persetujuanId, jenisTTD, perihal, jenisSurat) {
+    persetujuanAktif = { id: persetujuanId, jenis: jenisTTD, perihal, jenisSurat };
+    const isKetahui = jenisTTD === 'Mengetahui';
+    const isParaf   = jenisTTD === 'Paraf' || isKetahui;
+    const btnKon = document.getElementById('btnKonfirmasiTTD');
+
+    document.getElementById('modalTTDHeader').className = isParaf ? 'modal-header paraf' : 'modal-header';
+    document.getElementById('modalTTDJudul').textContent    = isParaf ? '✍️ Konfirmasi Paraf' : '🔏 Konfirmasi TTE';
+    document.getElementById('modalTTDSubjudul').textContent = isParaf
+        ? 'Masukkan PIN untuk membubuhkan paraf' : 'Masukkan PIN untuk membubuhkan Tanda Tangan Elektronik';
+    btnKon.className   = isParaf ? 'btn-konfirmasi paraf' : 'btn-konfirmasi';
+    btnKon.textContent = isParaf ? '✍️ Paraf Sekarang' : '🔏 Tandatangani Sekarang';
+    document.getElementById('modalTTDPerihal').textContent = perihal;
+
+    // "Mengetahui" tidak memakai PIN
+    document.getElementById('wrapPinTTD').style.display = isKetahui ? 'none' : 'block';
+    if (isKetahui) {
+        document.getElementById('modalTTDJudul').textContent    = '👁️ Konfirmasi Mengetahui';
+        document.getElementById('modalTTDSubjudul').textContent = 'Tidak perlu PIN, cukup tandai bahwa Anda sudah mengetahui surat ini';
+        btnKon.textContent = '👁️ Saya Mengetahui';
+    }
+    document.getElementById('modalCatatan').value = '';
+
+    // Penandatangan akhir surat permohonan wajib mengisi nomor surat
+    const butuhNomor = !isParaf && jenisSurat === 'permohonan';
+    document.getElementById('wrapNomorSuratInbox').style.display = butuhNomor ? 'block' : 'none';
+    document.getElementById('inputNomorSuratInbox').value = '';
+
+    ['m1','m2','m3','m4','m5','m6'].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = '';
+        el.className = isParaf ? 'pin-digit paraf' : 'pin-digit';
+    });
+    document.getElementById('modalTTD').classList.add('aktif');
+    if (!isKetahui) setTimeout(() => document.getElementById('m1').focus(), 300);
+}
+
+function tutupModalTTD() {
+    document.getElementById('modalTTD').classList.remove('aktif');
+    persetujuanAktif = null;
+}
+pasangTutupLuar('modalTTD', tutupModalTTD);
+
+async function konfirmasiTTD() {
+    if (!persetujuanAktif) return;
+    const aktif = persetujuanAktif;
+    const pin = ['m1','m2','m3','m4','m5','m6'].map(id => document.getElementById(id).value).join('');
+    if (aktif.jenis !== 'Mengetahui' && pin.length !== 6) { tampilNotif('Masukkan PIN 6 digit terlebih dahulu!', 'gagal'); return; }
+
+    const inputNomor = document.getElementById('inputNomorSuratInbox');
+    const nomorSurat = inputNomor.value.trim();
+    if (aktif.jenisSurat === 'permohonan' && aktif.jenis === 'TTE Utama' && !nomorSurat) {
+        tampilNotif('Nomor surat wajib diisi sebelum TTE!', 'gagal');
+        inputNomor.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnKonfirmasiTTD');
+    const teksAwal = btn.textContent;
+    btn.textContent = '⏳ Memproses...';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('nip', user.nip);
+    formData.append('pin', aktif.jenis === 'Mengetahui' ? '-' : pin);
+    formData.append('catatan', document.getElementById('modalCatatan').value);
+    formData.append('nomor_surat', nomorSurat);
+    try {
+        const res = await fetch(`/api/tanda-tangan/${aktif.id}`, { method: 'POST', body: formData });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            tutupModalTTD();
+            tampilNotif(data.message, 'sukses');
+            setTimeout(segarkanSemua, 800);
+        } else {
+            tampilNotif(data.detail || 'Gagal memproses!', 'gagal');
+            ['m1','m2','m3','m4','m5','m6'].forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('m1').focus();
+        }
+    } catch (err) {
+        tampilNotif('Koneksi gagal!', 'gagal');
+    }
+    btn.textContent = teksAwal;
+    btn.disabled = false;
+}
+
+function pindahPin(el, idBerikut) {
+    if (el.value.length === 1 && idBerikut) document.getElementById(idBerikut)?.focus();
+}
+function hapusPin(event, el, idSebelum) {
+    if (event.key === 'Backspace' && el.value === '' && idSebelum) document.getElementById(idSebelum)?.focus();
+}
+
+// ================================================================
+// NAVIGASI KE HALAMAN SURAT (lanjutan / balasan / surat tugas)
+// ================================================================
+function buatSuratTugasDariTugas(penugasanId) { window.location.href = `/surat?sebagai=tugas&penugasan_dari=${penugasanId}`; }
+function buatSuratLanjutan(suratId)            { window.location.href = `/surat?lanjutan_dari=${suratId}`; }
+function balasSuratLangsung(suratId)           { window.location.href = `/surat?lanjutan_dari=${suratId}&balasan=langsung`; }
+
+// ================================================================
+// MODAL DISPOSISI / PENUGASAN
+// ================================================================
+function tambahPenerimaTugas() {
+    const select = document.getElementById('selectPenerimaDT');
+    const nip  = select.value;
+    const nama = select.options[select.selectedIndex]?.text || '—';
+    if (!nip) { tampilNotif('Pilih penerima terlebih dahulu!', 'gagal'); return; }
+    if (daftarPenugasanTerpilih.some(p => p.nip === nip)) { tampilNotif('Penerima ini sudah ada di daftar!', 'gagal'); return; }
+    daftarPenugasanTerpilih.push({ nip, nama });
+    select.value = '';
+    renderDaftarPenerimaTugas();
+}
+function hapusPenerimaTugas(idx) { daftarPenugasanTerpilih.splice(idx, 1); renderDaftarPenerimaTugas(); }
+
+function renderDaftarPenerimaTugas() {
+    const wrap = document.getElementById('daftarPenerimaTugas');
+    if (daftarPenugasanTerpilih.length === 0) {
+        wrap.innerHTML = '<div style="text-align:center; padding:14px; color:#bdc3c7; font-size:0.82rem;">Belum ada penerima ditambahkan.</div>';
+        return;
+    }
+    wrap.innerHTML = daftarPenugasanTerpilih.map((p, i) => `
+        <div class="baris-item">
+            <span style="font-size:0.85rem; font-weight:700; color:#2c3e50;">${esc(p.nama)}</span>
+            <button class="btn-x" onclick="hapusPenerimaTugas(${i})">✕</button>
+        </div>`).join('');
+}
+
+function tambahPenerimaDisposisi() {
+    const select  = document.getElementById('selectPenerimaDT');
+    const nip     = select.value;
+    const nama    = select.options[select.selectedIndex]?.text || '—';
+    const catatan = document.getElementById('catatanDisposisiInput').value.trim();
+    if (!nip)     { tampilNotif('Pilih penerima terlebih dahulu!', 'gagal'); return; }
+    if (!catatan) { tampilNotif('Catatan wajib diisi untuk penerima ini!', 'gagal'); return; }
+    if (daftarPenerimaTerpilih.some(p => p.nip === nip)) { tampilNotif('Penerima ini sudah ada di daftar!', 'gagal'); return; }
+    daftarPenerimaTerpilih.push({ nip, nama, catatan });
+    document.getElementById('catatanDisposisiInput').value = '';
+    select.value = '';
+    renderDaftarPenerimaDisposisi();
+}
+function hapusPenerimaDisposisi(idx) { daftarPenerimaTerpilih.splice(idx, 1); renderDaftarPenerimaDisposisi(); }
+
+function renderDaftarPenerimaDisposisi() {
+    const wrap = document.getElementById('daftarPenerimaDisposisi');
+    if (daftarPenerimaTerpilih.length === 0) {
+        wrap.innerHTML = '<div style="text-align:center; padding:14px; color:#bdc3c7; font-size:0.82rem;">Belum ada penerima ditambahkan. Pilih penerima + isi catatan, lalu klik "Tambah".</div>';
+        return;
+    }
+    wrap.innerHTML = daftarPenerimaTerpilih.map((p, i) => `
+        <div class="baris-item" style="align-items:flex-start;">
+            <div style="min-width:0;">
+                <div style="font-size:0.85rem; font-weight:700; color:#2c3e50;">${esc(p.nama)}</div>
+                <div style="font-size:0.75rem; color:#7f8c8d; margin-top:2px; font-style:italic;">💬 ${esc(p.catatan)}</div>
+            </div>
+            <button class="btn-x" onclick="hapusPenerimaDisposisi(${i})">✕</button>
+        </div>`).join('');
+}
+
+function bukaModalDisposisiTugas(suratId, perihal, disposisiId = null) {
+    dtSuratId = suratId;
+    dtDisposisiId = disposisiId;
+    document.getElementById('perihalModalDT').textContent  = perihal;
+    document.getElementById('catatanDisposisiInput').value = '';
+    document.getElementById('deskripsiTugasInput').value   = '';
+    document.getElementById('deadlineTugasInput').value    = '';
+    daftarPenerimaTerpilih = [];  renderDaftarPenerimaDisposisi();
+    daftarPenugasanTerpilih = []; renderDaftarPenerimaTugas();
+    // Level 4 ke bawah tidak boleh meneruskan disposisi: langsung penugasan
+    const hanyaTugas = levelUnitUser !== null && levelUnitUser >= 4;
+    document.getElementById('btnPilihDisposisi').style.display = hanyaTugas ? 'none' : 'block';
+    pilihTipeAksi(hanyaTugas ? 'penugasan' : 'disposisi');
+    document.getElementById('modalDisposisiTugas').classList.add('aktif');
+}
+
+async function kembalikanSurat(suratId) {
+    const catatan = prompt('Alasan mengembalikan surat ke pembuat (wajib diisi):');
+    if (catatan === null) return;
+    if (!catatan.trim()) { tampilNotif('Alasan pengembalian wajib diisi!', 'gagal'); return; }
+    try {
+        const res = await fetch(`/api/surat/${suratId}/kembalikan`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nip: user.nip, catatan: catatan.trim() })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Surat dikembalikan', 'sukses'); segarkanSemua(); }
+        else tampilNotif(data.detail || 'Gagal mengembalikan surat', 'gagal');
+    } catch (e) { tampilNotif('Koneksi gagal!', 'gagal'); }
+}
+
+function tutupModalDT() {
+    document.getElementById('modalDisposisiTugas').classList.remove('aktif');
+    dtSuratId = null;
+    dtDisposisiId = null;
+}
+pasangTutupLuar('modalDisposisiTugas', tutupModalDT);
+
+function pilihTipeAksi(tipe) {
+    dtTipeAksi = tipe;
+    const btnKonfirmasi = document.getElementById('btnKonfirmasiDT');
+    document.getElementById('btnPilihDisposisi').classList.toggle('aktif-disposisi', tipe === 'disposisi');
+    document.getElementById('btnPilihTugaskan').classList.toggle('aktif-tugaskan', tipe === 'penugasan');
+    document.getElementById('wrapCatatanDisposisi').style.display = tipe === 'disposisi' ? 'block' : 'none';
+    document.getElementById('wrapFormPenugasan').style.display    = tipe === 'penugasan' ? 'block' : 'none';
+    if (tipe === 'disposisi') {
+        document.getElementById('judulModalDT').textContent = 'Teruskan Surat (Disposisi)';
+        btnKonfirmasi.style.background = '#2980b9';
+        btnKonfirmasi.innerHTML = '📤 Kirim Disposisi';
+    } else {
+        document.getElementById('judulModalDT').textContent = 'Beri Tugas Langsung';
+        btnKonfirmasi.style.background = '#e67e22';
+        btnKonfirmasi.innerHTML = '📝 Beri Tugas';
+    }
+    muatDropdownPenerimaDT(tipe);
+}
+
+async function muatDropdownPenerimaDT(mode) {
+    const select = document.getElementById('selectPenerimaDT');
+    select.innerHTML = '<option value="">-- Memuat... --</option>';
+    try {
+        let url = `/api/kandidat-penerima?kode_unit=${user.kode_unit}&mode=${mode}`;
+        if (mode === 'penugasan') url += `&nip_pemberi=${user.nip}`;
+        const data = await (await fetch(url)).json();
+        if (data.length === 0) { select.innerHTML = '<option value="">⚠️ Tidak ada kandidat penerima</option>'; return; }
+        let opsi = '<option value="">-- Pilih Penerima --</option>';
+        data.forEach(grup => {
+            opsi += `<option disabled>── ${esc(grup.label)} ──</option>`;
+            grup.pejabat.forEach(p => { opsi += `<option value="${esc(p.nip)}">${esc(p.nama)} — ${esc(p.nama_unit)}</option>`; });
+        });
+        select.innerHTML = opsi;
+    } catch (e) {
+        select.innerHTML = '<option value="">⚠️ Gagal memuat data</option>';
+    }
+}
+
+async function konfirmasiDisposisiTugas() {
+    const disposisi = dtTipeAksi === 'disposisi';
+    if ((disposisi ? daftarPenerimaTerpilih : daftarPenugasanTerpilih).length === 0) {
+        tampilNotif('Tambahkan minimal 1 penerima terlebih dahulu!', 'gagal');
+        return;
+    }
+    const btn = document.getElementById('btnKonfirmasiDT');
+    await kirimAksi(btn, '⏳ Mengirim...', async () => {
+        const url  = disposisi ? '/api/disposisi' : '/api/penugasan';
+        const body = disposisi ? {
+            surat_id: dtSuratId, nip_pengirim: user.nip, disposisi_asal_id: dtDisposisiId,
+            daftar_penerima: daftarPenerimaTerpilih.map(p => ({ nip_ke: p.nip, catatan: p.catatan }))
+        } : {
+            surat_id: dtSuratId, disposisi_id: dtDisposisiId, nip_pemberi: user.nip,
+            daftar_penerima: daftarPenugasanTerpilih.map(p => p.nip),
+            deskripsi_tugas: document.getElementById('deskripsiTugasInput').value || null,
+            deadline: document.getElementById('deadlineTugasInput').value || null,
+        };
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            tampilNotif(data.message || 'Berhasil diproses!', 'sukses');
+            tutupModalDT();
+            segarkanSemua();
+        } else tampilNotif(data.detail || 'Gagal memproses!', 'gagal');
+    });
+}
+
+// ================================================================
+// MODAL ARSIPKAN
+// ================================================================
+function bukaModalArsipkan(disposisiId, perihal) {
+    arsipkanDisposisiId = disposisiId;
+    document.getElementById('arsipkanPerihal').textContent = perihal;
+    document.getElementById('arsipkanCatatan').value = '';
+    document.getElementById('modalArsipkan').classList.add('aktif');
+}
+function tutupModalArsipkan() {
+    document.getElementById('modalArsipkan').classList.remove('aktif');
+    arsipkanDisposisiId = null;
+}
+pasangTutupLuar('modalArsipkan', tutupModalArsipkan);
+
+async function konfirmasiArsipkan() {
+    if (!arsipkanDisposisiId) return;
+    const catatan = document.getElementById('arsipkanCatatan').value.trim();
+    if (!catatan) { tampilNotif('Catatan alasan arsip wajib diisi!', 'gagal'); return; }
+    await kirimAksi(document.getElementById('btnKonfirmasiArsipkan'), '⏳ Memproses...', async () => {
+        const res = await fetch(`/api/disposisi/${arsipkanDisposisiId}/arsipkan`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ catatan })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif('Disposisi berhasil diarsipkan!', 'sukses'); tutupModalArsipkan(); segarkanSemua(); }
+        else tampilNotif(data.detail || 'Gagal mengarsipkan!', 'gagal');
+    });
+}
+
+// ================================================================
+// MODAL LAPOR TUGAS (umum)
+// ================================================================
+function bukaModalLaporTugas(penugasanId, perihal, suratTugasId = null) {
+    laporTugasPenugasanId = penugasanId;
+    laporSuratTugasId     = suratTugasId;
+    const wrapSt = document.getElementById('wrapSuratTugasLapor');
+    const tanda  = document.getElementById('tandaWajibBukti');
+    if (suratTugasId) {
+        wrapSt.style.display = 'block';
+        wrapSt.innerHTML = `✅ <strong>Surat tugas otomatis terlampir</strong> sebagai bukti laporan.
+            <a href="#" onclick="previewSuratInbox(${suratTugasId}); return false;" style="color:#27ae60; font-weight:700;">Lihat surat</a><br>
+            <small>Upload PDF di bawah hanya jika ada dokumen tambahan.</small>`;
+        tanda.textContent = '(opsional, dokumen tambahan)';
+        tanda.style.color = '#95a5a6';
+    } else {
+        wrapSt.style.display = 'none';
+        tanda.textContent = '*wajib';
+        tanda.style.color = '#e74c3c';
+    }
+    document.getElementById('laporTugasPerihal').textContent = perihal;
+    document.getElementById('isiLaporanInput').value = '';
+    document.getElementById('fileBuktiInput').value = '';
+    document.getElementById('modalLaporTugas').classList.add('aktif');
+}
+function tutupModalLaporTugas() {
+    document.getElementById('modalLaporTugas').classList.remove('aktif');
+    laporTugasPenugasanId = null;
+}
+pasangTutupLuar('modalLaporTugas', tutupModalLaporTugas);
+
+async function konfirmasiLaporTugas() {
+    const isiLaporan = document.getElementById('isiLaporanInput').value.trim();
+    const fileInput  = document.getElementById('fileBuktiInput');
+    const adaFile    = fileInput.files.length > 0;
+    if (!adaFile && !laporSuratTugasId) { tampilNotif('File bukti (PDF) wajib dilampirkan!', 'gagal'); return; }
+    if (adaFile && !fileInput.files[0].name.toLowerCase().endsWith('.pdf')) { tampilNotif('File bukti harus berformat PDF!', 'gagal'); return; }
+
+    await kirimAksi(document.getElementById('btnKonfirmasiLapor'), '⏳ Mengirim...', async () => {
+        let namaFileBukti = null;
+        if (adaFile) {
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            const resUp = await fetch('/api/upload/bukti-tugas', { method: 'POST', body: formData });
+            if (!resUp.ok) throw new Error((await resUp.json().catch(() => ({}))).detail || 'Gagal upload file bukti');
+            namaFileBukti = (await resUp.json()).nama_file;
+        }
+        const res = await fetch('/api/laporan-tugas', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ penugasan_id: laporTugasPenugasanId, isi_laporan: isiLaporan || null, file_bukti: namaFileBukti })
+        });
+        if (res.ok) { tampilNotif('Laporan berhasil dikirim!', 'sukses'); tutupModalLaporTugas(); segarkanSemua(); }
+        else tampilNotif((await res.json().catch(() => ({}))).detail || 'Gagal mengirim laporan!', 'gagal');
+    });
+}
+
+// ================================================================
+// MODAL NILAI TUGAS
+// ================================================================
+function bukaModalNilaiTugas(penugasanId) {
+    const item = cachePerluTindakan.find(i => i.tipe_aksi === 'tugas_nilai' && i.ref_id === penugasanId);
+    if (!item) return;
+    nilaiTugasPenugasanId = penugasanId;
+    const ex = item.extra || {};
+    document.getElementById('nilaiTugasPerihal').textContent    = item.perihal;
+    document.getElementById('nilaiTugasIsiLaporan').textContent = ex.isi_laporan || '(Tidak ada teks laporan)';
+    let linkHtml = '';
+    if (ex.surat_tugas_id) {
+        linkHtml += `<div><a href="#" onclick="previewSuratInbox(${ex.surat_tugas_id}); return false;" style="color:#8e44ad; font-size:0.82rem;">📝 Lihat Surat Tugas (hasil kerja)</a></div>`;
+    }
+    if (ex.file_bukti) {
+        linkHtml += `<div style="margin-top:6px;"><a href="/uploads/${esc(ex.file_bukti)}" target="_blank" style="color:#2980b9; font-size:0.82rem;">${ex.jenis_tugas === 'perjalanan_dinas' ? '📄 Lihat Laporan Perjalanan Dinas' : '📎 Lihat Dokumen Tambahan'}</a></div>`;
+    }
+    document.getElementById('nilaiTugasFileBukti').innerHTML = linkHtml;
+    document.getElementById('skalaNilaiInput').value = 'baik';
+    document.getElementById('catatanNilaiInput').value = '';
+    document.getElementById('modalNilaiTugas').classList.add('aktif');
+}
+function tutupModalNilaiTugas() {
+    document.getElementById('modalNilaiTugas').classList.remove('aktif');
+    nilaiTugasPenugasanId = null;
+}
+pasangTutupLuar('modalNilaiTugas', tutupModalNilaiTugas);
+
+async function konfirmasiNilaiTugas() {
+    await kirimAksi(document.getElementById('btnKonfirmasiNilai'), '⏳ Menyimpan...', async () => {
+        const res = await fetch('/api/penilaian', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                penugasan_id: nilaiTugasPenugasanId, nip_penilai: user.nip,
+                skala: document.getElementById('skalaNilaiInput').value,
+                catatan: document.getElementById('catatanNilaiInput').value || null,
+            })
+        });
+        if (res.ok) { tampilNotif('Penilaian berhasil disimpan!', 'sukses'); tutupModalNilaiTugas(); segarkanSemua(); }
+        else tampilNotif((await res.json().catch(() => ({}))).detail || 'Gagal menyimpan penilaian!', 'gagal');
+    });
+}
+
+// ================================================================
+// MODAL PENILAIAN LAYANAN (bintang per utas)
+// ================================================================
+function bukaModalNilaiLayanan(suratId, perihal) {
+    nilaiLayananSuratId = suratId;
+    bintangTerpilih = 0;
+    document.getElementById('nilaiLayananPerihal').textContent = perihal;
+    document.getElementById('catatanNilaiLayananInput').value = '';
+    renderBintangPicker();
+    document.getElementById('modalNilaiLayanan').classList.add('aktif');
+}
+function tutupModalNilaiLayanan() {
+    document.getElementById('modalNilaiLayanan').classList.remove('aktif');
+    nilaiLayananSuratId = null;
+}
+pasangTutupLuar('modalNilaiLayanan', tutupModalNilaiLayanan);
+
+function renderBintangPicker() {
+    document.querySelectorAll('#bintangPicker span').forEach(el => {
+        const nilai = parseInt(el.dataset.nilai);
+        el.textContent = nilai <= bintangTerpilih ? '★' : '☆';
+        el.style.color = nilai <= bintangTerpilih ? '#f39c12' : '#ccc';
+    });
+}
+document.getElementById('bintangPicker').addEventListener('click', function (e) {
+    if (e.target.dataset.nilai) { bintangTerpilih = parseInt(e.target.dataset.nilai); renderBintangPicker(); }
+});
+
+async function konfirmasiNilaiLayanan() {
+    if (bintangTerpilih === 0) { tampilNotif('Pilih jumlah bintang terlebih dahulu!', 'gagal'); return; }
+    await kirimAksi(document.getElementById('btnKonfirmasiNilaiLayanan'), '⏳ Menyimpan...', async () => {
+        const res = await fetch('/api/penilaian-layanan', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                surat_id: nilaiLayananSuratId, nip_penilai: user.nip, bintang: bintangTerpilih,
+                catatan: document.getElementById('catatanNilaiLayananInput').value || null,
+            })
+        });
+        if (res.ok) { tampilNotif('Terima kasih atas penilaiannya!', 'sukses'); tutupModalNilaiLayanan(); segarkanSemua(); }
+        else tampilNotif((await res.json().catch(() => ({}))).detail || 'Gagal menyimpan penilaian!', 'gagal');
+    });
+}
+
+// ================================================================
+// LAPORAN PERJALANAN DINAS (1 laporan bersama, semua peserta TTE)
+// ================================================================
+let laporPDPenugasanId = null, laporPDLaporanId = null, ttdLaporanId = null;
+let lampiranPD = [];        // { path, nama, baru }
+let laporPDSiap = false;    // true hanya jika data laporan berhasil dimuat
+
+async function ambilDataPD(penugasanId) {
+    const res = await fetch(`/api/laporan-pd/data?penugasan_id=${penugasanId}&nip=${user.nip}`);
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Gagal memuat data');
+    return d;
+}
+
+function renderLampiranPD() {
+    const wrap = document.getElementById('laporPDLampiran');
+    if (lampiranPD.length === 0) { wrap.innerHTML = '<div style="font-size:0.78rem; color:#bdc3c7;">Belum ada lampiran.</div>'; return; }
+    wrap.innerHTML = lampiranPD.map((l, i) => `
+        <div class="baris-item">
+            <a href="/uploads/${esc(l.path)}" target="_blank" style="font-size:0.82rem; color:#2980b9; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ${esc(l.nama)}</a>
+            <button type="button" class="btn-x" onclick="hapusLampiranPD(${i})">✕</button>
+        </div>`).join('');
+}
+
+function batalkanFilePD(path) {
+    fetch('/api/upload/batalkan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nama_file: path }) }).catch(() => {});
+}
+
+async function unggahLampiranPD(input) {
+    for (const f of Array.from(input.files)) {
+        if (lampiranPD.length >= 10) { tampilNotif('Maksimal 10 lampiran', 'gagal'); break; }
+        const fd = new FormData();
+        fd.append('file', f);
+        try {
+            const res = await fetch('/api/upload/lampiran-pd', { method: 'POST', body: fd });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(d.detail || 'Gagal mengunggah');
+            lampiranPD.push({ path: d.nama_file, nama: d.nama_asli, baru: true });
+            renderLampiranPD();
+        } catch (e) { tampilNotif(`${f.name}: ${e.message}`, 'gagal'); }
+    }
+    input.value = '';
+}
+
+function hapusLampiranPD(i) {
+    if (lampiranPD[i].baru) batalkanFilePD(lampiranPD[i].path);   // belum tersimpan: hapus dari server
+    lampiranPD.splice(i, 1);
+    renderLampiranPD();
+}
+
+async function bukaModalLaporPD(penugasanId, perihal) {
+    laporPDSiap = false;
+    laporPDPenugasanId = penugasanId;
+    laporPDLaporanId = null;
+    lampiranPD = [];
+    renderLampiranPD();
+    document.getElementById('laporPDPerihal').textContent = perihal;
+    document.getElementById('laporPDInfo').textContent = 'Memuat data surat tugas...';
+    document.getElementById('laporPDPeserta').innerHTML = '';
+    document.getElementById('laporPDTempat').value = '';
+    document.getElementById('laporPDHasil').value = '';
+    document.getElementById('modalLaporPD').classList.add('aktif');
+    try {
+        const d = await ambilDataPD(penugasanId);
+        const edit = !!d.laporan;
+        if (edit && d.laporan.status !== 'draft') throw new Error('Laporan sudah final dan terkunci');
+        laporPDLaporanId = edit ? d.laporan.id : null;
+
+        document.getElementById('laporPDJudul').textContent = edit ? '✏️ Edit Laporan Perjalanan Dinas' : '✈️ Susun Laporan Perjalanan Dinas';
+        document.getElementById('laporPDInfo').innerHTML = `
+            <div><strong>Dasar:</strong> Surat Tugas Direktur Nomor ${esc(d.nomor_surat)} tanggal ${esc(d.tanggal_surat)}</div>
+            <div><strong>Hari/Tanggal:</strong> ${esc(d.hari_tanggal)}</div>
+            <div><strong>Kegiatan:</strong> ${esc(d.kegiatan)}</div>`;
+        document.getElementById('laporPDTempat').value = edit ? d.laporan.tempat : (d.tempat || '');
+        document.getElementById('laporPDHasil').value  = edit ? d.laporan.hasil_kegiatan : '';
+        lampiranPD = (d.lampiran || []).map(l => ({ path: l.path, nama: l.nama, baru: false }));
+        renderLampiranPD();
+        document.getElementById('laporPDCatatan').textContent = edit
+            ? '⚠️ Semua peserta boleh mengedit selama laporan belum final. Menyimpan perubahan mereset tanda tangan yang sudah masuk: semua peserta menandatangani ulang.'
+            : 'Setelah disusun, Anda dan peserta lain menandatangani laporan ini dengan PIN TTE. Peserta lain juga boleh mengedit sampai semua menandatangani.';
+
+        document.getElementById('laporPDPeserta').innerHTML = d.peserta.map(p => {
+            const saya = p.nip === user.nip;
+            const ttd  = p.sudah_ttd ? ' <span style="color:#27ae60;">✅ sudah TTE</span>' : '';
+            const aksi = saya
+                ? '<span style="color:#95a5a6; font-size:0.75rem;">(Anda)</span>'
+                : `<label style="font-size:0.75rem; color:#c0392b; cursor:pointer;"><input type="checkbox" class="cbKeluarkanPD" value="${esc(p.nip)}"> Tidak berangkat / keluarkan</label>`;
+            return `<div class="baris-item"><span style="font-size:0.84rem; font-weight:700; color:#2c3e50;">${esc(p.nama)}${ttd}</span>${aksi}</div>`;
+        }).join('');
+        laporPDSiap = true;
+    } catch (e) {
+        document.getElementById('laporPDInfo').textContent = e.message || 'Gagal memuat data';
+    }
+}
+
+function tutupModalLaporPD() {
+    lampiranPD.filter(l => l.baru).forEach(l => batalkanFilePD(l.path));   // bersihkan unggahan yang tidak jadi disimpan
+    lampiranPD = [];
+    document.getElementById('modalLaporPD').classList.remove('aktif');
+    laporPDPenugasanId = null;
+    laporPDLaporanId = null;
+    laporPDSiap = false;
+}
+pasangTutupLuar('modalLaporPD', tutupModalLaporPD);
+
+async function konfirmasiLaporPD() {
+    if (!laporPDSiap) { tampilNotif('Data laporan belum termuat. Tutup lalu buka lagi tombolnya.', 'gagal'); return; }
+    const tempat = document.getElementById('laporPDTempat').value.trim();
+    const hasil  = document.getElementById('laporPDHasil').value.trim();
+    if (!tempat) { tampilNotif('Tempat wajib diisi!', 'gagal'); return; }
+    if (!hasil)  { tampilNotif('Hasil kegiatan wajib diisi!', 'gagal'); return; }
+    const keluar = Array.from(document.querySelectorAll('.cbKeluarkanPD:checked')).map(c => c.value);
+    if (keluar.length > 0 && !confirm(`Keluarkan ${keluar.length} peserta dari laporan? Tugas mereka akan dibatalkan.`)) return;
+    const lampiran = lampiranPD.map(l => ({ file: l.path, nama: l.nama }));
+
+    await kirimAksi(document.getElementById('btnKonfirmasiLaporPD'), '⏳ Menyusun laporan...', async () => {
+        const edit = laporPDLaporanId !== null;
+        const res = await fetch(edit ? `/api/laporan-pd/${laporPDLaporanId}` : '/api/laporan-pd', {
+            method: edit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(edit
+                ? { nip: user.nip, tempat, hasil_kegiatan: hasil, nip_dikeluarkan: keluar, lampiran }
+                : { penugasan_id: laporPDPenugasanId, nip_pelapor: user.nip, tempat, hasil_kegiatan: hasil, nip_dikeluarkan: keluar, lampiran })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            tampilNotif(data.message || 'Laporan tersimpan', 'sukses');
+            lampiranPD = [];       // sudah tersimpan: jangan dibersihkan saat modal ditutup
+            tutupModalLaporPD();
+            segarkanSemua();
+        } else tampilNotif(data.detail || 'Gagal menyimpan laporan!', 'gagal');
+    });
+}
+
+async function bukaModalTTDLaporan(penugasanId, perihal) {
+    ttdLaporanId = null;
+    document.getElementById('ttdLaporanPerihal').textContent = perihal;
+    document.getElementById('ttdLaporanInfo').textContent = 'Memuat laporan...';
+    document.getElementById('ttdLaporanPin').value = '';
+    document.getElementById('modalTTDLaporan').classList.add('aktif');
+    try {
+        const d = await ambilDataPD(penugasanId);
+        if (!d.laporan) throw new Error('Laporan belum disusun');
+        ttdLaporanId = d.laporan.id;
+        const jml = d.peserta.filter(p => p.sudah_ttd).length;
+        document.getElementById('ttdLaporanInfo').innerHTML = `
+            <div><a href="/api/laporan-pd/${d.laporan.id}/pdf" target="_blank" style="color:#27ae60; font-weight:700;">📄 Buka dan periksa laporan (PDF)</a></div>
+            <div style="margin-top:6px;">Sudah menandatangani: <strong>${jml} dari ${d.peserta.length}</strong></div>
+            ${d.peserta.map(p => `<div style="font-size:0.8rem;">${p.sudah_ttd ? '✅' : '⏳'} ${esc(p.nama)}</div>`).join('')}`;
+        setTimeout(() => document.getElementById('ttdLaporanPin').focus(), 300);
+    } catch (e) {
+        document.getElementById('ttdLaporanInfo').textContent = e.message || 'Gagal memuat data';
+    }
+}
+function tutupModalTTDLaporan() {
+    document.getElementById('modalTTDLaporan').classList.remove('aktif');
+    ttdLaporanId = null;
+}
+pasangTutupLuar('modalTTDLaporan', tutupModalTTDLaporan);
+
+async function konfirmasiTTDLaporan() {
+    if (!ttdLaporanId) return;
+    const pin = document.getElementById('ttdLaporanPin').value.trim();
+    if (pin.length !== 6) { tampilNotif('Masukkan PIN 6 digit terlebih dahulu!', 'gagal'); return; }
+    await kirimAksi(document.getElementById('btnKonfirmasiTTDLaporan'), '⏳ Memproses...', async () => {
+        const fd = new FormData();
+        fd.append('nip', user.nip);
+        fd.append('pin', pin);
+        const res = await fetch(`/api/laporan-pd/${ttdLaporanId}/ttd`, { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'TTE berhasil', 'sukses'); tutupModalTTDLaporan(); segarkanSemua(); }
+        else { tampilNotif(data.detail || 'Gagal menandatangani!', 'gagal'); document.getElementById('ttdLaporanPin').value = ''; }
+    });
+}
+
+// ================================================================
+// RAPAT: ABSENSI & KIRIM PERWAKILAN
+// ================================================================
+let rapatPenugasanId = null;
+
+
+// ---------- Ubah jadwal rapat (oleh notulen) ----------
+let ubahJadwalPenugasanId = null;
+
+function bukaModalUbahJadwal(penugasanId, perihal) {
+    ubahJadwalPenugasanId = penugasanId;
+    document.getElementById('ubahJadwalPerihal').textContent = perihal;
+    document.getElementById('ubahJadwalSaatIni').textContent = (itemRapat(penugasanId).nomor_surat || '—').replace(/^📅\s*/, '');
+    document.getElementById('ubahJadwalTanggal').value = '';
+    document.getElementById('ubahJadwalMulai').value = '';
+    document.getElementById('ubahJadwalSelesai').value = '';
+    document.getElementById('ubahJadwalAlasan').value = '';
+    document.getElementById('modalUbahJadwal').classList.add('aktif');
+}
+function tutupModalUbahJadwal() {
+    document.getElementById('modalUbahJadwal').classList.remove('aktif');
+    ubahJadwalPenugasanId = null;
+}
+pasangTutupLuar('modalUbahJadwal', tutupModalUbahJadwal);
+
+async function konfirmasiUbahJadwal() {
+    const tanggal = document.getElementById('ubahJadwalTanggal').value;
+    const mulai   = document.getElementById('ubahJadwalMulai').value;
+    const selesai = document.getElementById('ubahJadwalSelesai').value;
+    const alasan  = document.getElementById('ubahJadwalAlasan').value.trim();
+    if (!tanggal) { tampilNotif('Tanggal rapat baru wajib diisi!', 'gagal'); return; }
+    if (!mulai)   { tampilNotif('Jam mulai wajib diisi!', 'gagal'); return; }
+    if (selesai && selesai <= mulai) { tampilNotif('Jam selesai harus setelah jam mulai!', 'gagal'); return; }
+    if (!alasan)  { tampilNotif('Alasan perubahan jadwal wajib diisi!', 'gagal'); return; }
+
+    await kirimAksi(document.getElementById('btnKonfirmasiUbahJadwal'), '⏳ Menyimpan...', async () => {
+        const res = await fetch('/api/rapat/ubah-jadwal', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                penugasan_id: ubahJadwalPenugasanId, nip: user.nip,
+                tanggal, jam_mulai: mulai, jam_selesai: selesai || null, alasan
+            })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Jadwal diperbarui', 'sukses'); tutupModalUbahJadwal(); segarkanSemua(); }
+        else tampilNotif(data.detail || 'Gagal mengubah jadwal!', 'gagal');
+    });
+}
+
+function itemRapat(penugasanId) {
+    return cachePerluTindakan.find(i => i.tipe_aksi === 'tugas_lapor' && i.ref_id === penugasanId) || {};
+}
+
+function bukaModalAbsenRapat(penugasanId, perihal) {
+    rapatPenugasanId = penugasanId;
+    document.getElementById('absenRapatPerihal').textContent = perihal;
+    document.getElementById('absenRapatInfo').textContent = itemRapat(penugasanId).nomor_surat || '';
+    document.getElementById('absenRapatPin').value = '';
+    document.getElementById('modalAbsenRapat').classList.add('aktif');
+    setTimeout(() => document.getElementById('absenRapatPin').focus(), 300);
+}
+function tutupModalAbsenRapat() {
+    document.getElementById('modalAbsenRapat').classList.remove('aktif');
+    rapatPenugasanId = null;
+}
+pasangTutupLuar('modalAbsenRapat', tutupModalAbsenRapat);
+
+async function konfirmasiAbsenRapat() {
+    const pin = document.getElementById('absenRapatPin').value.trim();
+    if (pin.length !== 6) { tampilNotif('Masukkan PIN 6 digit terlebih dahulu!', 'gagal'); return; }
+    await kirimAksi(document.getElementById('btnKonfirmasiAbsenRapat'), '⏳ Memproses...', async () => {
+        const fd = new FormData();
+        fd.append('penugasan_id', rapatPenugasanId);
+        fd.append('nip', user.nip);
+        fd.append('pin', pin);
+        const res = await fetch('/api/rapat/absen', { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Kehadiran tercatat', 'sukses'); tutupModalAbsenRapat(); segarkanSemua(); }
+        else { tampilNotif(data.detail || 'Gagal mencatat kehadiran!', 'gagal'); document.getElementById('absenRapatPin').value = ''; }
+    });
+}
+
+async function bukaModalPerwakilan(penugasanId, perihal) {
+    rapatPenugasanId = penugasanId;
+    document.getElementById('perwakilanPerihal').textContent = perihal;
+    document.getElementById('alasanPerwakilanRapat').value = '';
+    const sel = document.getElementById('selectPerwakilanRapat');
+    sel.innerHTML = '<option value="">-- Memuat... --</option>';
+    document.getElementById('modalPerwakilan').classList.add('aktif');
+    try {
+        const res = await fetch(`/api/rapat/kandidat-perwakilan?penugasan_id=${penugasanId}&nip=${user.nip}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Gagal memuat kandidat');
+        if (data.length === 0) { sel.innerHTML = '<option value="">⚠️ Tidak ada kandidat perwakilan di unit Anda</option>'; return; }
+        sel.innerHTML = '<option value="">-- Pilih Perwakilan --</option>' +
+            data.map(p => `<option value="${esc(p.nip)}">${esc(p.nama)} — ${esc(p.jabatan || '')} (${esc(p.nama_unit)})</option>`).join('');
+    } catch (e) {
+        sel.innerHTML = `<option value="">⚠️ ${esc(e.message || 'Gagal memuat')}</option>`;
+    }
+}
+function tutupModalPerwakilan() {
+    document.getElementById('modalPerwakilan').classList.remove('aktif');
+    rapatPenugasanId = null;
+}
+pasangTutupLuar('modalPerwakilan', tutupModalPerwakilan);
+
+async function konfirmasiPerwakilan() {
+    const sel    = document.getElementById('selectPerwakilanRapat');
+    const nipW   = sel.value;
+    const nama   = sel.options[sel.selectedIndex]?.text || '';
+    const alasan = document.getElementById('alasanPerwakilanRapat').value.trim();
+    if (!nipW)   { tampilNotif('Pilih perwakilan terlebih dahulu!', 'gagal'); return; }
+    if (!alasan) { tampilNotif('Alasan berhalangan hadir wajib diisi!', 'gagal'); return; }
+    if (!confirm(`Kirim "${nama}" sebagai perwakilan Anda? Setelah ini Anda tidak perlu absen.`)) return;
+
+    await kirimAksi(document.getElementById('btnKonfirmasiPerwakilan'), '⏳ Mengirim...', async () => {
+        const res = await fetch('/api/rapat/perwakilan', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ penugasan_id: rapatPenugasanId, nip_pengirim: user.nip, nip_perwakilan: nipW, alasan })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Perwakilan dikirim', 'sukses'); tutupModalPerwakilan(); segarkanSemua(); }
+        else tampilNotif(data.detail || 'Gagal mengirim perwakilan!', 'gagal');
+    });
+}
+
+// ================================================================
+// RAPAT: NOTULENSI (oleh notulen)
+// ================================================================
+let notulenPenugasanId = null, notulenPeserta = [], notulenTamu = [];
+
+function tautanPDFNotulen(urlNotulen, fh) {
+    let h = '';
+    if (urlNotulen) h += `<a href="${esc(urlNotulen)}" target="_blank" style="color:#8e44ad; font-weight:700; margin-right:16px;">📄 Lihat Notulen (PDF)</a>`;
+    if (fh) h += `<a href="/uploads/${esc(fh)}" target="_blank" style="color:#27ae60; font-weight:700;">📋 Lihat Daftar Hadir (PDF)</a>`;
+    document.getElementById('notulenLink').innerHTML = h || '<span style="color:#95a5a6;">PDF pratinjau muncul setelah Anda menekan Simpan Draft.</span>';
+}
+
+async function bukaModalNotulensi(penugasanId, perihal) {
+    notulenPenugasanId = penugasanId;
+    notulenPeserta = [];
+    notulenTamu = [];
+    document.getElementById('notulenPerihal').textContent = perihal;
+    document.getElementById('notulenInfo').textContent = 'Memuat...';
+    document.getElementById('notulenPeserta').innerHTML = '';
+    document.getElementById('notulenTamu').innerHTML = '';
+    document.getElementById('notulenHasil').value = '';
+    document.getElementById('notulenRevisi').style.display = 'none';
+    document.getElementById('modalNotulensi').classList.add('aktif');
+    try {
+        const res = await fetch(`/api/rapat/notulensi?penugasan_id=${penugasanId}&nip=${user.nip}`);
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'Gagal memuat data');
+
+        document.getElementById('notulenInfo').innerHTML = `
+            <div><strong>Agenda:</strong> ${esc(d.info.agenda)}</div>
+            <div><strong>Hari/Tanggal:</strong> ${esc(d.info.hari_tanggal)}</div>
+            <div><strong>Waktu:</strong> ${esc(d.info.waktu)}</div>
+            <div><strong>Tempat:</strong> ${esc(d.info.tempat)}</div>
+            <div><strong>Pimpinan Rapat:</strong> ${esc(d.info.pimpinan)}</div>`;
+        if (d.catatan_revisi) {
+            const rv = document.getElementById('notulenRevisi');
+            rv.style.display = 'block';
+            rv.innerHTML = `<strong>Catatan revisi pimpinan:</strong><br>${esc(d.catatan_revisi)}`;
+        }
+        notulenPeserta = d.peserta;
+        notulenTamu = d.tamu;
+        document.getElementById('notulenHasil').value = d.hasil_rapat || '';
+        renderPesertaNotulen();
+        renderTamuNotulen();
+        tautanPDFNotulen(d.url_notulen, d.file_daftar_hadir);
+
+        ['btnSimpanNotulen', 'btnKirimNotulen'].forEach(id => { document.getElementById(id).style.display = d.boleh_edit ? '' : 'none'; });
+        document.getElementById('notulenHasil').disabled = !d.boleh_edit;
+    } catch (e) {
+        document.getElementById('notulenInfo').textContent = e.message || 'Gagal memuat data';
+    }
+}
+function tutupModalNotulensi() {
+    document.getElementById('modalNotulensi').classList.remove('aktif');
+    notulenPenugasanId = null;
+}
+pasangTutupLuar('modalNotulensi', tutupModalNotulensi);
+
+function renderPesertaNotulen() {
+    document.getElementById('notulenPeserta').innerHTML = notulenPeserta.map((p, i) => {
+        const nama = esc(p.nama) + (p.is_notulen ? ' <small style="color:#8e44ad;">(notulen)</small>' : '')
+                   + (p.mewakili ? ` <small style="color:#7f8c8d;">(mewakili ${esc(p.mewakili)})</small>` : '');
+        const kanan = p.editable
+            ? `<select id="stNot_${i}" style="padding:5px; border:1px solid #ddd; border-radius:6px; font-size:0.78rem;">
+                   <option value="belum" ${p.status === 'belum' ? 'selected' : ''}>Belum absen (otomatis Tidak hadir)</option>
+                   <option value="izin" ${p.status === 'izin' ? 'selected' : ''}>Izin</option>
+                   <option value="tidak_hadir" ${p.status === 'tidak_hadir' ? 'selected' : ''}>Tidak hadir</option>
+               </select>
+               <input type="text" id="alNot_${i}" value="${esc(p.alasan || '')}" placeholder="Alasan (opsional)" style="padding:5px; border:1px solid #ddd; border-radius:6px; font-size:0.78rem; width:150px;">`
+            : `<span style="font-size:0.78rem; font-weight:700;">${esc(p.label)}</span>`;
+        return `<div class="baris-item"><span style="font-size:0.84rem; font-weight:700; color:#2c3e50;">${nama}</span><span style="display:flex; gap:6px; align-items:center;">${kanan}</span></div>`;
+    }).join('') || '<div style="color:#bdc3c7; font-size:0.82rem;">Belum ada peserta.</div>';
+}
+
+function renderTamuNotulen() {
+    const wrap = document.getElementById('notulenTamu');
+    if (notulenTamu.length === 0) { wrap.innerHTML = '<div style="color:#bdc3c7; font-size:0.82rem;">Belum ada peserta luar.</div>'; return; }
+    wrap.innerHTML = notulenTamu.map((t, i) => `
+        <div class="baris-item">
+            <span style="font-size:0.84rem; font-weight:700; color:#2c3e50;">${esc(t.nama)}
+                <small style="font-weight:normal; color:#7f8c8d;">${t.instansi ? '— ' + esc(t.instansi) : ''}</small></span>
+            <span style="display:flex; gap:10px; align-items:center;">
+                <label style="font-size:0.78rem; cursor:pointer;"><input type="checkbox" ${t.hadir ? 'checked' : ''} onchange="notulenTamu[${i}].hadir = this.checked"> Hadir</label>
+                <button type="button" class="btn-x" onclick="hapusTamuNotulen(${i})">✕</button>
+            </span>
+        </div>`).join('');
+}
+
+function tambahTamuNotulen() {
+    const nama = document.getElementById('tamuNama').value.trim();
+    const ins  = document.getElementById('tamuInstansi').value.trim();
+    if (!nama) { tampilNotif('Nama peserta luar wajib diisi!', 'gagal'); return; }
+    notulenTamu.push({ nama, instansi: ins, hadir: true });
+    document.getElementById('tamuNama').value = '';
+    document.getElementById('tamuInstansi').value = '';
+    renderTamuNotulen();
+}
+function hapusTamuNotulen(i) { notulenTamu.splice(i, 1); renderTamuNotulen(); }
+
+function kumpulkanNotulensi() {
+    const statusPeserta = [];
+    notulenPeserta.forEach((p, i) => {
+        if (!p.editable) return;
+        statusPeserta.push({
+            nip: p.nip,
+            status_hadir: document.getElementById('stNot_' + i).value,
+            alasan: document.getElementById('alNot_' + i).value.trim() || null
+        });
+    });
+    return {
+        penugasan_id: notulenPenugasanId, nip: user.nip,
+        hasil_rapat: document.getElementById('notulenHasil').value,
+        tamu: notulenTamu.map(t => ({ nama: t.nama, instansi: t.instansi || null, hadir: t.hadir })),
+        status_peserta: statusPeserta
+    };
+}
+
+async function simpanNotulensi(kirim) {
+    const body = kumpulkanNotulensi();
+    if (kirim) {
+        if (!body.hasil_rapat.trim()) { tampilNotif('Hasil rapat wajib diisi!', 'gagal'); return; }
+        if (!confirm('Kirim notulensi ke pimpinan rapat? Setelah dikirim tidak bisa diubah, dan peserta yang belum absen tercatat Tidak hadir.')) return;
+    }
+    await kirimAksi(document.getElementById(kirim ? 'btnKirimNotulen' : 'btnSimpanNotulen'), '⏳ Memproses...', async () => {
+        const res = await fetch(kirim ? '/api/rapat/notulensi/kirim' : '/api/rapat/notulensi', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            tampilNotif(data.message || 'Tersimpan', 'sukses');
+            if (kirim) { tutupModalNotulensi(); segarkanSemua(); }
+            else tautanPDFNotulen(data.url_notulen, data.file_daftar_hadir);
+        } else tampilNotif(data.detail || 'Gagal memproses!', 'gagal');
+    });
+}
+
+// ================================================================
+// RAPAT: TTE & REVISI NOTULENSI (oleh pimpinan rapat)
+// ================================================================
+let notulenTtdId = null, notulenRevisiId = null;
+
+function bukaModalTTDNotulen(laporanId, perihal) {
+    notulenTtdId = laporanId;
+    document.getElementById('ttdNotulenPerihal').textContent = perihal;
+    document.getElementById('ttdNotulenPin').value = '';
+    document.getElementById('modalTTDNotulen').classList.add('aktif');
+    setTimeout(() => document.getElementById('ttdNotulenPin').focus(), 300);
+}
+function tutupModalTTDNotulen() {
+    document.getElementById('modalTTDNotulen').classList.remove('aktif');
+    notulenTtdId = null;
+}
+pasangTutupLuar('modalTTDNotulen', tutupModalTTDNotulen);
+
+async function konfirmasiTTDNotulen() {
+    const pin = document.getElementById('ttdNotulenPin').value.trim();
+    if (pin.length !== 6) { tampilNotif('Masukkan PIN 6 digit terlebih dahulu!', 'gagal'); return; }
+    await kirimAksi(document.getElementById('btnKonfirmasiTTDNotulen'), '⏳ Memproses...', async () => {
+        const fd = new FormData();
+        fd.append('nip', user.nip);
+        fd.append('pin', pin);
+        const res = await fetch(`/api/rapat/notulensi/${notulenTtdId}/ttd`, { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Notulensi ditandatangani', 'sukses'); tutupModalTTDNotulen(); segarkanSemua(); }
+        else { tampilNotif(data.detail || 'Gagal menandatangani!', 'gagal'); document.getElementById('ttdNotulenPin').value = ''; }
+    });
+}
+
+function bukaModalRevisiNotulen(laporanId, perihal) {
+    notulenRevisiId = laporanId;
+    document.getElementById('revisiNotulenPerihal').textContent = perihal;
+    document.getElementById('revisiNotulenCatatan').value = '';
+    document.getElementById('modalRevisiNotulen').classList.add('aktif');
+}
+function tutupModalRevisiNotulen() {
+    document.getElementById('modalRevisiNotulen').classList.remove('aktif');
+    notulenRevisiId = null;
+}
+pasangTutupLuar('modalRevisiNotulen', tutupModalRevisiNotulen);
+
+async function konfirmasiRevisiNotulen() {
+    const catatan = document.getElementById('revisiNotulenCatatan').value.trim();
+    if (!catatan) { tampilNotif('Catatan revisi wajib diisi!', 'gagal'); return; }
+    await kirimAksi(document.getElementById('btnKonfirmasiRevisiNotulen'), '⏳ Memproses...', async () => {
+        const res = await fetch(`/api/rapat/notulensi/${notulenRevisiId}/revisi`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nip: user.nip, catatan })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Dikembalikan ke notulen', 'sukses'); tutupModalRevisiNotulen(); segarkanSemua(); }
+        else tampilNotif(data.detail || 'Gagal memproses!', 'gagal');
+    });
+}
+
+// ================================================================
+// POHON TRACKING & SEMUA KASUS
+// ================================================================
+const IKON_POHON = { surat:'✉️', ttd:'🔏', disposisi:'📤', tugas:'📝', laporan:'📄', nilai:'⭐',
+                     rapat:'📅', peserta:'👤', notulensi:'🗒️', laporan_pd:'✈️' };
+const LABEL_STATUS_POHON = { selesai:'Selesai', berjalan:'Berjalan', belum:'Belum', batal:'Ditolak', info:'' };
+
+function renderNodePohon(n, depth = 0) {
+    const st   = n.status || 'info';
+    const kls  = st === 'belum' ? 'info' : st;          // warna titik; "belum" tampil abu-abu
+    const dot  = st === 'belum' ? '○' : (IKON_POHON[n.tipe] || '•');
+    const aksi = [];
+    if (n.surat_id) aksi.push(`<button class="btn-preview" onclick="event.stopPropagation(); previewSuratInbox(${n.surat_id})">👁️ Lihat Surat</button>`);
+(n.files || []).forEach(f => aksi.push(`<a class="btn-preview" style="background:#1a1a1a;" href="${esc(f.url)}" target="_blank" onclick="event.stopPropagation()">📄 ${esc(f.label)}</a>`));
+
+    const adaAnak = !!(n.anak && n.anak.length);
+    const kepala = `<div class="pn-kepala">
+        <span class="pn-caret">${adaAnak ? '▶' : ''}</span>
+        <span class="pn-dot pn-${st === 'belum' ? 'x' : esc(st)}">${dot}</span>
+        <div class="pn-isi">
+            <div class="pn-judul">${esc(n.judul)}${LABEL_STATUS_POHON[st] ? `<span class="pn-badge pn-${esc(st)}">${LABEL_STATUS_POHON[st]}</span>` : ''}</div>
+            ${n.sub ? `<div class="pn-sub">${esc(n.sub)}</div>` : ''}
+            ${n.tanggal ? `<div class="pn-tgl">${esc(n.tanggal.replace('T', ' '))}</div>` : ''}
+            ${aksi.length ? `<div class="pn-aksi">${aksi.join('')}</div>` : ''}
+        </div></div>`;
+
+    if (!n.anak || n.anak.length === 0) return `<div class="pn-daun">${kepala}</div>`;
+    const buka = true;   // semua terbuka; pengguna bisa melipat sendiri
+    return `<details class="pn" ${buka ? 'open' : ''}><summary>${kepala}</summary>
+        <div class="pn-anak">${n.anak.map(a => renderNodePohon(a, depth + 1)).join('')}</div></details>`;
+}
+
+async function bukaPohon(suratId) {
+    document.getElementById('pohonJudul').textContent = 'Memuat...';
+    document.getElementById('pohonRingkas').innerHTML = '';
+    document.getElementById('pohonIsi').innerHTML = '<div style="text-align:center; padding:24px; color:#95a5a6;">⏳ Menyusun alur...</div>';
+    document.getElementById('modalPohon').classList.add('aktif');
+    try {
+        const res = await fetch(`/api/pohon-kasus/${suratId}?nip=${user.nip}`);
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'Gagal memuat alur');
+        document.getElementById('pohonJudul').textContent = d.judul + (d.nomor_surat ? ` — ${d.nomor_surat}` : '');
+
+        const ikon = { selesai: '✓', berjalan: '⏳', belum: '○' };
+        const stepper = (d.tahap || []).map(t =>
+            `<span class="tahap tahap-${esc(t.status)}">${ikon[t.status] || ''} ${esc(t.label)}</span>`
+        ).join('<span style="color:#bdc3c7; font-size:0.7rem;"> › </span>');
+        const tunggu = (d.menunggu || []).map(h => `<div class="menunggu-item">
+            <strong>${esc(h.nama)}</strong>${h.jabatan ? ` <span style="color:#95a5a6;">· ${esc(h.jabatan)}</span>` : ''}<br>
+            ${esc(h.apa)}${h.hari !== null ? ` <span class="hari">· ${h.hari} hari</span>` : ''}</div>`).join('');
+        document.getElementById('pohonRingkas').innerHTML =
+            `<div class="stepper">${stepper}</div>` +
+            (tunggu ? `<div class="menunggu-box"><strong style="color:#b9770e;">⏳ Sedang menunggu (${d.menunggu.length})</strong>${tunggu}</div>` : '');
+        document.getElementById('pohonIsi').innerHTML = renderNodePohon(d.pohon, 0);
+    } catch (e) {
+        document.getElementById('pohonIsi').innerHTML = `<div style="text-align:center; color:#e74c3c; padding:20px;">${esc(e.message || 'Gagal memuat alur')}</div>`;
+    }
+}
+function tutupPohon() { document.getElementById('modalPohon').classList.remove('aktif'); }
+pasangTutupLuar('modalPohon', tutupPohon);
+
+async function muatSemuaKasus() {
+    const tbody = document.getElementById('tabelSemuaKasus');
+    try {
+        const res = await fetch(`/api/semua-kasus?nip=${user.nip}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Gagal memuat');
+        if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="5"><div class="kosong-info"><span class="icon">📭</span>Belum ada kasus</div></td></tr>`; return; }
+        const badgeJenis = { eksternal: 'badge-eksternal', internal: 'badge-internal', permohonan: 'badge-permohonan' };
+        const ikon = { selesai: '✓', berjalan: '⏳', belum: '○' };
+        tbody.innerHTML = data.map(k => {
+            const stepper = (k.tahap || []).map(t => `<span class="tahap tahap-${esc(t.status)}">${ikon[t.status] || ''} ${esc(t.label)}</span>`).join(' ');
+            return `<tr>
+                <td style="white-space:nowrap; font-size:0.82rem;">${esc((k.tanggal || '').split('T')[0].split(' ')[0])}</td>
+                <td><span class="badge ${badgeJenis[k.jenis_surat] || ''}">${esc((k.jenis_surat || '').toUpperCase())}</span>
+                    <strong style="margin-left:6px;">${esc(k.judul)}</strong><br>
+                    <small style="color:#95a5a6;">${esc(k.nomor_surat || 'Belum ada nomor')} · dibuat ${esc(k.pembuat)}</small></td>
+                <td><div class="stepper" style="margin:0;">${stepper}</div>
+                    <span class="badge" style="background:${k.status_kasus === 'selesai' ? '#27ae60' : '#e67e22'}; margin-top:5px;">${k.status_kasus === 'selesai' ? '✅ SELESAI' : '⏳ BERJALAN'}</span></td>
+                <td style="font-size:0.78rem; max-width:260px;">${k.menunggu_utama ? esc(k.menunggu_utama) + (k.jumlah_menunggu > 1 ? ` <small style="color:#95a5a6;">(+${k.jumlah_menunggu - 1} lainnya)</small>` : '') : '<span style="color:#95a5a6;">—</span>'}</td>
+                <td><button class="btn-preview" style="background:#27ae60;" onclick="bukaPohon(${k.kasus_id})">🌳 Lihat Alur</button></td>
+            </tr>`;
+        }).join('');
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#e74c3c;">${esc(e.message || 'Gagal memuat data.')}</td></tr>`;
+    }
+}
+
+// ================================================================
+// KOREKSI PENUGASAN (edit instruksi / ganti penerima)
+// ================================================================
+let koreksiAktif = null;   // { penugasanId, mode }
+
+async function bukaKoreksiTugas(idx, mode) {
+    const item = (window._riwayatDataCache || [])[idx];
+    if (!item) return;
+    koreksiAktif = { penugasanId: item.penugasan_id, mode };
+    document.getElementById('koreksiPerihal').textContent = item.perihal;
+    document.getElementById('koreksiWrapEdit').style.display  = mode === 'edit'  ? 'block' : 'none';
+    document.getElementById('koreksiWrapGanti').style.display = mode === 'ganti' ? 'block' : 'none';
+    document.getElementById('koreksiJudul').textContent = mode === 'edit' ? '✏️ Edit Tugas' : '🔁 Ganti Penerima';
+
+    if (mode === 'edit') {
+        document.getElementById('koreksiDeskripsi').value = item.deskripsi_tugas || '';
+        document.getElementById('koreksiDeadline').value  = item.deadline ? String(item.deadline).slice(0, 10) : '';
+    } else {
+        document.getElementById('koreksiPenerimaLama').textContent = item.pihak_terkait || '—';
+        const sel = document.getElementById('selectPenerimaKoreksi');
+        sel.innerHTML = '<option value="">-- Memuat... --</option>';
+        try {
+            const data = await (await fetch(`/api/kandidat-penerima?kode_unit=${user.kode_unit}&mode=penugasan&nip_pemberi=${user.nip}`)).json();
+            let opsi = '<option value="">-- Pilih Penerima --</option>';
+            data.forEach(g => {
+                opsi += `<option disabled>── ${esc(g.label)} ──</option>`;
+                g.pejabat.forEach(p => { opsi += `<option value="${esc(p.nip)}">${esc(p.nama)} — ${esc(p.nama_unit)}</option>`; });
+            });
+            sel.innerHTML = opsi;
+        } catch (e) {
+            sel.innerHTML = '<option value="">⚠️ Gagal memuat data</option>';
+        }
+    }
+    document.getElementById('modalKoreksiTugas').classList.add('aktif');
+}
+
+function tutupKoreksiTugas() {
+    document.getElementById('modalKoreksiTugas').classList.remove('aktif');
+    koreksiAktif = null;
+}
+pasangTutupLuar('modalKoreksiTugas', tutupKoreksiTugas);
+
+async function konfirmasiKoreksiTugas() {
+    if (!koreksiAktif) return;
+    const { penugasanId, mode } = koreksiAktif;
+    let url, metode, body;
+    if (mode === 'edit') {
+        const desk = document.getElementById('koreksiDeskripsi').value.trim();
+        if (!desk) { tampilNotif('Deskripsi tugas tidak boleh kosong!', 'gagal'); return; }
+        url = `/api/penugasan/${penugasanId}`; metode = 'PUT';
+        body = { nip_pemberi: user.nip, deskripsi_tugas: desk,
+                 deadline: document.getElementById('koreksiDeadline').value || null };
+    } else {
+        const nipBaru = document.getElementById('selectPenerimaKoreksi').value;
+        if (!nipBaru) { tampilNotif('Pilih penerima baru terlebih dahulu!', 'gagal'); return; }
+        url = `/api/penugasan/${penugasanId}/ganti-penerima`; metode = 'POST';
+        body = { nip_pemberi: user.nip, nip_penerima_baru: nipBaru };
+    }
+    await kirimAksi(document.getElementById('btnKonfirmasiKoreksi'), '⏳ Menyimpan...', async () => {
+        const res = await fetch(url, { method: metode, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Tersimpan', 'sukses'); tutupKoreksiTugas(); segarkanSemua(); }
+        else tampilNotif(data.detail || 'Gagal menyimpan!', 'gagal');
+    });
+}
+
+async function hapusPenugasan(idx) {
+    const item = (window._riwayatDataCache || [])[idx];
+    if (!item || !item.penugasan_id) return;
+    if (!confirm(`Hapus penugasan untuk ${item.pihak_terkait}? Tugas ini akan hilang dari inbox penerima.`)) return;
+    try {
+        const res = await fetch(`/api/penugasan/${item.penugasan_id}/hapus`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nip_pemberi: user.nip })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) { tampilNotif(data.message || 'Penugasan dihapus', 'sukses'); segarkanSemua(); }
+        else tampilNotif(data.detail || 'Gagal menghapus!', 'gagal');
+    } catch (e) { tampilNotif('Koneksi gagal!', 'gagal'); }
+}
+</script>
+</body>
+</html>
