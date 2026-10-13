@@ -359,6 +359,7 @@
 <!-- Notifikasi toast -->
 <div id="notif-container" class="notif-container"></div>
 
+
 <!-- ================================================================ -->
 <!-- HEADER: info penandatangan (diisi oleh renderInfoUser)           -->
 <!-- ================================================================ -->
@@ -376,53 +377,78 @@
     </p>
 </section> -->
 <!-- Banner info -->
-<section data-aos="fade-up"
-         class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-hijau-600 to-hijau-800 text-white p-6 shadow-lg mb-8">
-  <div class="absolute inset-0 bg-pola-hijau"></div>
-  <div class="absolute -right-6 -bottom-8 opacity-10">
-    <span class="material-icons-round" style="font-size:160px">description</span>
-  </div>
-  <div class="relative flex items-start gap-4">
-    <div class="w-12 h-12 shrink-0 rounded-xl bg-emas-500 text-hijau-900 flex items-center justify-center">
-      <span class="material-icons-round">description</span>
-    </div>
-    <div>
-      <h2 class="text-lg font-extrabold leading-tight">Manajemen Surat</h2>
-      <p class="text-sm text-white/75 mt-1">
-        Kelola surat masuk, surat keluar, disposisi, dan arsip dalam satu tempat.
-      </p>
-    </div>
-  </div>
-</section>
-
+    <section data-aos="fade-up"
+            class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-hijau-600 to-hijau-800 text-white p-6 shadow-lg mb-8">
+      <div class="absolute inset-0 bg-pola-hijau"></div>
+      <div class="absolute -right-6 -bottom-8 opacity-10">
+        <span class="material-icons-round" style="font-size:160px">description</span>
+      </div>
+      <div class="relative flex items-start gap-4">
+        <div class="w-12 h-12 shrink-0 rounded-xl bg-emas-500 text-hijau-900 flex items-center justify-center">
+          <span class="material-icons-round">description</span>
+        </div>
+        <div>
+          <h2 class="text-lg font-extrabold leading-tight">Manajemen Surat</h2>
+          <p class="text-sm text-white/75 mt-1">
+            Kelola surat masuk, surat keluar, disposisi, dan arsip dalam satu tempat.
+          </p>
+        </div>
+      </div>
+    </section>
 <!-- ================================================================ -->
 <!-- PANEL DELEGASI (hanya pejabat level 3 & 4)                       -->
 <!-- ================================================================ -->
-<section class="card" id="cardDelegasi" style="display:none;" data-aos="fade-up">
-    <h3 class="text-lg mt-0">👥 Delegasi Manajemen Surat untuk Staf</h3>
-    <p class="text-sm text-slate-500 mt-1">
-        Staf yang diberi delegasi boleh membuat dan mengirim surat atas nama unit Anda.
-        Staf tanpa delegasi hanya bisa menerima tugas dan mengirim laporan.
-    </p>
+<section id="cardDelegasi" style="display:none;"
+         class="mb-5 p-5 bg-white border border-gray-200 rounded-lg shadow-sm" data-aos="fade-up">
 
-    <input type="text" id="cariDelegasi" placeholder="🔍 Cari nama atau jabatan staf..."
-           oninput="filterDelegasi()"
-           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm mb-2 focus:outline-none focus:border-hijau-500">
+    <!-- Judul -->
+    <div class="flex items-start gap-3 mb-4">
+        <span class="flex items-center justify-center w-10 h-10 rounded-lg bg-hijau-50 text-hijau-700 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-4.13a4 4 0 11-8 0 4 4 0 018 0zm6 0a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+        </span>
+        <div class="min-w-0">
+            <h3 class="m-0 text-base font-bold text-gray-900">Delegasi Manajemen Surat untuk Staf</h3>
+            <p class="mt-1 text-sm text-gray-500 leading-relaxed">
+                Staf yang diberi delegasi boleh membuat dan mengirim surat atas nama unit Anda.
+                Staf tanpa delegasi hanya bisa menerima tugas dan mengirim laporan.
+            </p>
+        </div>
+    </div>
 
-    <div class="delegasi-scroll">
-        <table>
-            <thead>
-                <tr><th>Nama Staf</th><th>Jabatan</th><th>Status</th><th>Aksi</th></tr>
+    <!-- Pencarian -->
+    <div class="relative mb-3">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+            </svg>
+        </div>
+        <input type="text" id="cariDelegasi" placeholder="Cari nama atau jabatan staf..."
+               oninput="filterDelegasi()"
+               class="block w-full ps-10 p-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:ring-4 focus:ring-hijau-100 focus:border-hijau-500 focus:outline-none">
+    </div>
+
+    <!-- Tabel -->
+    <div class="delegasi-scroll relative overflow-x-auto border border-gray-200 rounded-lg">
+        <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-4 py-3 font-semibold">Nama Staf</th>
+                    <th scope="col" class="px-4 py-3 font-semibold">Jabatan</th>
+                    <th scope="col" class="px-4 py-3 font-semibold">Status</th>
+                    <th scope="col" class="px-4 py-3 font-semibold text-right">Aksi</th>
+                </tr>
             </thead>
-            <tbody id="tabelDelegasi">
+            <tbody id="tabelDelegasi" class="divide-y divide-gray-100">
                 <!-- Skeleton: diganti otomatis oleh renderDelegasi() -->
-                <tr class="skel-row"><td><span class="skel-bar w-70"></span></td><td><span class="skel-bar w-50"></span></td><td><span class="skel-bar pill"></span></td><td><span class="skel-bar btn"></span></td></tr>
-                <tr class="skel-row"><td><span class="skel-bar w-50"></span></td><td><span class="skel-bar w-70"></span></td><td><span class="skel-bar pill"></span></td><td><span class="skel-bar btn"></span></td></tr>
-                <tr class="skel-row"><td><span class="skel-bar w-70"></span></td><td><span class="skel-bar w-30"></span></td><td><span class="skel-bar pill"></span></td><td><span class="skel-bar btn"></span></td></tr>
+                <tr class="skel-row"><td class="px-4"><div class="flex items-center gap-3"><span class="skel-bar" style="width:2.25rem;height:2.25rem;border-radius:50%;flex-shrink:0;"></span><span class="skel-bar w-70"></span></div></td><td class="px-4"><span class="skel-bar w-50"></span></td><td class="px-4"><span class="skel-bar pill"></span></td><td class="px-4"><span class="skel-bar btn" style="margin-left:auto;"></span></td></tr>
+                <tr class="skel-row"><td class="px-4"><div class="flex items-center gap-3"><span class="skel-bar" style="width:2.25rem;height:2.25rem;border-radius:50%;flex-shrink:0;"></span><span class="skel-bar w-50"></span></div></td><td class="px-4"><span class="skel-bar w-70"></span></td><td class="px-4"><span class="skel-bar pill"></span></td><td class="px-4"><span class="skel-bar btn" style="margin-left:auto;"></span></td></tr>
+                <tr class="skel-row"><td class="px-4"><div class="flex items-center gap-3"><span class="skel-bar" style="width:2.25rem;height:2.25rem;border-radius:50%;flex-shrink:0;"></span><span class="skel-bar w-70"></span></div></td><td class="px-4"><span class="skel-bar w-30"></span></td><td class="px-4"><span class="skel-bar pill"></span></td><td class="px-4"><span class="skel-bar btn" style="margin-left:auto;"></span></td></tr>
             </tbody>
         </table>
     </div>
-    <small id="infoJumlahDelegasi" class="block mt-2 text-slate-400"></small>
+    <small id="infoJumlahDelegasi" class="block mt-3 text-xs text-gray-500"></small>
 </section>
 
 <!-- ================================================================ -->
@@ -440,7 +466,7 @@
 <!-- ================================================================ -->
 <!-- FORM PEMBUATAN SURAT                                             -->
 <!-- ================================================================ -->
-<section id="cardFormSurat" class="mb-5 p-5 bg-white border border-gray-200 rounded-lg shadow-sm"
+<section id="cardFormSurat" class="mb-5 p-5 bg-white border border-gray-200 rounded-lg shadow-sm relative z-20"
          data-aos="fade-up" data-aos-delay="80">
 
     <!-- Pemilih jenis surat -->
@@ -1678,40 +1704,53 @@
 
         if (data.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="4" style="text-align:center; color:#7f8c8d;">Tidak ada staf di unit Anda.</td></tr>';
+            '<tr><td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500">Tidak ada staf di unit Anda.</td></tr>';
           return;
         }
 
         tbody.innerHTML = data
-          .map(
-            (s) => `
-                        <tr>
-                            <td><strong>${s.nama}</strong></td>
-                            <td>${s.jabatan || '—'}</td>
-                            <td>${
-                              s.aktif
-                                ? '<span style="background:#27ae60; color:white; padding:3px 10px; border-radius:12px; font-size:0.72rem; font-weight:700;">✅ Ada Delegasi</span>'
-                                : '<span style="background:#95a5a6; color:white; padding:3px 10px; border-radius:12px; font-size:0.72rem; font-weight:700;">Tanpa Delegasi</span>'
-                            }
-                            </td>
-                            <td>${
-                              s.aktif
-                                ? `<button onclick="cabutDelegasi(${s.delegasi_id})"
-                                       style="padding:5px 12px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">
-                                       ✕ Cabut
-                                   </button>`
-                                : `<button onclick="beriDelegasi('${s.nip}')"
-                                       style="padding:5px 12px; background:#2ecc71; color:white; border:none; border-radius:4px; cursor:pointer;">
-                                       ➕ Beri Delegasi
-                                   </button>`
-                            }
-                            </td>
-                        </tr>`
-          )
+      .map((s) => {
+        const inisial = (s.nama || '?')
+          .trim()
+          .split(' ')
+          .slice(0, 2)
+          .map((k) => k[0])
           .join('');
+        const badge = s.aktif
+          ? `<span class="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                <span class="w-2 h-2 me-1.5 bg-green-500 rounded-full"></span>Ada Delegasi
+                            </span>`
+          : `<span class="inline-flex items-center bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                <span class="w-2 h-2 me-1.5 bg-gray-400 rounded-full"></span>Tanpa Delegasi
+                            </span>`;
+        const aksi = s.aktif
+          ? `<button type="button" onclick="cabutDelegasi(${s.delegasi_id})"
+                                class="inline-flex items-center gap-1.5 text-red-700 border border-red-300 hover:bg-red-600 hover:text-white focus:ring-4 focus:ring-red-100 font-medium rounded-lg text-xs px-3 py-2 focus:outline-none transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                                Cabut
+                            </button>`
+          : `<button type="button" onclick="beriDelegasi('${s.nip}')"
+                                class="inline-flex items-center gap-1.5 text-white bg-hijau-600 hover:bg-hijau-700 focus:ring-4 focus:ring-hijau-200 font-medium rounded-lg text-xs px-3 py-2 focus:outline-none transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                Beri Delegasi
+                            </button>`;
+        return `
+                    <tr class="bg-white hover:bg-gray-50">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="flex items-center justify-center w-9 h-9 rounded-full bg-hijau-100 text-hijau-700 text-xs font-bold uppercase shrink-0">${inisial}</div>
+                                <span class="text-sm font-semibold text-gray-900">${s.nama}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${s.jabatan || '—'}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">${badge}</td>
+                        <td class="px-4 py-3 text-right whitespace-nowrap">${aksi}</td>
+                    </tr>`;
+      })
+      .join('');
         filterDelegasi();
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#e74c3c;">Gagal memuat data.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-sm text-red-600">Gagal memuat data.</td></tr>';
       }
     }
 

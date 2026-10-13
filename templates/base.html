@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Sistem Kinerja TTE PPNP{% endblock %}</title>
+  <title>{% block title %}Sistem Kendali Kinerja{% endblock %}</title>
   <link rel="icon" type="image/webp" href="https://res.cloudinary.com/dvul7dq3b/image/upload/v1755843240/logowebp_bqssky.webp" />
 
   <meta name="theme-color" content="#205A28">
@@ -35,40 +35,41 @@
   {% block extra_head %}{% endblock %}
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    // Penjaga login: halaman dalam hanya boleh dibuka jika sudah login
-    if (!localStorage.getItem('user_ppnp')) {
-      window.location.replace('/');
-    }
-    // Config Tailwind
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
-          colors: {
-            hijau: {
-              50: '#f0f7f1', 100: '#dcefdf', 200: '#b9dfc0', 300: '#8ac899',
-              400: '#55ab6c', 500: '#338c4d', 600: '#205A28', 700: '#1a4a21',
-              800: '#163b1c', 900: '#102c15'
-            },
-            emas: { 500: '#C9A227', 400: '#d4b246', 300: '#e0c76e' },
-            merah: { 500: '#C72B32', 50: '#fdf2f2', 100: '#fde3e3' }
+<script>
+  // Penjaga login: halaman dalam hanya boleh dibuka jika sudah login
+  if (!localStorage.getItem('user_ppnp')) {
+    window.location.replace('/');
+  }
+
+  // Config Tailwind
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+        colors: {
+          hijau: {
+            50: '#f0f7f1', 100: '#dcefdf', 200: '#b9dfc0', 300: '#8ac899',
+            400: '#55ab6c', 500: '#338c4d', 600: '#205A28', 700: '#1a4a21',
+            800: '#163b1c', 900: '#102c15'
           },
-          animation: {
-            'fade-up': 'fadeUp .6s ease-out both',
-            'page-enter': 'pageEnter .45s ease-out both',
-            'shimmer': 'shimmer 1.6s linear infinite',
-            'spin-slow': 'spin 1s linear infinite'
-          },
-          keyframes: {
-            fadeUp: { '0%': { opacity: 0, transform: 'translateY(12px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
-            pageEnter: { '0%': { opacity: 0, transform: 'scale(.99)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
-            shimmer: { '0%': { backgroundPosition: '-400px 0' }, '100%': { backgroundPosition: '400px 0' } }
-          }
+          emas: { 500: '#C9A227', 400: '#d4b246', 300: '#e0c76e' },
+          merah: { 500: '#C72B32', 50: '#fdf2f2', 100: '#fde3e3' }
+        },
+        animation: {
+          'fade-up': 'fadeUp .6s ease-out both',
+          'page-enter': 'pageEnter .45s ease-out both',
+          'shimmer': 'shimmer 1.6s linear infinite',
+          'spin-slow': 'spin 1s linear infinite'
+        },
+        keyframes: {
+          fadeUp: { '0%': { opacity: 0, transform: 'translateY(12px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+          pageEnter: { '0%': { opacity: 0, transform: 'scale(.99)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
+          shimmer: { '0%': { backgroundPosition: '-400px 0' }, '100%': { backgroundPosition: '400px 0' } }
         }
       }
     }
-  </script>
+  }
+</script>
 </head>
 
 <body class="bg-slate-100 font-sans text-slate-800 antialiased">
@@ -86,7 +87,7 @@
        <!-- Brand -->
         <div class="px-6 py-5 border-b border-white/10 text-center">
             <p class="text-base font-extrabold leading-tight tracking-wide">
-            Sistem Kinerja<br>PPNP
+            Sistem Kendali Kinerja<br>PPNP
             </p>
         </div>
 
@@ -94,11 +95,12 @@
       <div class="px-6 pt-8 pb-6 border-b border-white/10">
         <div class="flex items-start gap-3">
           <div class="w-12 h-12 shrink-0 rounded-2xl bg-emas-500 text-hijau-900 flex items-center justify-center font-extrabold text-lg">
-            <span id="inisial-user">--</span>
+            <span id="userAvatar">--</span>
           </div>
           <div class="min-w-0 flex-1">
-            <p id="nama-user" class="font-bold text-sm leading-snug break-words">Memuat...</p>
-            <p id="jabatan-user" class="mt-0.5 text-xs leading-snug text-hijau-100/70 break-words">&nbsp;</p>
+            <p id="userNama" class="font-bold text-sm leading-snug break-words">Memuat...</p>
+            <p id="userJabatan" class="mt-0.5 text-xs leading-snug text-hijau-100/70 break-words">&nbsp;</p>
+            <span id="userRole" class="inline-block mt-1.5 rounded-full bg-emas-500/20 border border-emas-500/50 text-emas-300 text-[10px] font-bold uppercase px-2 py-0.5">—</span>
           </div>
         </div>
       </div>
@@ -174,6 +176,27 @@
 
   <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
   <script>
+
+    // Data pengguna dari localStorage
+    (function isiProfil() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user_ppnp') || '{}');
+        const nama = user.nama || 'Pengguna';
+        const labelRole = {
+          'direktur': '🏛️ Direktur', 'wadir_1': '📌 Wadir I',
+          'wadir_2': '📌 Wadir II',  'wadir_3': '📌 Wadir III',
+          'kabag':   '🗂️ Kabag',     'kajur':   '📚 Kajur',
+          'pimpinan':'👔 Pimpinan',  'staf':    '👤 Staf',
+        };
+        document.getElementById('userNama').textContent    = nama;
+        document.getElementById('userJabatan').textContent = user.jabatan || '';
+        document.getElementById('userAvatar').textContent  =
+          nama.split(' ').slice(0, 2).map(s => s[0]).join('').toUpperCase();
+        document.getElementById('userRole').textContent    =
+          labelRole[user.role_ppnp] || user.role_ppnp || '—';
+      } catch (e) {}
+    })();
+
     // Data pengguna dari localStorage
     (function isiProfil() {
       try {
