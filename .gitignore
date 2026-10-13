@@ -1,8 +1,24 @@
-venv/
+# Python
 __pycache__/
 *.pyc
-uploads/
+.venv/
+venv/
+env/
+
+# Rahasia dan konfigurasi lokal (JANGAN diunggah)
+.env
+*.env
+config_local.py
+instance/
+
+# Database dan upload
 *.db
 *.sqlite3
-.env
-*.log
+uploads/
+storage/
+
+# Editor dan OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

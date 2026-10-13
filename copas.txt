@@ -1,1005 +1,7 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Sistem Kinerja - PPNP</title>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <style>
-        .marker-frame {
-            position: absolute;
-            border: 2px dashed #8e44ad;
-            background: rgba(142, 68, 173, 0.08);
-            pointer-events: none;
-            z-index: 5;
-            box-sizing: border-box;
-        }
-
-        .marker-frame-ghost {
-            position: absolute;
-            border: 2px dashed #3498db;
-            background: rgba(52, 152, 219, 0.08);
-            pointer-events: none;
-            z-index: 4;
-            box-sizing: border-box;
-            display: none;
-        }
-        /* ============================================================
-           RESET & LAYOUT DASAR
-        ============================================================ */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #f4f7f6;
-            display: flex;
-            height: 100vh;
-        }
-
-        /* ============================================================
-           SIDEBAR
-        ============================================================ */
-        .sidebar {
-            width: 250px;
-            background-color: #2c3e50;
-            color: white;
-            padding-top: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar h2 {
-            text-align: center;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #34495e;
-            padding-bottom: 15px;
-        }
-        .sidebar a {
-            color: #ecf0f1;
-            text-decoration: none;
-            padding: 15px 20px;
-            display: block;
-            border-left: 4px solid transparent;
-            transition: 0.3s;
-        }
-        .sidebar a:hover,
-        .sidebar a.aktif {
-            background-color: #34495e;
-            border-left: 4px solid #3498db;
-        }
-        .logout-btn {
-            margin-top: auto;
-            background-color: #c0392b;
-            text-align: center;
-            padding: 15px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .logout-btn:hover { background-color: #e74c3c; }
-
-        /* ---- User info di sidebar ---- */
-        .user-info-box {
-            margin: 0 15px 20px;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 10px;
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .user-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3498db, #2ecc71);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: white;
-            flex-shrink: 0;
-            text-transform: uppercase;
-        }
-        .user-detail { overflow: hidden; }
-        .user-detail .user-nama {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #ecf0f1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .user-detail .user-jabatan {
-            font-size: 0.72rem;
-            color: #95a5a6;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 2px;
-        }
-        .user-detail .user-role-badge {
-            display: inline-block;
-            margin-top: 5px;
-            background: rgba(52, 152, 219, 0.3);
-            border: 1px solid rgba(52, 152, 219, 0.5);
-            color: #74b9ff;
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-
-        /* ============================================================
-           KONTEN UTAMA
-        ============================================================ */
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-        }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .btn-submit {
-            background-color: #2ecc71;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-submit:hover { background-color: #27ae60; }
-        .selector-box {
-            background: #e8f4f8;
-            padding: 20px;
-            border-radius: 6px;
-            border-left: 5px solid #3498db;
-            margin-bottom: 20px;
-        }
-
-        /* ============================================================
-           TABEL
-        ============================================================ */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: middle; }
-        th { background-color: #34495e; color: white; }
-        .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            background: #ecf0f1;
-            cursor: pointer;
-            font-size: 0.9rem;
-            border-radius: 4px 4px 0 0;
-            color: #2c3e50;
-            font-weight: bold;
-        }
-        .tab-btn.aktif { background: white; border-bottom: 3px solid #3498db; color: #3498db; }
-
-        /* ============================================================
-           NOTIFIKASI TOAST
-        ============================================================ */
-        .notif-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .notif {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            font-weight: 600;
-            font-size: 0.9rem;
-            animation: slideIn 0.3s ease;
-            min-width: 250px;
-        }
-        .notif.sukses { background: #2ecc71; color: white; }
-        .notif.gagal  { background: #e74c3c; color: white; }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(40px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-
-        /* ============================================================
-           MODAL SUKSES (umum)
-        ============================================================ */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .modal-overlay.aktif { opacity: 1; visibility: visible; }
-        .modal-box {
-            background: white;
-            border-radius: 16px;
-            width: 460px;
-            max-width: 90vw;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
-            transform: translateY(30px) scale(0.97);
-            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            overflow: hidden;
-        }
-        .modal-overlay.aktif .modal-box { transform: translateY(0) scale(1); }
-        .modal-header {
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            padding: 22px 28px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .modal-header .icon-besar {
-            font-size: 2.2rem;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 50%;
-            width: 52px;
-            height: 52px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .modal-header h3 { margin: 0; color: white; font-size: 1.15rem; }
-        .modal-header p  { margin: 3px 0 0; color: rgba(255, 255, 255, 0.75); font-size: 0.82rem; }
-        .modal-body { padding: 24px 28px; }
-        .modal-info-row { margin-bottom: 16px; }
-        .modal-info-row label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #95a5a6;
-            font-weight: 700;
-            display: block;
-            margin-bottom: 5px;
-        }
-        .modal-info-row .nilai {
-            background: #f4f7f6;
-            border: 1px solid #e0e6e4;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 0.9rem;
-            color: #2c3e50;
-            word-break: break-all;
-            font-family: monospace;
-        }
-        .kode-pelacakan-box {
-            background: linear-gradient(135deg, #eafaf1, #d5f5e3);
-            border: 2px dashed #2ecc71;
-            border-radius: 10px;
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .kode-pelacakan-box .kode-teks {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #27ae60;
-            letter-spacing: 0.1em;
-            font-family: monospace;
-        }
-        .btn-salin {
-            background: #2ecc71;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 7px 14px;
-            font-size: 0.82rem;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .btn-salin:hover { background: #27ae60; }
-        .btn-salin.tersalin { background: #16a085; }
-        .modal-footer { padding: 0 28px 24px; display: flex; justify-content: flex-end; }
-        .btn-modal-ok {
-            background: #2c3e50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 11px 32px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s, transform 0.1s;
-        }
-        .btn-modal-ok:hover { background: #3498db; transform: translateY(-1px); }
-
-        /* ============================================================
-           KOP SURAT DI FORM
-        ============================================================ */
-        .kop-form-preview {
-            border: 1.5px dashed #bdc3c7;
-            border-radius: 8px;
-            padding: 10px;
-            background: #fafafa;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .kop-form-preview img { max-width: 100%; max-height: 110px; object-fit: contain; }
-        .kop-form-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: #7f8c8d;
-            font-weight: 700;
-            margin-bottom: 7px;
-            display: block;
-        }
-        .kop-tidak-ada { font-size: 0.8rem; color: #bdc3c7; font-style: italic; padding: 12px 0; }
-
-        /* Sembunyikan toolbar Quill, bersihkan border */
-        .ql-toolbar   { border-radius: 6px 6px 0 0 !important; }
-.ql-container {
-    border: 1.5px solid #ccc !important;
-    border-radius: 0 0 6px 6px !important;
-}
-.ql-editor    { min-height: 200px; }
-
-        /* ============================================================
-           MODAL TRACKING (timeline)
-        ============================================================ */
-        .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 18px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e0e6ea;
-        }
-        .timeline-item { display: flex; gap: 16px; margin-bottom: 20px; position: relative; }
-        .timeline-dot {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-            z-index: 1;
-        }
-        .timeline-dot.selesai  { background: #eafaf1; border: 2px solid #2ecc71; }
-        .timeline-dot.menunggu { background: #fef9e7; border: 2px solid #f39c12; }
-        .timeline-dot.ditolak  { background: #fdf2f2; border: 2px solid #e74c3c; }
-        .timeline-dot.awal     { background: #eaf4fd; border: 2px solid #3498db; }
-        .timeline-dot.tujuan   { background: #f4f0fb; border: 2px solid #8e44ad; }
-        .timeline-konten { flex: 1; }
-        .timeline-konten .tl-judul     { font-weight: 700; font-size: 0.9rem; color: #2c3e50; }
-        .timeline-konten .tl-subjudul  { font-size: 0.78rem; color: #7f8c8d; margin-top: 2px; }
-        .timeline-konten .tl-waktu     { font-size: 0.72rem; color: #bdc3c7; margin-top: 3px; }
-                /* ============================================================
-           TOGGLE EDITOR / UPLOAD PDF
-        ============================================================ */
-        .tipe-toggle {
-            display:flex; gap:8px;
-            background:#f4f7f6; padding:6px;
-            border-radius:8px; margin-bottom:16px;
-        }
-        .tipe-btn {
-            flex:1; padding:10px; border:none;
-            border-radius:6px; cursor:pointer;
-            font-weight:700; font-size:0.88rem;
-            background:transparent; color:#7f8c8d; transition:0.2s;
-        }
-        .tipe-btn.aktif {
-            background:white; color:#2c3e50;
-            box-shadow:0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        /* ============================================================
-           UPLOAD AREA PDF
-        ============================================================ */
-        .upload-area {
-            border:2px dashed #bdc3c7; border-radius:8px;
-            padding:30px; text-align:center;
-            cursor:pointer; transition:0.2s; background:#fafafa;
-        }
-        .upload-area:hover  { border-color:#3498db; background:#eaf4fd; }
-        .upload-area.ada-file { border-color:#2ecc71; background:#eafaf1; }
-
-        /* ============================================================
-           MODAL POSISI TTD
-        ============================================================ */
-        .modal-pdf-box {
-            background:white; border-radius:16px;
-            width:92vw; max-width:1100px; max-height:95vh;
-            display:flex; flex-direction:column;
-            overflow:hidden;
-            box-shadow:0 25px 60px rgba(0,0,0,0.3);
-            transform:translateY(30px) scale(0.97);
-            transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        .modal-overlay.aktif .modal-pdf-box { transform:translateY(0) scale(1); }
-
-        .marker-dot {
-            position:absolute;
-            width:28px; height:28px; border-radius:50%;
-            background:#e74c3c; border:3px solid white;
-            box-shadow:0 2px 8px rgba(0,0,0,0.4);
-            display:flex; align-items:center; justify-content:center;
-            color:white; font-size:0.72rem; font-weight:800;
-            pointer-events:none; z-index:10;
-            transform:translate(-50%, -50%);
-        }
-        .timeline-konten .tl-catatan {
-            font-size: 0.78rem;
-            color: #7f8c8d;
-            background: #f8f9fa;
-            border-left: 3px solid #ddd;
-            padding: 4px 10px;
-            border-radius: 0 4px 4px 0;
-            margin-top: 6px;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- NOTIFIKASI TOAST -->
-    <div id="notif-container" class="notif-container"></div>
-
-    <!-- ================================================================ -->
-    <!-- SIDEBAR                                                          -->
-    <!-- ================================================================ -->
-    <div class="sidebar">
-        <h2>Sistem Kinerja<br>PPNP</h2>
-
-        <div class="user-info-box">
-            <div class="user-avatar" id="userAvatar">?</div>
-            <div class="user-detail">
-                <div class="user-nama" id="userNama">Memuat...</div>
-                <div class="user-jabatan" id="userJabatan">—</div>
-                <span class="user-role-badge" id="userRole">—</span>
-            </div>
-        </div>
-
-        <a href="/dashboard">Dashboard Utama</a>
-        <a href="/surat" class="aktif">Manajemen Surat</a>
-        <a href="/inbox">📥 Inbox Disposisi</a>
-        <a href="/profil">👤 Profil & TTE Saya</a>
-        <div class="logout-btn" onclick="logout()">Keluar Aplikasi</div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- KONTEN UTAMA                                                     -->
-    <!-- ================================================================ -->
-    <div class="main-content">
-        <h2>Manajemen Surat</h2>
-
-        <!-- Form Pembuatan Surat -->
-        <div class="card">
-            <div class="selector-box">
-                <label style="font-size:1.1rem; color:#2980b9; margin-bottom:10px; display:block; font-weight:bold;">
-                    Tentukan Jenis Surat yang Akan Dibuat:
-                </label>
-                <select id="pilih_jenis_surat" onchange="gantiModeInput(this.value)"
-                        style="font-size:1rem; padding:10px; font-weight:bold; cursor:pointer; width:100%;">
-                    <option value="" disabled selected>-- Pilih Kategori Surat --</option>
-                    <option value="eksternal">📥 Surat Eksternal (Laporan Surat Masuk dari Luar)</option>
-                    <option value="internal">📝 Surat Internal (Komunikasi Antar Unit PPNP)</option>
-                    <option value="permohonan">📄 Permohonan Surat (Pengajuan Draf & TTE Pimpinan)</option>
-                </select>
-            </div>
-
-            <form id="formDetailSurat" onsubmit="simpanDraft(event)" style="display:none;">
-                <div style="display:flex; gap:15px;">
-                    <div class="form-group" style="flex:1;" id="wrap_nomor_surat">
-                        <label>Nomor Surat (Opsional)</label>
-                        <input type="text" id="nomor_surat" placeholder="Contoh: 123/PPNP/2026">
-                    </div>
-                    <div class="form-group" style="flex:1;">
-                        <label>Asal Surat<span style="color:#e74c3c;">*</span></label>
-                        <input type="text" id="asal_surat" required placeholder="Instansi / Unit Asal">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Perihal Singkat<span style="color:#e74c3c;">*</span></label>
-                    <input type="text" id="perihal" required placeholder="Contoh: Undangan Rapat Koordinasi">
-                </div>
-
-                <div style="display:flex; gap:15px;">
-                    <div class="form-group" style="flex:1;">
-                        <label>Tanggal Surat <span style="color:#e74c3c;">*</span></label>
-                        <input type="date" id="tanggal_surat" required>
-                    </div>
-                    <div class="form-group" style="flex:1;" id="wrap_tanggal_diterima">
-                        <label>Tanggal Diterima <span style="color:#e74c3c;">*</span></label>
-                        <input type="date" id="tanggal_diterima">
-                    </div>
-                </div>
-
-                <!-- Area Eksternal -->
-                <div class="form-group" id="areaEksternal">
-                    <label>Upload Scan Surat Asli <span style="color:#e74c3c;">*</span></label>
-                    <input type="file" id="file_surat" accept=".pdf,.jpg,.jpeg,.png">
-                    <small style="color:#e74c3c; display:block; margin-top:4px;">
-                        Wajib diupload. Format: PDF/JPG/PNG. Maksimal 10MB.
-                    </small>
-                </div>
-
-                <!-- Area Internal & Permohonan -->
-                <div id="areaInternal" style="display:none;">
-                                        <!-- Toggle Editor / Upload PDF -->
-                    <div class="tipe-toggle">
-                        <button type="button" class="tipe-btn aktif" id="btnTipeEditor"
-                            onclick="gantiTipeInput('editor')">
-                            ✏️ Tulis di Editor
-                        </button>
-                        <button type="button" class="tipe-btn" id="btnTipeUpload"
-                            onclick="gantiTipeInput('upload')">
-                            📄 Upload Dokumen PDF
-                        </button>
-                    </div>
-                    <div class="form-group" id="wrap_penandatangan">
-                        <label>Pejabat Penandatangan</label>
-                        <select id="nip_penandatangan">
-                            <option value="">-- Memuat daftar pimpinan... --</option>
-                        </select>
-                    </div>
-
-                    <!-- Tujuan Surat (khusus Internal) -->
-                    <div id="wrap_tujuan_surat">
-                        <div class="form-group">
-                            <label>Kepada / Yth.</label>
-                            <select id="nip_tujuan">
-                                <option value="">-- Pilih Unit / Pejabat Tujuan --</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="wrap_tujuan_tambahan">
-    <label>
-        Keterangan Tujuan
-        <small style="font-weight:normal; color:#95a5a6;">
-            (opsional — contoh: "di Tempat", "Kampus PPNP")
-        </small>
-    </label>
-    <input type="text" id="tujuan_tambahan" placeholder="Contoh: di Tempat">
-</div>
-                    </div>
-
-                    <!-- Preview Kop Surat -->
-                    <div id="kopFormWrap">
-                        <span class="kop-form-label">🖼️ Kop Surat Yang Akan Digunakan</span>
-                        <div class="kop-form-preview">
-                            <img id="kopFormImg" src="" alt="" style="display:none;">
-                            <div id="kopFormTidakAda" class="kop-tidak-ada">
-                                Unit ini tidak memiliki kop surat khusus
-                            </div>
-                        </div>
-                    </div>
-
-                                        <!-- Editor Quill (tipe editor) -->
-                    <div class="form-group" id="wrap_editor_surat">
-                        <label>Isi Dokumen Surat</label>
-                        <div id="editor-surat-internal" style="height:250px; background:white;"></div>
-                    </div>
-
-                    <!-- Upload PDF (tipe upload) -->
-                    <div id="areaUploadPDF" style="display:none;">
-                        <div class="form-group">
-                            <label>Upload Dokumen PDF <span style="color:#e74c3c;">*</span></label>
-                            <div class="upload-area" id="uploadAreaPDF"
-                                onclick="document.getElementById('inputFilePDF').click()">
-                                <div id="uploadAreaInner">
-                                    <span style="font-size:2.5rem; display:block; margin-bottom:8px;">📄</span>
-                                    <strong>Klik untuk pilih file PDF</strong><br>
-                                    <small style="color:#95a5a6;">Format: PDF. Maksimal 20MB</small>
-                                </div>
-                            </div>
-                            <input type="file" id="inputFilePDF" accept=".pdf"
-                                style="display:none" onchange="previewFilePDF(this)">
-                        </div>
-                        <div id="infoFilePDF" style="display:none; margin-bottom:12px;">
-                            <div style="background:#eafaf1; border:1px solid #2ecc71; border-radius:8px;
-                                        padding:12px 16px; display:flex; align-items:center; justify-content:space-between;">
-                                <div>
-                                    <span>📄</span>
-                                    <span id="namaFilePDFLabel" style="font-weight:700; margin-left:8px; color:#27ae60;">—</span>
-                                </div>
-                                <button type="button" onclick="hapusFilePDF()"
-                                    style="background:#e74c3c; color:white; border:none; border-radius:4px;
-                                           padding:4px 10px; cursor:pointer; font-size:0.8rem;">
-                                    ✕ Hapus
-                                </button>
-                            </div>
-                        </div>
-                        <div style="background:#fff8e1; border-left:4px solid #f39c12; border-radius:4px;
-                                    padding:10px 14px; font-size:0.83rem; color:#7f6000; margin-bottom:12px;">
-                            💡 Setelah draft disimpan, klik tombol <strong>📍 Atur Posisi TTD</strong>
-                            di tabel draft untuk menentukan letak tanda tangan di PDF.
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
-                    <button type="submit" class="btn-submit">💾 Simpan ke Draft (Preview)</button>
-                    <small style="color:#7f8c8d; margin-left:10px;">
-                        Surat tidak akan langsung dikirim sebelum Anda setujui di tabel Draft.
-                    </small>
-                </div>
-            </form>
-        </div>
-
-        <!-- Tabel Monitoring -->
-        <div class="card" style="padding:0;">
-            <div style="display:flex; border-bottom:1px solid #ddd; padding:15px 15px 0 15px;">
-                <button class="tab-btn aktif" onclick="gantiTab('draft', this)">📬 Draf & Preview</button>
-                <button class="tab-btn" onclick="gantiTab('terkirim', this)" style="margin-left:5px;">📋 Surat Terkirim / Diproses</button>
-            </div>
-
-            <div id="tab-draft" style="padding:15px;">
-                <table>
-                    <thead>
-                        <tr><th>Tanggal Input</th><th>Jenis</th><th>Perihal</th><th>Aksi</th></tr>
-                    </thead>
-                    <tbody id="tabelDraft">
-                        <tr><td colspan="4" style="text-align:center; color:#7f8c8d;">Memuat data...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div id="tab-terkirim" style="padding:15px; display:none;">
-                <table>
-                    <thead>
-                        <tr><th>Tgl Terima</th><th>Nomor</th><th>Perihal</th><th>Status</th><th>Aksi</th></tr>
-                    </thead>
-                    <tbody id="tabelTerkirim">
-                        <tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Belum ada surat terkirim.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- MODAL: Sukses Simpan Draft Surat Eksternal                       -->
-    <!-- (Diletakkan sebelum <script> agar getElementById tidak null saat -->
-    <!-- script pertama kali diparse)                                     -->
-    <!-- ================================================================ -->
-    <div class="modal-overlay" id="modalSukses">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="icon-besar">✅</div>
-                <div>
-                    <h3>Draft Berhasil Disimpan!</h3>
-                    <p>Surat eksternal telah dicatat ke sistem</p>
-                </div>
-            </div>
-            <div class="modal-body">
-                <div class="modal-info-row">
-                    <label>📁 File Disimpan Sebagai</label>
-                    <div class="nilai" id="modal-nama-file">—</div>
-                </div>
-                <div class="modal-info-row">
-                    <label>🔑 Kode Pelacakan Surat</label>
-                    <div class="kode-pelacakan-box">
-                        <span class="kode-teks" id="modal-kode-pelacakan">—</span>
-                        <button class="btn-salin" onclick="salinKode()">📋 Salin</button>
-                    </div>
-                </div>
-                <p style="font-size:0.82rem; color:#95a5a6; margin:0; text-align:center;">
-                    💡 Berikan kode ini kepada pengirim surat sebagai bukti penerimaan.
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-modal-ok" onclick="tutupModal()">Selesai ✓</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- MODAL: Konfirmasi Kirim Surat                                    -->
-    <!-- ================================================================ -->
-    <div class="modal-overlay" id="modalKirim">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="icon-besar">🚀</div>
-                <div>
-                    <h3>Kirim Surat untuk Ditandatangani?</h3>
-                    <p>Surat akan diteruskan ke pejabat terkait</p>
-                </div>
-            </div>
-            <div class="modal-body">
-                <p id="teksKirim" style="color:#2c3e50; margin-bottom:12px;">
-                    Surat berikut akan dikirim untuk proses paraf / TTE:
-                </p>
-                <div style="background:#f4f7f6; border-radius:8px; padding:12px 16px;">
-                    <div style="font-size:0.75rem; color:#95a5a6; text-transform:uppercase; font-weight:700; margin-bottom:4px;">
-                        Perihal
-                    </div>
-                    <div id="kirimPerihal" style="font-weight:600; color:#2c3e50;">—</div>
-                </div>
-                <div style="margin-top:12px; background:#fff8e1; border-left:4px solid #f39c12;
-                            border-radius:4px; padding:10px 14px; font-size:0.83rem; color:#7f6000;">
-                    ⚠️ Setelah dikirim, surat <strong>tidak bisa diedit</strong> kecuali dikembalikan oleh pejabat.
-                </div>
-            </div>
-            <div class="modal-footer" style="gap:10px; display:flex; justify-content:flex-end; padding:0 28px 24px;">
-                <button onclick="tutupModalKirim()"
-                        style="background:#ecf0f1; color:#2c3e50; border:none; border-radius:8px;
-                               padding:10px 24px; cursor:pointer; font-weight:bold;">
-                    Batal
-                </button>
-                <button id="btnKonfirmasiKirim" onclick="konfirmasiKirim()"
-                        style="background:#2ecc71; color:white; border:none; border-radius:8px;
-                               padding:10px 28px; cursor:pointer; font-weight:bold;">
-                    ✅ Ya, Kirim Sekarang
-                </button>
-            </div>
-        </div>
-    </div>
-
-        <!-- ================================================================ -->
-    <!-- MODAL: Posisi TTD di PDF                                         -->
-    <!-- ================================================================ -->
-    <div class="modal-overlay" id="modalPosisiTTD">
-        <div class="modal-pdf-box">
-
-            <!-- Header -->
-            <div style="background:linear-gradient(135deg,#2c3e50,#8e44ad); padding:16px 24px;
-                        display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
-                <div style="display:flex; align-items:center; gap:14px;">
-                    <span style="font-size:1.8rem; background:rgba(255,255,255,0.15); border-radius:50%;
-                                 width:44px; height:44px; display:flex; align-items:center; justify-content:center;">📍</span>
-                    <div>
-                        <h3 style="margin:0; color:white; font-size:1rem;">Atur Posisi Tanda Tangan Elektronik</h3>
-                        <p id="posisiPerihalLabel" style="margin:3px 0 0; color:rgba(255,255,255,0.75); font-size:0.8rem;">—</p>
-                    </div>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="simpanPosisiTTD()"
-                        style="background:#2ecc71; color:white; border:none; border-radius:8px;
-                               padding:10px 20px; cursor:pointer; font-weight:700;">
-                        💾 Simpan Posisi
-                    </button>
-                    <button onclick="tutupModalPosisi()"
-                        style="background:rgba(255,255,255,0.2); color:white; border:none;
-                               border-radius:8px; padding:10px 16px; cursor:pointer; font-weight:700;">
-                        ✕
-                    </button>
-                </div>
-            </div>
-
-            <!-- Body -->
-            <div style="display:flex; flex:1; overflow:hidden; min-height:0;">
-
-                <!-- Kiri: PDF Canvas -->
-                <div style="flex:1; display:flex; flex-direction:column; background:#718096; min-width:0;">
-                    <div style="flex:1; overflow:auto; display:flex; justify-content:center;
-                                align-items:flex-start; padding:20px; position:relative;" id="pdfScrollArea">
-                        <div style="position:relative; display:inline-block;">
-                            <canvas id="pdfCanvas"
-                                style="display:block; box-shadow:0 6px 30px rgba(0,0,0,0.4); cursor:crosshair;">
-                            </canvas>
-                            <div id="markerContainer"
-                                style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;">
-                                <div id="frameGhost" class="marker-frame-ghost"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Navigasi halaman -->
-                    <div style="background:#2c3e50; padding:12px; display:flex; align-items:center;
-                                justify-content:center; gap:16px; flex-shrink:0;">
-                        <button onclick="navHalaman(-1)"
-                            style="background:rgba(255,255,255,0.15); color:white; border:none;
-                                   border-radius:6px; padding:6px 16px; cursor:pointer; font-weight:700;">
-                            ◀ Prev
-                        </button>
-                        <span id="halamanInfo" style="color:white; font-size:0.88rem; font-weight:700;">
-                            Hal 1 / 1
-                        </span>
-                        <button onclick="navHalaman(1)"
-                            style="background:rgba(255,255,255,0.15); color:white; border:none;
-                                   border-radius:6px; padding:6px 16px; cursor:pointer; font-weight:700;">
-                            Next ▶
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Kanan: Panel -->
-                <div style="width:300px; flex-shrink:0; display:flex; flex-direction:column;
-                            border-left:1px solid #eee; background:#f8f9fa;">
-
-                    <!-- Mode TTD -->
-                    <div style="padding:16px; border-bottom:1px solid #eee; flex-shrink:0;">
-                        <div style="font-size:0.72rem; text-transform:uppercase; font-weight:700;
-                                    color:#95a5a6; margin-bottom:8px; letter-spacing:0.05em;">
-                            Mode Tanda Tangan
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button id="btnModeUrut" onclick="setModeTTD('sequential')"
-                                style="flex:1; padding:8px; border:2px solid #3498db; border-radius:6px;
-                                       background:#3498db; color:white; cursor:pointer;
-                                       font-size:0.78rem; font-weight:700;">
-                                🔢 Berurutan
-                            </button>
-                            <button id="btnModeParalel" onclick="setModeTTD('paralel')"
-                                style="flex:1; padding:8px; border:2px solid #ddd; border-radius:6px;
-                                       background:white; color:#7f8c8d; cursor:pointer;
-                                       font-size:0.78rem; font-weight:700;">
-                                ⚡ Sejajar
-                            </button>
-                        </div>
-                        <small id="keteranganMode"
-                            style="color:#7f8c8d; font-size:0.72rem; display:block; margin-top:6px; line-height:1.5;">
-                            TTD ke-2 baru bisa dilakukan setelah ke-1 selesai.
-                        </small>
-                    </div>
-
-                    <!-- Daftar Marker -->
-                    <div style="padding:16px; flex:1; overflow-y:auto;">
-                        <div style="font-size:0.72rem; text-transform:uppercase; font-weight:700;
-                                    color:#95a5a6; margin-bottom:10px; letter-spacing:0.05em;">
-                            Daftar Posisi TTD
-                        </div>
-                        <div id="daftarMarkerTTD">
-                            <div style="text-align:center; padding:20px; color:#bdc3c7;">
-                                <div style="font-size:2rem;">📍</div>
-                                <div style="font-size:0.82rem; margin-top:8px; line-height:1.6;">
-                                    Belum ada posisi TTD.<br>
-                                    Klik pada PDF untuk menambahkan.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Instruksi -->
-                    <div style="padding:14px 16px; background:#fff8e1; border-top:1px solid #f0d080; flex-shrink:0;">
-                        <div style="font-size:0.78rem; color:#7f6000; line-height:1.7;">
-                            <strong>💡 Cara penggunaan:</strong><br>
-                            1. Klik di PDF untuk pasang posisi TTD<br>
-                            2. Isi pejabat & label keterangan<br>
-                            3. Ulangi untuk TTD ke-2 jika perlu<br>
-                            4. Klik <strong>Simpan Posisi</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- MODAL: Mini Form TTD (muncul setelah klik PDF)                   -->
-    <!-- ================================================================ -->
-    <div class="modal-overlay" id="modalFormTTD" style="z-index:10001;">
-        <div style="background:white; border-radius:12px; width:420px; max-width:95vw;
-                    overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4);
-                    transform:scale(0.95); transition:transform 0.25s ease;">
-            <div style="background:linear-gradient(135deg,#8e44ad,#9b59b6); padding:16px 20px;">
-                <h3 style="margin:0; color:white; font-size:0.95rem;">📍 Siapa yang TTD di posisi ini?</h3>
-                <p id="posisiKoordLabel"
-                    style="margin:4px 0 0; color:rgba(255,255,255,0.75); font-size:0.78rem; font-family:monospace;">
-                    Hal 1 — X: 50% Y: 50%
-                </p>
-            </div>
-            <div style="padding:20px;">
-                <div class="form-group">
-                    <label>Pejabat Penandatangan</label>
-                    <select id="formTTDPejabat"
-                        style="width:100%; padding:9px; border:1.5px solid #ddd;
-                               border-radius:6px; box-sizing:border-box; font-size:0.88rem;">
-                        <option value="">-- Pilih Pejabat --</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label>
-                        Label / Keterangan
-                        <small style="font-weight:normal; color:#95a5a6;">(contoh: "Mengetahui,")</small>
-                    </label>
-                    <input type="text" id="formTTDLabel"
-                        placeholder="Contoh: Mengetahui,"
-                        style="width:100%; padding:9px; border:1.5px solid #ddd;
-                               border-radius:6px; box-sizing:border-box; font-size:0.88rem;">
-                </div>
-            </div>
-            <div style="padding:0 20px 20px; display:flex; gap:10px; justify-content:flex-end;">
-                <button onclick="batalFormTTD()"
-                    style="background:#ecf0f1; color:#2c3e50; border:none; border-radius:8px;
-                           padding:10px 20px; cursor:pointer; font-weight:700;">
-                    Batal
-                </button>
-                <button onclick="konfirmasiFormTTD()"
-                    style="background:#8e44ad; color:white; border:none; border-radius:8px;
-                           padding:10px 20px; cursor:pointer; font-weight:700;">
-                    ✅ Pasang Marker
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- MODAL: Riwayat / Tracking Surat                                  -->
-    <!-- ================================================================ -->
-    <div class="modal-overlay" id="modalTracking">
-        <div class="modal-box" style="width:520px;">
-            <div class="modal-header">
-                <div class="icon-besar">🔍</div>
-                <div>
-                    <h3>Riwayat Perjalanan Surat</h3>
-                    <p id="trackingPerihal">—</p>
-                </div>
-            </div>
-            <div class="modal-body" style="max-height:420px; overflow-y:auto;">
-                <ul class="timeline" id="timelineTracking">
-                    <li style="text-align:center; color:#95a5a6;">Memuat...</li>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-modal-ok" onclick="tutupTracking()">Tutup</button>
-            </div>
-        </div>
-    </div>
-
-        <!-- MODAL KONFIRMASI HAPUS DRAFT -->
-    <div class="modal-overlay" id="modalHapus">
-        <div class="modal-box">
-            <div class="modal-header" style="background:linear-gradient(135deg, #c0392b, #e74c3c);">
-                <div class="icon-besar">🗑️</div>
-                <div>
-                    <h3>Hapus Draft Surat?</h3>
-                    <p>Tindakan ini tidak bisa dibatalkan</p>
-                </div>
-            </div>
-            <div class="modal-body">
-                <p style="color:#2c3e50; margin:0;">
-                    Draft surat yang dihapus akan hilang secara permanen dari sistem, termasuk file yang sudah diupload (jika ada).
-                </p>
-            </div>
-            <div class="modal-footer" style="gap:10px; display:flex; justify-content:flex-end; padding:0 28px 24px;">
-                <button onclick="tutupModalHapus()"
-                    style="background:#ecf0f1; color:#2c3e50; border:none; border-radius:8px;
-                           padding:10px 24px; cursor:pointer; font-weight:bold;">
-                    Batal
-                </button>
-                <button id="btnKonfirmasiHapus" onclick="eksekusiHapus()"
-                    style="background:#e74c3c; color:white; border:none; border-radius:8px;
-                           padding:10px 28px; cursor:pointer; font-weight:bold;">
-                    🗑️ Ya, Hapus
-                </button>
-            </div>
-        </div>
-    </div>
-
-</parameter>
-
-    <!-- ================================================================ -->
-    <!-- SCRIPT (setelah semua HTML/Modal ada di DOM)                     -->
-    <!-- ================================================================ -->
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    <script>
+<!-- Library & script halaman (urutan penting: ui-ppnp.js, lalu Quill, lalu script asli) -->
+<script src="/static/ui-ppnp.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
 
         // ============================================================
         // VARIABEL GLOBAL
@@ -1009,6 +11,7 @@
         let urlKopAktif = null;
         let suratEditId = null;
         let sedangMenyimpan  = false;
+        let suratAsalId = null; 
                 // ── Variabel Upload PDF & Posisi TTD ──
         let tipeInputSurat  = 'editor';   // 'editor' | 'upload'
         let fileUploadNama  = null;
@@ -1023,6 +26,12 @@
         let halamanPtHeight = 842;
         const FRAME_PT_W = 155;   // harus sama dengan BLOK_W di main.py
         const FRAME_PT_H = 125;   // perkiraan tinggi blok QR+nama+NIP+tanggal di main.py
+        let jenisPinAktif      = 'ttd';   // 'ttd' | 'nomor'
+        let jenisSuratPosisi   = '';      // jenis surat yang sedang diatur posisinya
+        let posisiNomorList    = [];
+        let pendingMarkerNomor = null;
+        const FRAME_PT_W_NOMOR = 80;    // perkiraan lebar teks nomor surat
+        const FRAME_PT_H_NOMOR = 16;    // perkiraan tinggi 1 baris teks
 
         // Set PDF.js worker
         pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -1039,12 +48,28 @@
         window.addEventListener('load', async function () {
             renderInfoUser();
 
+            // Dropdown nama dengan pencarian
+            ['nip_tujuan', 'nip_penandatangan', 'pegawaiTugasSelect', 'formTTDPejabat', 'pimpinanRapatSelect']
+                .forEach(jadikanSearchable);
+
+            // Staf tanpa delegasi: tampilkan pesan, hentikan pemuatan form & tabel
+            if (!(await cekAksesSurat())) return;
+
+            // Pejabat level 4: tampilkan panel delegasi staf
+            muatPanelDelegasi();
+
             quillSurat = new Quill('#editor-surat-internal', { theme: 'snow' });
             document.getElementById('tanggal_surat').valueAsDate    = new Date();
             document.getElementById('tanggal_diterima').valueAsDate = new Date();
 
             // Muat kop surat unit user (default sebelum jenis surat dipilih)
             await muatKop(user.kode_unit);
+                        // Muat kop surat unit user (default sebelum jenis surat dipilih)
+            await muatKop(user.kode_unit);
+
+            // ✅ BARU — cek apakah ini dibuka dari tombol "Lanjutkan ke Direktur"
+            await cekParameterLanjutan();
+            await cekParameterPenugasan();   // dari tombol "Surat Tugas" di tugas sekretaris
 
             // Muat dropdown pejabat (unit user sendiri)
             // Muat dropdown pejabat penandatangan (unit sendiri, + atasan level 3 kalau level 4)
@@ -1063,9 +88,138 @@ try {
             muatSuratTerkirim();
         });
 
+    // ================================================================
+    // DROPDOWN DENGAN PENCARIAN (saran otomatis saat mengetik)
+    // ================================================================
+    function jadikanSearchable(selectId) {
+        const sel = document.getElementById(selectId);
+        if (!sel || sel.dataset.ss) return;
+        sel.dataset.ss = '1';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'ss-wrap';
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'ss-input';
+        inp.autocomplete = 'off';
+        inp.placeholder = 'Ketik nama untuk mencari...';
+        const list = document.createElement('div');
+        list.className = 'ss-list';
+
+        sel.parentNode.insertBefore(wrap, sel);
+        wrap.appendChild(inp);
+        wrap.appendChild(sel);
+        document.body.appendChild(list);
+        sel.style.display = 'none';
+
+        const descValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+        let aktifIdx = -1;
+
+        function syncInput() {
+            const o = sel.options[sel.selectedIndex];
+            inp.value = (o && o.value && !o.disabled) ? o.text.trim() : '';
+        }
+
+        // Kode lama yang mengubah sel.value (misal reset ke '') ikut menyegarkan kotak ketik
+        Object.defineProperty(sel, 'value', {
+            get() { return descValue.get.call(sel); },
+            set(v) { descValue.set.call(sel, v); syncInput(); }
+        });
+
+        function esc(t) {
+            return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function render(q) {
+            const kata = q.toLowerCase().split(/\s+/).filter(Boolean);
+            let html = '';
+            let ada = false;
+            Array.from(sel.options).forEach(o => {
+                const t = o.text.trim();
+                if (o.disabled) {
+                    if (kata.length === 0) html += `<div class="ss-group">${esc(t)}</div>`;
+                    return;
+                }
+                if (o.value === '') return;
+                const tl = t.toLowerCase();
+                if (kata.every(k => tl.includes(k))) {
+                    ada = true;
+                    html += `<div class="ss-item" data-v="${esc(o.value)}">${esc(t)}</div>`;
+                }
+            });
+            if (!ada) html = '<div class="ss-kosong">Tidak ada hasil</div>';
+            list.innerHTML = html;
+            aktifIdx = -1;
+        }
+
+        function buka() {
+            const r = inp.getBoundingClientRect();
+            const bawah = window.innerHeight - r.bottom - 10;
+            list.style.left = r.left + 'px';
+            list.style.top = (r.bottom + 2) + 'px';
+            list.style.width = r.width + 'px';
+            list.style.maxHeight = Math.max(120, Math.min(260, bawah)) + 'px';
+            list.style.display = 'block';
+        }
+
+        function tutup() { list.style.display = 'none'; }
+
+        function pilih(v) {
+            sel.value = v;
+            sel.dispatchEvent(new Event('change'));
+            tutup();
+            inp.blur();
+        }
+
+        function sorot(idx) {
+            const items = list.querySelectorAll('.ss-item');
+            if (items.length === 0) return;
+            aktifIdx = (idx + items.length) % items.length;
+            items.forEach((el, i) => el.classList.toggle('aktif', i === aktifIdx));
+            items[aktifIdx].scrollIntoView({ block: 'nearest' });
+        }
+
+        inp.addEventListener('focus', () => { inp.select(); render(''); buka(); });
+        inp.addEventListener('input', () => { render(inp.value); buka(); });
+        inp.addEventListener('keydown', e => {
+            if (e.key === 'ArrowDown') { e.preventDefault(); sorot(aktifIdx + 1); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); sorot(aktifIdx - 1); }
+            else if (e.key === 'Enter') {
+                e.preventDefault();
+                const items = list.querySelectorAll('.ss-item');
+                const target = aktifIdx >= 0 ? items[aktifIdx] : (items.length === 1 ? items[0] : null);
+                if (target) pilih(target.dataset.v);
+            }
+            else if (e.key === 'Escape') { tutup(); inp.blur(); }
+        });
+        inp.addEventListener('blur', () => {
+            tutup();
+            if (inp.value.trim() === '' && sel.value !== '') sel.value = '';
+            else syncInput();
+        });
+
+        list.addEventListener('mousedown', e => e.preventDefault());   // jaga fokus agar klik terbaca
+        list.addEventListener('click', e => {
+            const el = e.target.closest('.ss-item');
+            if (el) pilih(el.dataset.v);
+        });
+
+        window.addEventListener('scroll', e => { if (!list.contains(e.target)) tutup(); }, true);
+        window.addEventListener('resize', tutup);
+
+        // Jika isi <select> diganti oleh kode lain (fetch), kotak ketik ikut menyesuaikan
+        new MutationObserver(() => {
+            syncInput();
+            if (list.style.display === 'block') render(inp.value);
+        }).observe(sel, { childList: true });
+
+        syncInput();
+    }
+
         // ============================================================
         // RENDER INFO USER DI SIDEBAR
         // ============================================================
+        
         function renderInfoUser() {
             if (!user) return;
 
@@ -1155,6 +309,7 @@ async function gantiModeInput(mode) {
     const wrapPenandatangan = document.getElementById('wrap_penandatangan');
     const fieldAsal         = document.getElementById('asal_surat');
 
+    document.getElementById('wrap_surat_tugas').style.display = 'none';
     tipeInputSurat = 'editor';
     document.getElementById('btnTipeEditor').classList.add('aktif');
     document.getElementById('btnTipeUpload').classList.remove('aktif');
@@ -1196,6 +351,8 @@ async function gantiModeInput(mode) {
             muatKop(user.kode_unit);
 
         } else if (mode === 'permohonan') {
+            document.getElementById('wrap_surat_tugas').style.display = 'block';
+            muatDaftarPegawaiTugas();
             wrapNomor.style.display         = 'none';
             wrapPenandatangan.style.display = 'none';
             document.getElementById('wrap_tujuan_surat').style.display = 'none';
@@ -1203,6 +360,379 @@ async function gantiModeInput(mode) {
         }
     }
 }
+
+
+        // ============================================================
+        // ✅ BARU — SURAT LANJUTAN (dari tombol di Inbox → Surat Diterima)
+        // ============================================================
+        let disposisiAsalId = null;   // ✅ BARU
+
+        async function cekParameterLanjutan() {
+            const params       = new URLSearchParams(window.location.search);
+            const idAsal        = params.get('lanjutan_dari');
+            const idDisposisi   = params.get('disposisi_dari');
+            const sebagaiTugas  = params.get('sebagai') === 'tugas';
+            const balasLangsung = params.get('balasan') === 'langsung';   // ✅ BARU
+            if (!idAsal) return;
+
+            try {
+                const resAsal = await fetch(`/api/surat/${idAsal}`);
+                if (!resAsal.ok) throw new Error('Surat asal tidak ditemukan');
+                const asal = await resAsal.json();
+
+                suratAsalId     = parseInt(idAsal);
+                disposisiAsalId = idDisposisi ? parseInt(idDisposisi) : null;
+
+                // Tampilkan banner
+                document.getElementById('bannerSuratLanjutan').style.display = 'block';
+                let labelBanner = asal.perihal;
+                if (sebagaiTugas)  labelBanner = '📝 Surat Tugas untuk: ' + asal.perihal;
+                if (balasLangsung) labelBanner = '↩️ Balasan untuk: ' + asal.perihal;
+                document.getElementById('bannerSuratLanjutanPerihal').textContent = labelBanner;
+
+                if (sebagaiTugas) {
+                    // Surat Tugas: jenis = permohonan, TTE otomatis naik sampai Direktur
+                    document.getElementById('pilih_jenis_surat').value = 'permohonan';
+                    await gantiModeInput('permohonan');
+                    document.getElementById('perihal').value = `Surat Tugas: ${asal.perihal}`;
+                    tampilNotif('Membuat Surat Tugas — akan diteruskan untuk TTE Direktur', 'sukses');
+
+                } else if (balasLangsung) {
+                    // ✅ BARU — Balas langsung: internal, tujuan = pengirim surat asal (bukan Direktur)
+                    if (!asal.nip_pembuat) throw new Error('NIP pengirim surat asal tidak ditemukan');
+
+                    document.getElementById('pilih_jenis_surat').value = 'internal';
+                    await gantiModeInput('internal');
+                    await muatUnitTujuan();
+
+                    // ✅ FIX — pastikan pengirim asal selalu jadi opsi, walau dia tidak
+                    // termasuk kandidat normal dari get_unit_tujuan (misal bukan pimpinan
+                    // unit, atau ke-filter aturan level/punya_kop).
+                    const selectTujuan = document.getElementById('nip_tujuan');
+                    const sudahAda = Array.from(selectTujuan.options).some(o => o.value === asal.nip_pembuat);
+                    if (!sudahAda) {
+                        const resProfil = await fetch(`/api/profil?nip=${asal.nip_pembuat}`);
+                        const namaTampil = resProfil.ok
+                            ? (await resProfil.json()).nama
+                            : asal.nama_pembuat || asal.nip_pembuat;
+                        const opsiBaru = document.createElement('option');
+                        opsiBaru.value = asal.nip_pembuat;
+                        opsiBaru.textContent = `${namaTampil} (Pengirim Surat Asal)`;
+                        selectTujuan.appendChild(opsiBaru);
+                    }
+                    selectTujuan.value = asal.nip_pembuat;
+
+                    document.getElementById('perihal').value = `Balasan: ${asal.perihal}`;
+                    tampilNotif(`Membalas surat dari: ${asal.perihal}`, 'sukses');
+
+                } else {
+                    // Surat lanjutan biasa (internal, ke ATASAN LANGSUNG)
+                    const resAtasan = await fetch(`/api/atasan-tujuan?nip=${user.nip}`);
+                    const atasan = resAtasan.ok ? await resAtasan.json() : { ada: false };
+                    if (!atasan.ada) throw new Error('Unit Anda tidak memiliki atasan yang boleh dituju');
+
+                    document.getElementById('pilih_jenis_surat').value = 'internal';
+                    await gantiModeInput('internal');
+                    await muatUnitTujuan();
+                    document.getElementById('nip_tujuan').value = atasan.nip;
+                    document.getElementById('perihal').value = `Tindak Lanjut: ${asal.perihal}`;
+                    tampilNotif(`Surat lanjutan ke ${atasan.nama} — lampiran: ${asal.perihal}`, 'sukses');
+                }
+            } catch (err) {
+                console.error('Gagal muat data surat lanjutan:', err);
+                tampilNotif('Gagal memuat data surat asal!', 'gagal');
+            }
+        }
+
+        // ============================================================
+        // SURAT TUGAS DARI PENUGASAN (tombol di tugas sekretaris)
+        // ============================================================
+        let penugasanAsalId = null;
+        let tampilkanSuratTugas = false;   // true hanya jika dibuka dari tombol "Surat Tugas"
+
+        async function cekParameterPenugasan() {
+            const params      = new URLSearchParams(window.location.search);
+            const idPenugasan = params.get('penugasan_dari');
+            if (!idPenugasan || params.get('sebagai') !== 'tugas') return;
+
+            try {
+                const res = await fetch(`/api/tugas-saya?nip=${user.nip}`);
+                if (!res.ok) throw new Error('Gagal memuat daftar tugas');
+                const daftar = await res.json();
+                const tugas  = daftar.find(t => t.penugasan_id === parseInt(idPenugasan));
+                if (!tugas) throw new Error('Penugasan tidak ditemukan');
+
+                penugasanAsalId = tugas.penugasan_id;
+                suratAsalId     = tugas.surat_id;   // tautkan ke surat asli (utas)
+                tampilkanSuratTugas = true;
+
+                document.getElementById('bannerSuratLanjutan').style.display = 'block';
+                document.getElementById('bannerSuratLanjutanPerihal').textContent =
+                    `📝 Surat Tugas untuk: ${tugas.perihal}` +
+                    (tugas.deskripsi_tugas ? ` — Perintah atasan: ${tugas.deskripsi_tugas}` : '');
+
+                document.getElementById('pilih_jenis_surat').value = 'permohonan';
+                await gantiModeInput('permohonan');
+                document.getElementById('perihal').value = `Surat Tugas: ${tugas.perihal}`;
+                tampilNotif('Membuat Surat Tugas — akan diteruskan untuk TTE Direktur', 'sukses');
+            } catch (err) {
+                console.error(err);
+                tampilNotif('Gagal memuat data penugasan!', 'gagal');
+            }
+        }
+
+        // ============================================================
+        // AKSES STAF: hanya boleh kelola surat jika punya delegasi
+        // ============================================================
+        async function cekAksesSurat() {
+            if (user.role_ppnp !== 'staf') return true;   // pejabat: bebas
+            try {
+                const res  = await fetch(`/api/delegasi-saya?nip=${user.nip}`);
+                const data = await res.json();
+                if (data.punya_delegasi === true) return true;
+            } catch (e) {
+                console.error('Gagal cek delegasi:', e);
+            }
+            document.getElementById('cardFormSurat').style.display     = 'none';
+            document.getElementById('cardTabelSurat').style.display    = 'none';
+            document.getElementById('pesanTanpaDelegasi').style.display = 'block';
+            return false;
+        }
+
+        // ============================================================
+        // PANEL DELEGASI (pejabat level 4)
+        // ============================================================
+        async function muatPanelDelegasi() {
+            if (user.role_ppnp === 'staf') return;
+            try {
+                const resUnit = await fetch(`/api/unit-info?kode_unit=${user.kode_unit}`);
+                const unit    = await resUnit.json();
+                if (![3, 4].includes(unit.level)) return;
+
+                document.getElementById('cardDelegasi').style.display = 'block';
+                await renderDelegasi();
+            } catch (e) {
+                console.error('Gagal muat panel delegasi:', e);
+            }
+        }
+
+        async function renderDelegasi() {
+            const tbody = document.getElementById('tabelDelegasi');
+            try {
+                const res  = await fetch(`/api/delegasi?nip=${user.nip}`);
+                if (!res.ok) throw new Error('Gagal');
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#7f8c8d;">Tidak ada staf di unit Anda.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(s => `
+                    <tr>
+                        <td><strong>${s.nama}</strong></td>
+                        <td>${s.jabatan || '—'}</td>
+                        <td>${s.aktif
+                            ? '<span style="background:#27ae60; color:white; padding:3px 10px; border-radius:12px; font-size:0.72rem; font-weight:700;">✅ Ada Delegasi</span>'
+                            : '<span style="background:#95a5a6; color:white; padding:3px 10px; border-radius:12px; font-size:0.72rem; font-weight:700;">Tanpa Delegasi</span>'}
+                        </td>
+                        <td>${s.aktif
+                            ? `<button onclick="cabutDelegasi(${s.delegasi_id})"
+                                   style="padding:5px 12px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">
+                                   ✕ Cabut
+                               </button>`
+                            : `<button onclick="beriDelegasi('${s.nip}')"
+                                   style="padding:5px 12px; background:#2ecc71; color:white; border:none; border-radius:4px; cursor:pointer;">
+                                   ➕ Beri Delegasi
+                               </button>`}
+                        </td>
+                    </tr>`).join('');
+                filterDelegasi();
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#e74c3c;">Gagal memuat data.</td></tr>';
+            }
+        }
+
+                function filterDelegasi() {
+            const kata  = (document.getElementById('cariDelegasi')?.value || '').toLowerCase().split(/\s+/).filter(Boolean);
+            const baris = document.querySelectorAll('#tabelDelegasi tr');
+            let tampil = 0, total = 0;
+            baris.forEach(tr => {
+                if (tr.children.length < 4) return;          // lewati baris pesan (Memuat / kosong)
+                total++;
+                const teks = tr.textContent.toLowerCase();
+                const cocok = kata.every(k => teks.includes(k));
+                tr.style.display = cocok ? '' : 'none';
+                if (cocok) tampil++;
+            });
+            const info = document.getElementById('infoJumlahDelegasi');
+            if (info) info.textContent = total ? `Menampilkan ${tampil} dari ${total} staf` : '';
+        }
+
+        async function beriDelegasi(nipStaf) {
+            try {
+                const res = await fetch('/api/delegasi', {
+                    method : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body   : JSON.stringify({ nip_pemberi: user.nip, nip_staf: nipStaf })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    tampilNotif(data.message || 'Delegasi diberikan', 'sukses');
+                    renderDelegasi();
+                } else {
+                    tampilNotif(data.detail || 'Gagal memberi delegasi', 'gagal');
+                }
+            } catch (e) {
+                tampilNotif('Koneksi gagal!', 'gagal');
+            }
+        }
+
+        async function cabutDelegasi(delegasiId) {
+            const ya = await konfirmasiKustom(
+                'Cabut delegasi staf ini? Draft surat miliknya tidak bisa dikirim lagi.',
+                { judul: 'Cabut Delegasi', ya: 'Ya, Cabut', bahaya: true }
+            );
+            if (!ya) return;
+            try {
+                const res = await fetch(`/api/delegasi/${delegasiId}/cabut`, {
+                    method : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body   : JSON.stringify({ nip_pemberi: user.nip })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    tampilNotif(data.message || 'Delegasi dicabut', 'sukses');
+                    renderDelegasi();
+                } else {
+                    tampilNotif(data.detail || 'Gagal mencabut delegasi', 'gagal');
+                }
+            } catch (e) {
+                tampilNotif('Koneksi gagal!', 'gagal');
+            }
+        }
+
+        // ============================================================
+        // SURAT TUGAS: daftar pegawai yang ditugaskan
+        // ============================================================
+        let pegawaiTugasList  = [];
+        let cachePegawaiTugas = null;
+        let nipNotulen = null;            // NIP peserta yang dicentang sebagai notulen (jenis rapat)
+        let pimpinanRapatDipilih = '';    // NIP pimpinan rapat
+
+        async function muatDaftarPegawaiTugas() {
+            const sel  = document.getElementById('pegawaiTugasSelect');
+            const selP = document.getElementById('pimpinanRapatSelect');
+            try {
+                if (!cachePegawaiTugas) {
+                    const res = await fetch('/api/pegawai-daftar');
+                    if (!res.ok) throw new Error('Gagal');
+                    cachePegawaiTugas = await res.json();
+                }
+                let opsi = '<option value="">-- Pilih Pegawai --</option>';
+                cachePegawaiTugas.forEach(p => {
+                    opsi += `<option value="${p.nip}">${p.nama} — ${p.jabatan || ''} (${p.nama_unit})</option>`;
+                });
+                sel.innerHTML = opsi;
+
+                // Pimpinan rapat: semua pejabat non-staf
+                let opsiP = '<option value="">-- Pilih Pimpinan Rapat --</option>';
+                cachePegawaiTugas.filter(p => p.role_ppnp !== 'staf').forEach(p => {
+                    opsiP += `<option value="${p.nip}">${p.nama} — ${p.jabatan || ''} (${p.nama_unit})</option>`;
+                });
+                selP.innerHTML = opsiP;
+                selP.value = pimpinanRapatDipilih;
+            } catch (e) {
+                sel.innerHTML  = '<option value="">⚠️ Gagal memuat daftar pegawai</option>';
+                selP.innerHTML = '<option value="">⚠️ Gagal memuat daftar pegawai</option>';
+            }
+            renderDaftarPegawaiTugas();
+        }
+
+        function tambahPegawaiTugas() {
+            const sel  = document.getElementById('pegawaiTugasSelect');
+            const nip  = sel.value;
+            const nama = sel.options[sel.selectedIndex]?.text || '—';
+            if (!nip) { tampilNotif('Pilih pegawai terlebih dahulu!', 'gagal'); return; }
+            if (pegawaiTugasList.some(p => p.nip === nip)) {
+                tampilNotif('Pegawai ini sudah ada di daftar!', 'gagal');
+                return;
+            }
+            pegawaiTugasList.push({ nip, nama });
+            sel.value = '';
+            renderDaftarPegawaiTugas();
+        }
+
+        function hapusPegawaiTugas(idx) {
+            pegawaiTugasList.splice(idx, 1);
+            if (!pegawaiTugasList.some(p => p.nip === nipNotulen)) nipNotulen = null;
+            renderDaftarPegawaiTugas();
+        }
+
+        function setNotulen(nip) {
+            nipNotulen = nip;
+        }
+
+        function renderDaftarPegawaiTugas() {
+            const wrap  = document.getElementById('daftarPegawaiTugas');
+            const rapat = document.getElementById('jenisTugas').value === 'rapat';
+            if (pegawaiTugasList.length === 0) {
+                wrap.innerHTML = '<div style="text-align:center; padding:10px; color:#bdc3c7; font-size:0.82rem;">Belum ada pegawai ditambahkan.</div>';
+                return;
+            }
+            wrap.innerHTML = pegawaiTugasList.map((p, i) => `
+                <div style="background:white; border:1px solid #e0e6e4; border-radius:8px; padding:8px 12px;
+                            margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <span style="font-size:0.85rem; font-weight:700; color:#2c3e50;">${i + 1}. ${p.nama}</span>
+                    <span style="display:flex; align-items:center; gap:10px;">
+                        ${rapat ? `<label style="font-size:0.78rem; color:#e67e22; font-weight:700; cursor:pointer;">
+                            <input type="radio" name="radioNotulen" ${p.nip === nipNotulen ? 'checked' : ''}
+                                   onchange="setNotulen('${p.nip}')"> Notulen
+                        </label>` : ''}
+                        <button type="button" onclick="hapusPegawaiTugas(${i})"
+                            style="background:#fdf2f2; color:#e74c3c; border:1px solid #fcc; border-radius:4px;
+                                   padding:3px 8px; cursor:pointer; font-size:0.75rem; font-weight:700;">✕</button>
+                    </span>
+                </div>`).join('');
+        }
+
+        function aturJenisTugas() {
+            const jenis = document.getElementById('jenisTugas').value;
+            const pd    = jenis === 'perjalanan_dinas';
+            const rapat = jenis === 'rapat';
+            document.getElementById('wrapTempatTugas').style.display   = (pd || rapat) ? 'block' : 'none';
+            document.getElementById('wrapRapat').style.display         = rapat ? 'block' : 'none';
+            document.getElementById('wrapTanggalSelesai').style.display = rapat ? 'none' : 'block';
+            document.getElementById('labelTanggalMulai').textContent   = rapat ? 'Tanggal Rapat' : 'Tanggal Mulai Pelaksanaan';
+            if (!rapat) nipNotulen = null;
+            renderDaftarPegawaiTugas();
+        }
+
+        function resetSuratTugas() {
+            document.getElementById('jenisTugas').value  = '';
+            document.getElementById('tempatTugas').value = '';
+            document.getElementById('agendaRapat').value    = '';
+            document.getElementById('jamMulaiRapat').value  = '';
+            document.getElementById('jamSelesaiRapat').value = '';
+            pimpinanRapatDipilih = '';
+            document.getElementById('pimpinanRapatSelect').value = '';
+            nipNotulen = null;
+            aturJenisTugas();
+            tampilkanSuratTugas = false;
+            penugasanAsalId = null;
+            suratAsalId = null;
+            disposisiAsalId = null;
+            document.getElementById('wrap_surat_tugas').style.display = 'none';
+            document.getElementById('bannerSuratLanjutan').style.display = 'none';
+            pegawaiTugasList = [];
+            document.getElementById('tanggalTugasMulai').value   = '';
+            document.getElementById('tanggalTugasSelesai').value = '';
+            renderDaftarPegawaiTugas();
+        }
+
+        function lihatSuratAsal() {
+            if (suratAsalId) previewSurat(suratAsalId);
+        }
 
         // ============================================================
         // GANTI TAB DRAFT / TERKIRIM
@@ -1229,7 +759,7 @@ async function gantiModeInput(mode) {
 
                 if (data.length === 0) {
                     tbody.innerHTML =
-                        '<tr><td colspan="4" style="text-align:center; color:#7f8c8d;">Belum ada draft surat.</td></tr>';
+                        '<tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Belum ada draft surat.</td></tr>';
                     return;
                 }
 
@@ -1255,7 +785,14 @@ async function gantiModeInput(mode) {
                         identHtml = `<small style="color:#555;">${nomor}</small>`;
                     }
 
-                                        const isUpload = s.tipe_input === 'upload';
+                    const isUpload = s.tipe_input === 'upload';
+                    const kotakKembali = s.catatan_kembali
+                        ? `<div style="margin-top:8px; background:#fdf2f2; border-left:4px solid #e74c3c;
+                                       border-radius:4px; padding:8px 12px; font-size:0.8rem; color:#922b21; line-height:1.5;">
+                               <strong>↩️ Dikembalikan pejabat:</strong><br>${String(s.catatan_kembali)
+                                   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                           </div>`
+                        : '';
                     const perihalEsc = s.perihal.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
                     const aksiHtml = isUpload ? `
@@ -1280,6 +817,9 @@ async function gantiModeInput(mode) {
                             style="padding:5px 10px; background:#34495e; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:5px;">
                             👁️ Preview
                         </button>
+                        ${s.jenis_surat === 'eksternal' ? `<button onclick="cetakTandaTerima(${s.id})"
+                            style="padding:5px 10px; background:#16a085; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:5px;">
+                            🧾 Tanda Terima</button>` : ''}
                         <button onclick="editSurat(${s.id})"
                             style="padding:5px 10px; background:#f39c12; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:5px;">
                             ✏️ Edit
@@ -1306,7 +846,13 @@ async function gantiModeInput(mode) {
                             <br>
                             <span style="font-size:0.82rem;">${identHtml}</span>
                         </td>
-                        <td>${s.perihal}</td>
+                        <td><span class="teks-perihal">${s.perihal}</span>${kotakKembali}</td>
+                        <td>
+                            ${s.nama_penerima
+                                ? `<span style="font-size:0.85rem;">${s.nama_penerima}</span><br>
+                                   <small style="color:#95a5a6;">${s.jabatan_penerima || ''}</small>`
+                                : '<small style="color:#bdc3c7;">—</small>'}
+                        </td>
                         <td style="white-space:nowrap;">${aksiHtml}</td>
                     </tr>`;
                 });
@@ -1316,7 +862,7 @@ async function gantiModeInput(mode) {
             } catch (err) {
                 console.error('Gagal memuat tabel draft:', err);
                 document.getElementById('tabelDraft').innerHTML =
-                    '<tr><td colspan="4" style="text-align:center; color:#e74c3c;">Gagal memuat data. Coba refresh halaman.</td></tr>';
+                    '<tr><td colspan="5" style="text-align:center; color:#e74c3c;">Gagal memuat data. Coba refresh halaman.</td></tr>';
             }
         }
 
@@ -1350,6 +896,28 @@ async function gantiModeInput(mode) {
 
                 if (s.jenis_surat !== 'eksternal' && quillSurat) {
                     quillSurat.root.innerHTML = s.isi_surat || '';
+                }
+
+                if (s.jenis_surat === 'permohonan') {
+                    const adaDataTugas = (s.pegawai_ditugaskan || []).length > 0 || s.tanggal_tugas_selesai;
+                    if (adaDataTugas) {
+                        document.getElementById('wrap_surat_tugas').style.display = 'block';
+                        muatDaftarPegawaiTugas();
+                    }
+                    pegawaiTugasList = (s.pegawai_ditugaskan || []).map(p => ({ nip: p.nip, nama: p.nama }));
+                    document.getElementById('tanggalTugasMulai').value   = s.tanggal_tugas_mulai   || '';
+                    document.getElementById('tanggalTugasSelesai').value = s.tanggal_tugas_selesai || '';
+                    document.getElementById('jenisTugas').value  = s.jenis_tugas  || '';
+                    document.getElementById('tempatTugas').value = s.tempat_tugas || '';
+                    document.getElementById('agendaRapat').value     = s.agenda_rapat || '';
+                    document.getElementById('jamMulaiRapat').value   = s.jam_mulai    || '';
+                    document.getElementById('jamSelesaiRapat').value = s.jam_selesai  || '';
+                    pimpinanRapatDipilih = s.nip_pimpinan_rapat || '';
+                    document.getElementById('pimpinanRapatSelect').value = pimpinanRapatDipilih;
+                    const notulenLama = (s.pegawai_ditugaskan || []).find(p => p.is_notulen);
+                    nipNotulen = notulenLama ? notulenLama.nip : null;
+                    aturJenisTugas();
+                    renderDaftarPegawaiTugas();
                 }
 
                 document.querySelector('.btn-submit').innerText = '💾 Simpan Perubahan';
@@ -1489,6 +1057,49 @@ async function gantiModeInput(mode) {
                 }
             }
 
+            // Surat tugas dari penugasan: wajib ada pegawai yang ditugaskan
+            if (modeSurat === 'permohonan' && penugasanAsalId && pegawaiTugasList.length === 0) {
+                tampilNotif('Tambahkan minimal 1 pegawai yang ditugaskan (klik tombol ➕ Tambah)!', 'gagal');
+                btnSimpan.innerText = '💾 Simpan ke Draft (Preview)';
+                btnSimpan.disabled  = false;
+                sedangMenyimpan     = false;
+                return;
+            }
+
+            // Perjalanan dinas: wajib ada pegawai & tempat
+            if (modeSurat === 'permohonan' && document.getElementById('jenisTugas').value === 'perjalanan_dinas') {
+                const kurang = pegawaiTugasList.length === 0
+                    ? 'Tambahkan minimal 1 pegawai yang ditugaskan (klik tombol ➕ Tambah)!'
+                    : (!document.getElementById('tempatTugas').value.trim() ? 'Tempat pelaksanaan wajib diisi!' : '');
+                if (kurang) {
+                    tampilNotif(kurang, 'gagal');
+                    btnSimpan.innerText = '💾 Simpan ke Draft (Preview)';
+                    btnSimpan.disabled  = false;
+                    sedangMenyimpan     = false;
+                    return;
+                }
+            }
+
+            // Rapat: wajib lengkap
+            if (modeSurat === 'permohonan' && document.getElementById('jenisTugas').value === 'rapat') {
+                const kurang =
+                    pegawaiTugasList.length === 0 ? 'Tambahkan minimal 1 peserta rapat (klik tombol ➕ Tambah)!'
+                    : !document.getElementById('agendaRapat').value.trim() ? 'Agenda rapat wajib diisi!'
+                    : !document.getElementById('tanggalTugasMulai').value ? 'Tanggal rapat wajib diisi!'
+                    : !document.getElementById('jamMulaiRapat').value ? 'Jam mulai wajib diisi!'
+                    : !document.getElementById('tempatTugas').value.trim() ? 'Tempat rapat wajib diisi!'
+                    : !document.getElementById('pimpinanRapatSelect').value ? 'Pimpinan rapat wajib dipilih!'
+                    : !nipNotulen ? 'Centang satu peserta sebagai Notulen!'
+                    : '';
+                if (kurang) {
+                    tampilNotif(kurang, 'gagal');
+                    btnSimpan.innerText = '💾 Simpan ke Draft (Preview)';
+                    btnSimpan.disabled  = false;
+                    sedangMenyimpan     = false;
+                    return;
+                }
+            }
+
             // Tahap 3: Susun payload
             const payload = {
                 jenis_surat       : modeSurat,
@@ -1507,6 +1118,19 @@ async function gantiModeInput(mode) {
                 // ✅ BARU
                 tipe_input        : modeSurat === 'eksternal' ? 'editor' : tipeInputSurat,
                 file_upload       : namaFileUpload,
+                surat_asal_id     : suratAsalId,       // ✅ BARU — null kalau bukan surat lanjutan
+                disposisi_asal_id : disposisiAsalId,   // ✅ BARU — null kalau bukan Surat Tugas
+                penugasan_asal_id : penugasanAsalId,   // ✅ BARU — null kalau bukan Surat Tugas dari penugasan
+                pegawai_ditugaskan    : modeSurat === 'permohonan' ? pegawaiTugasList.map(p => p.nip) : [],
+                tanggal_tugas_mulai   : modeSurat === 'permohonan' ? (document.getElementById('tanggalTugasMulai').value   || null) : null,
+                tanggal_tugas_selesai : modeSurat === 'permohonan' ? (document.getElementById('tanggalTugasSelesai').value || null) : null,
+                jenis_tugas           : modeSurat === 'permohonan' ? (document.getElementById('jenisTugas').value || null) : null,
+                tempat_tugas          : modeSurat === 'permohonan' ? (document.getElementById('tempatTugas').value.trim() || null) : null,
+                agenda_rapat          : modeSurat === 'permohonan' ? (document.getElementById('agendaRapat').value.trim() || null) : null,
+                jam_mulai             : modeSurat === 'permohonan' ? (document.getElementById('jamMulaiRapat').value || null) : null,
+                jam_selesai           : modeSurat === 'permohonan' ? (document.getElementById('jamSelesaiRapat').value || null) : null,
+                nip_pimpinan_rapat    : modeSurat === 'permohonan' ? (document.getElementById('pimpinanRapatSelect').value || null) : null,
+                nip_notulen           : modeSurat === 'permohonan' ? nipNotulen : null,
             };
 
             // Tahap 4: Kirim ke API
@@ -1538,27 +1162,55 @@ async function gantiModeInput(mode) {
                     btnSimpan.disabled = false;   // ✅ tambahkan ini
                     document.querySelector('.btn-submit').innerText = '💾 Simpan ke Draft (Preview)';
                     document.getElementById('formDetailSurat').reset();
+                    resetSuratTugas();
                     if (quillSurat) quillSurat.setText('');
                     document.getElementById('formDetailSurat').style.display = 'none';
                     document.getElementById('pilih_jenis_surat').value = '';
                     hapusFilePDF();
                     muatDaftarSurat();
-                } else {
-                    const errData = await res.json().catch(() => ({}));
-                    sedangMenyimpan = false;
-                    tampilNotif(`Gagal menyimpan: ${errData.detail || 'Server error ' + res.status}`, 'gagal');
-                }
-            } catch (err) {
+                    } else {
+    const errData = await res.json().catch(() => ({}));
+
+    // ✅ Bersihkan file yang sudah kadung terupload tapi datanya gagal disimpan
+    if (!suratEditId) {
+        const fileUntukDihapus = namaFileUploaded || namaFileUpload;
+        if (fileUntukDihapus) {
+            fetch('/api/upload/batalkan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama_file: fileUntukDihapus })
+            }).catch(() => {});  // silent fail, tidak perlu blokir alur utama
+        }
+    }
+
+    sedangMenyimpan = false;
+    btnSimpan.disabled = false;
+    btnSimpan.innerText = suratEditId ? '💾 Simpan Perubahan' : '💾 Simpan ke Draft (Preview)';
+    tampilNotif(`Gagal menyimpan: ${errData.detail || 'Server error ' + res.status}`, 'gagal');
+}
+} catch (err) {
     tampilNotif('Koneksi gagal saat menyimpan draft!', 'gagal');
     console.error(err);
-    sedangMenyimpan = false;   // ✅ reset kalau exception tak terduga
+    sedangMenyimpan = false;
+    btnSimpan.disabled = false;
+    btnSimpan.innerText = suratEditId ? '💾 Simpan Perubahan' : '💾 Simpan ke Draft (Preview)';
 }
+        }
+
+
+        let suratIdTerakhir = null;
+
+        function cetakTandaTerima(id) {
+            const sid = id || suratIdTerakhir;
+            if (!sid) return;
+            window.open(`/api/surat/${sid}/tanda-terima?nip=${user.nip}`, '_blank');
         }
 
         // ============================================================
         // MODAL SUKSES (surat eksternal)
         // ============================================================
-        function tampilModalSukses(namaFile, kodePelacakan) {
+        function tampilModalSukses(namaFile, kodePelacakan, suratId) {
+            suratIdTerakhir = suratId;
             document.getElementById('modal-nama-file').textContent      = namaFile;
             document.getElementById('modal-kode-pelacakan').textContent = kodePelacakan;
             document.getElementById('modalSukses').classList.add('aktif');
@@ -1998,7 +1650,8 @@ ${qrScript}
 
         function kirimSurat(id) {
             const baris   = document.querySelector(`button[onclick="kirimSurat(${id})"]`).closest('tr');
-            const perihal = baris.querySelector('td:nth-child(3)').textContent;
+            const elPerihal = baris.querySelector('.teks-perihal');
+            const perihal = elPerihal ? elPerihal.textContent : baris.querySelector('td:nth-child(3)').textContent;
             const jenis   = baris.querySelector('td:nth-child(2)').textContent.trim().toLowerCase();
 
             idSuratAkanDikirim = id;
@@ -2035,7 +1688,7 @@ ${qrScript}
                     tutupModalKirim();
                     tampilNotif("Surat berhasil dikirim ke pejabat!", "sukses");
 
-                    if (data.chain_approval && data.chain_approval.length > 0) {
+                    if (data && data.chain_approval && data.chain_approval.length > 0) {
                         const infoChain = data.chain_approval
                             .map(c => `${c.urutan}. ${c.jenis}: ${c.nip}`)
                             .join('\n');
@@ -2130,6 +1783,9 @@ ${qrScript}
                                 🔍 Tracking
                             </button>
                             ${btnDownload}
+                            ${s.jenis_surat === 'eksternal' ? `<button onclick="cetakTandaTerima(${s.id})"
+                                style="padding:5px 10px; background:#16a085; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:5px;">
+                                🧾 Tanda Terima</button>` : ''}
                         </td>
                     </tr>`;
                 });
@@ -2349,50 +2005,84 @@ ${qrScript}
         // ============================================================
         // BUKA MODAL POSISI TTD
         // ============================================================
-        async function bukaPosisiTTD(suratId, perihal, fileUpload, jenisSurat) {
+async function bukaPosisiTTD(suratId, perihal, fileUpload, jenisSurat) {
     if (!fileUpload) {
         tampilNotif('File PDF belum ada. Simpan draft terlebih dahulu.', 'gagal');
         return;
     }
 
     if (jenisSurat === 'permohonan') {
-        tampilNotif('Surat permohonan hanya perlu 1 posisi TTD untuk Direktur. Paraf pejabat di atas Anda akan diproses otomatis.', 'sukses');
+        tampilNotif('Surat permohonan hanya perlu 1 posisi TTD untuk Direktur. Paraf pejabat di atas Anda akan diproses otomatis.', 'sukses');        tampilNotif('Surat permohonan: pasang pin Nomor Surat lebih dulu, lalu 1 pin TTD Direktur. Paraf pejabat di atas Anda diproses otomatis.', 'sukses');
     }
 
-            suratPosisiId = suratId;
-            posisiTTDList = [];
-            pendingMarker = null;
-            halamanAktif  = 1;
+    suratPosisiId    = suratId;
+    posisiTTDList    = [];
+    posisiNomorList  = [];
+    pendingMarker      = null;
+    pendingMarkerNomor = null;
+    halamanAktif     = 1;
+    jenisSuratPosisi = jenisSurat;
+    jenisPinAktif    = jenisSurat === 'permohonan' ? 'nomor' : 'ttd';
 
-            document.getElementById('posisiPerihalLabel').textContent  = perihal;
-            document.getElementById('daftarMarkerTTD').innerHTML       = `
-                <div style="text-align:center; padding:20px; color:#bdc3c7;">
-                    <div style="font-size:2rem;">📍</div>
-                    <div style="font-size:0.82rem; margin-top:8px; line-height:1.6;">
-                        Belum ada posisi TTD.<br>Klik pada PDF untuk menambahkan.
-                    </div>
-                </div>`;
-            document.getElementById('markerContainer').innerHTML =
-    '<div id="frameGhost" class="marker-frame-ghost"></div>';
-            setModeTTD('sequential');
+    document.getElementById('posisiPerihalLabel').textContent  = perihal;
+    document.getElementById('daftarMarkerTTD').innerHTML       = `
+        <div style="text-align:center; padding:20px; color:#bdc3c7;">
+            <div style="font-size:2rem;">📍</div>
+            <div style="font-size:0.82rem; margin-top:8px; line-height:1.6;">
+                Belum ada posisi TTD.<br>Klik pada PDF untuk menambahkan.
+            </div>
+        </div>`;
+    document.getElementById('markerContainer').innerHTML =
+        '<div id="frameGhost" class="marker-frame-ghost"></div>' +
+        '<div id="frameGhostNomor" class="marker-frame-ghost-nomor"></div>';
+    setModeTTD('sequential');
 
-            await isiDropdownPejabatTTD(jenisSurat);
-            document.getElementById('modalPosisiTTD').classList.add('aktif');
+    // ✅ Tampilkan toggle Pin TTD/Nomor & panel daftar nomor HANYA untuk permohonan
+    const wrapToggle = document.getElementById('wrapTogglePin');
+    const wrapDaftarNomor = document.getElementById('wrapDaftarNomor');
+    if (jenisSurat === 'permohonan') {
+        wrapToggle.style.display = 'block';
+        wrapDaftarNomor.style.display = 'block';
+        setJenisPin('nomor');
 
-            // Load PDF.js
-            try {
-                const loadTask = pdfjsLib.getDocument(`/uploads/${fileUpload}`);
-                pdfJsDoc      = await loadTask.promise;
-                totalHalaman  = pdfJsDoc.numPages;
-                await renderHalamanPDF(1);
-                document.getElementById('pdfCanvas').onclick = klikPdfCanvas;
-                document.getElementById('pdfCanvas').onmousemove = gerakPdfCanvas;
-                document.getElementById('pdfCanvas').onmouseleave = sembunyikanGhost;
-            } catch (err) {
-                tampilNotif('Gagal memuat PDF!', 'gagal');
-                console.error(err);
-            }
+        // Muat posisi nomor surat yang sudah tersimpan sebelumnya (jika ada)
+        try {
+            const resNomor = await fetch(`/api/surat/${suratId}/posisi-nomor`);
+            const dataNomor = await resNomor.json();
+            posisiNomorList = dataNomor.map(p => ({
+                prefix_teks: p.prefix_teks,
+                posisi_hal : p.posisi_hal,
+                posisi_x   : p.posisi_x,
+                posisi_y   : p.posisi_y,
+            }));
+        } catch (e) {
+            posisiNomorList = [];
         }
+    } else {
+        wrapToggle.style.display = 'none';
+        wrapDaftarNomor.style.display = 'none';
+    }
+    renderDaftarMarkerNomor();
+
+    await isiDropdownPejabatTTD(jenisSurat);
+    document.getElementById('modalPosisiTTD').classList.add('aktif');
+
+    try {
+        const loadTask = pdfjsLib.getDocument(`/uploads/${fileUpload}`);
+        pdfJsDoc      = await loadTask.promise;
+        totalHalaman  = pdfJsDoc.numPages;
+        await renderHalamanPDF(1);
+        document.getElementById('pdfCanvas').onclick = klikPdfCanvas;
+        document.getElementById('pdfCanvas').onmousemove = gerakPdfCanvas;
+        document.getElementById('pdfCanvas').onmouseleave = function() {
+            sembunyikanGhost();
+            sembunyikanGhostNomor();
+        };
+    } catch (err) {
+        tampilNotif('Gagal memuat PDF!', 'gagal');
+        console.error(err);
+    }
+}
 
         // ============================================================
 // HELPER: Ambil opsi HTML pejabat penandatangan (untuk surat internal)
@@ -2476,11 +2166,12 @@ async function ambilOpsiPejabatInternal() {
 }
 
         function tutupModalPosisi() {
-            document.getElementById('modalPosisiTTD').classList.remove('aktif');
-            if (pdfJsDoc) { pdfJsDoc.destroy(); pdfJsDoc = null; }
-            posisiTTDList = [];
-            suratPosisiId = null;
-        }
+    document.getElementById('modalPosisiTTD').classList.remove('aktif');
+    if (pdfJsDoc) { pdfJsDoc.destroy(); pdfJsDoc = null; }
+    posisiTTDList   = [];
+    posisiNomorList = [];
+    suratPosisiId   = null;
+}
 
         document.getElementById('modalPosisiTTD').addEventListener('click', function(e) {
             if (e.target === this) tutupModalPosisi();
@@ -2511,7 +2202,8 @@ async function ambilOpsiPejabatInternal() {
             await page.render({ canvasContext: ctx, viewport: vp }).promise;
             document.getElementById('halamanInfo').textContent = `Hal ${nomHal} / ${totalHalaman}`;
             renderMarkerDiCanvas();
-        }
+            renderMarkerNomorDiCanvas();
+            }
 
         function navHalaman(arah) { renderHalamanPDF(halamanAktif + arah); }
 
@@ -2519,20 +2211,33 @@ async function ambilOpsiPejabatInternal() {
         // KLIK CANVAS → MUNCUL MINI FORM
         // ============================================================
         function klikPdfCanvas(e) {
-            const canvas = document.getElementById('pdfCanvas');
-            const rect   = canvas.getBoundingClientRect();
-            const xPct   = parseFloat(((e.clientX - rect.left) / canvas.width  * 100).toFixed(2));
-            const yPct   = parseFloat(((e.clientY - rect.top)  / canvas.height * 100).toFixed(2));
+    const canvas = document.getElementById('pdfCanvas');
+    const rect   = canvas.getBoundingClientRect();
+    const xPct   = parseFloat(((e.clientX - rect.left) / canvas.width  * 100).toFixed(2));
+    const yPct   = parseFloat(((e.clientY - rect.top)  / canvas.height * 100).toFixed(2));
 
-            pendingMarker = { hal: halamanAktif, x: xPct, y: yPct };
+    if (jenisPinAktif === 'nomor') {
+        pendingMarkerNomor = { hal: halamanAktif, x: xPct, y: yPct };
+        document.getElementById('posisiKoordLabelNomor').textContent =
+            `Hal ${halamanAktif} — X: ${xPct.toFixed(1)}%  Y: ${yPct.toFixed(1)}%`;
+        document.getElementById('formNomorPrefix').value = '';
+        document.getElementById('modalFormNomor').classList.add('aktif');
+        return;
+    }
 
-            document.getElementById('posisiKoordLabel').textContent =
-                `Hal ${halamanAktif} — X: ${xPct.toFixed(1)}%  Y: ${yPct.toFixed(1)}%`;
-            document.getElementById('formTTDPejabat').value = '';
-            document.getElementById('formTTDLabel').value   = '';
+    if (jenisSuratPosisi === 'permohonan' && posisiNomorList.length === 0) {
+        tampilNotif('Pasang minimal 1 pin Nomor Surat terlebih dahulu!', 'gagal');
+        setJenisPin('nomor');
+        return;
+    }
 
-            document.getElementById('modalFormTTD').classList.add('aktif');
-        }
+    pendingMarker = { hal: halamanAktif, x: xPct, y: yPct };
+    document.getElementById('posisiKoordLabel').textContent =
+        `Hal ${halamanAktif} — X: ${xPct.toFixed(1)}%  Y: ${yPct.toFixed(1)}%`;
+    document.getElementById('formTTDPejabat').value = '';
+    document.getElementById('formTTDLabel').value   = '';
+    document.getElementById('modalFormTTD').classList.add('aktif');
+}
 
         function batalFormTTD() {
             document.getElementById('modalFormTTD').classList.remove('aktif');
@@ -2567,10 +2272,40 @@ async function ambilOpsiPejabatInternal() {
             renderMarkerDiCanvas();
         }
 
+function batalFormNomor() {
+    document.getElementById('modalFormNomor').classList.remove('aktif');
+    pendingMarkerNomor = null;
+}
+
+function konfirmasiFormNomor() {
+    if (!pendingMarkerNomor) return;
+
+    const prefix = document.getElementById('formNomorPrefix').value.trim();
+
+    posisiNomorList.push({
+        prefix_teks: prefix,
+        posisi_hal : pendingMarkerNomor.hal,
+        posisi_x   : pendingMarkerNomor.x,
+        posisi_y   : pendingMarkerNomor.y,
+    });
+
+    document.getElementById('modalFormNomor').classList.remove('aktif');
+    pendingMarkerNomor = null;
+    renderDaftarMarkerNomor();
+    renderMarkerNomorDiCanvas();
+}
+
         // ============================================================
 // GHOST FRAME (preview area sebelum diklik) — BARU DITAMBAHKAN
 // ============================================================
 function gerakPdfCanvas(e) {
+    if (jenisPinAktif === 'nomor') {
+        sembunyikanGhost();
+        gerakPdfCanvasNomor(e);
+        return;
+    }
+    sembunyikanGhostNomor();
+
     const canvas = document.getElementById('pdfCanvas');
     const rect   = canvas.getBoundingClientRect();
     const ghost  = document.getElementById('frameGhost');
@@ -2591,6 +2326,28 @@ function gerakPdfCanvas(e) {
 
 function sembunyikanGhost() {
     const ghost = document.getElementById('frameGhost');
+    if (ghost) ghost.style.display = 'none';
+}
+
+function gerakPdfCanvasNomor(e) {
+    if (jenisPinAktif !== 'nomor') { sembunyikanGhostNomor(); return; }
+    const canvas = document.getElementById('pdfCanvas');
+    const rect   = canvas.getBoundingClientRect();
+    const ghost  = document.getElementById('frameGhostNomor');
+    if (!ghost) return;
+
+    const frameWpx = FRAME_PT_W_NOMOR * (canvas.width  / halamanPtWidth);
+    const frameHpx = FRAME_PT_H_NOMOR * (canvas.height / halamanPtHeight);
+
+    ghost.style.display = 'block';
+    ghost.style.width   = `${frameWpx}px`;
+    ghost.style.height  = `${frameHpx}px`;
+    ghost.style.left    = `${e.clientX - rect.left}px`;
+    ghost.style.top     = `${e.clientY - rect.top}px`;
+}
+
+function sembunyikanGhostNomor() {
+    const ghost = document.getElementById('frameGhostNomor');
     if (ghost) ghost.style.display = 'none';
 }
 
@@ -2623,6 +2380,22 @@ function sembunyikanGhost() {
 
         const dot = document.createElement('div');
         dot.className = 'marker-dot';
+        dot.style.left = `${m.posisi_x}%`;
+        dot.style.top  = `${m.posisi_y}%`;
+        dot.textContent = i + 1;
+        container.appendChild(dot);
+    });
+}
+
+function renderMarkerNomorDiCanvas() {
+    document.querySelectorAll('.marker-dot-nomor').forEach(el => el.remove());
+    const container = document.getElementById('markerContainer');
+    const canvas    = document.getElementById('pdfCanvas');
+
+    posisiNomorList.forEach((m, i) => {
+        if (m.posisi_hal !== halamanAktif) return;
+        const dot = document.createElement('div');
+        dot.className = 'marker-dot-nomor';
         dot.style.left = `${m.posisi_x}%`;
         dot.style.top  = `${m.posisi_y}%`;
         dot.textContent = i + 1;
@@ -2685,6 +2458,49 @@ function sembunyikanGhost() {
             renderMarkerDiCanvas();
         }
 
+function renderDaftarMarkerNomor() {
+    const wrap = document.getElementById('daftarMarkerNomor');
+    if (posisiNomorList.length === 0) {
+        wrap.innerHTML = `
+            <div style="text-align:center; padding:20px; color:#bdc3c7;">
+                <div style="font-size:2rem;">🔢</div>
+                <div style="font-size:0.82rem; margin-top:8px; line-height:1.6;">
+                    Belum ada posisi nomor surat.<br>Opsional — klik pada PDF untuk menambahkan.
+                </div>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+    posisiNomorList.forEach((m, i) => {
+        html += `
+            <div style="background:white; border:1px solid #e0e6e4; border-radius:8px;
+                        padding:10px 12px; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="background:#f39c12; color:white; border-radius:50%;
+                                     width:22px; height:22px; display:flex; align-items:center;
+                                     justify-content:center; font-size:0.72rem; font-weight:800;">${i+1}</span>
+                        <div style="font-size:0.8rem; color:#2c3e50;">
+                            ${m.prefix_teks ? `"${m.prefix_teks}" + nomor` : 'Nomor saja'} — Hal ${m.posisi_hal}
+                        </div>
+                    </div>
+                    <button onclick="hapusMarkerNomor(${i})"
+                        style="background:#fdf2f2; color:#e74c3c; border:1px solid #fcc;
+                               border-radius:4px; padding:3px 8px; cursor:pointer; font-size:0.75rem; font-weight:700;">
+                        ✕
+                    </button>
+                </div>
+            </div>`;
+    });
+    wrap.innerHTML = html;
+}
+
+function hapusMarkerNomor(idx) {
+    posisiNomorList.splice(idx, 1);
+    renderDaftarMarkerNomor();
+    renderMarkerNomorDiCanvas();
+} 
         // ============================================================
         // MODE TTD (SEQUENTIAL / PARALEL)
         // ============================================================
@@ -2705,47 +2521,148 @@ function sembunyikanGhost() {
             }
         }
 
+function setJenisPin(jenis) {
+    // Permohonan: pin nomor surat wajib dipasang lebih dulu sebelum pin TTE
+    if (jenis === 'ttd' && jenisSuratPosisi === 'permohonan' && posisiNomorList.length === 0) {
+        tampilNotif('Pasang minimal 1 pin Nomor Surat terlebih dahulu, baru pin TTE Direktur!', 'gagal');
+        jenis = 'nomor';
+    }
+    jenisPinAktif = jenis;
+    const btnTTD   = document.getElementById('btnJenisPinTTD');
+    const btnNomor = document.getElementById('btnJenisPinNomor');
+
+    if (jenis === 'ttd') {
+        btnTTD.style.cssText   = 'flex:1;padding:8px;border:2px solid #8e44ad;border-radius:6px;background:#8e44ad;color:white;cursor:pointer;font-size:0.78rem;font-weight:700;';
+        btnNomor.style.cssText = 'flex:1;padding:8px;border:2px solid #ddd;border-radius:6px;background:white;color:#7f8c8d;cursor:pointer;font-size:0.78rem;font-weight:700;';
+    } else {
+        btnNomor.style.cssText = 'flex:1;padding:8px;border:2px solid #f39c12;border-radius:6px;background:#f39c12;color:white;cursor:pointer;font-size:0.78rem;font-weight:700;';
+        btnTTD.style.cssText   = 'flex:1;padding:8px;border:2px solid #ddd;border-radius:6px;background:white;color:#7f8c8d;cursor:pointer;font-size:0.78rem;font-weight:700;';
+    }
+    sembunyikanGhost();
+    sembunyikanGhostNomor();
+}
+
         // ============================================================
         // SIMPAN POSISI TTD KE SERVER
         // ============================================================
-        async function simpanPosisiTTD() {
-            if (!suratPosisiId) return;
-            if (posisiTTDList.length === 0) {
-                tampilNotif('Tambahkan minimal 1 posisi TTD terlebih dahulu!', 'gagal');
+async function simpanPosisiTTD() {
+    if (!suratPosisiId) return;
+    const isPermohonan = jenisSuratPosisi === 'permohonan';
+
+    if (isPermohonan && posisiNomorList.length === 0) {
+        tampilNotif('Pin Nomor Surat wajib dipasang terlebih dahulu!', 'gagal');
+        setJenisPin('nomor');
+        return;
+    }
+    if (posisiTTDList.length === 0) {
+        tampilNotif('Tambahkan minimal 1 posisi TTD terlebih dahulu!', 'gagal');
+        return;
+    }
+
+    try {
+        // 1) Nomor surat lebih dulu (khusus permohonan)
+        if (isPermohonan) {
+            const resNomor = await fetch(`/api/surat/${suratPosisiId}/posisi-nomor`, {
+                method : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body   : JSON.stringify({
+                    posisi_list: posisiNomorList.map(m => ({
+                        posisi_hal : m.posisi_hal,
+                        posisi_x   : m.posisi_x,
+                        posisi_y   : m.posisi_y,
+                        prefix_teks: m.prefix_teks,
+                    }))
+                })
+            });
+            if (!resNomor.ok) {
+                const err = await resNomor.json().catch(() => ({}));
+                tampilNotif(err.detail || 'Gagal menyimpan posisi nomor surat!', 'gagal');
                 return;
-            }
-
-            try {
-                const res = await fetch(`/api/surat/${suratPosisiId}/posisi-ttd`, {
-                    method : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body   : JSON.stringify({
-                        posisi_list : posisiTTDList.map(m => ({
-                            nip_penyetuju: m.nip_penyetuju,
-                            label_ttd    : m.label_ttd,
-                            posisi_hal   : m.posisi_hal,
-                            posisi_x     : m.posisi_x,
-                            posisi_y     : m.posisi_y,
-                        })),
-                        mode_paralel: modeTTD === 'paralel'
-                    })
-                });
-
-                if (res.ok) {
-                    tampilNotif('Posisi TTD berhasil disimpan! Surat siap dikirim.', 'sukses');
-                    tutupModalPosisi();
-                    muatDaftarSurat();
-                } else {
-                    const err = await res.json().catch(() => ({}));
-                    tampilNotif(err.detail || 'Gagal menyimpan posisi TTD!', 'gagal');
-                }
-            } catch (err) {
-                tampilNotif('Koneksi gagal!', 'gagal');
-                console.error(err);
             }
         }
 
-    </script>
+        // 2) Baru posisi TTD
+        const res = await fetch(`/api/surat/${suratPosisiId}/posisi-ttd`, {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({
+                posisi_list : posisiTTDList.map(m => ({
+                    nip_penyetuju: m.nip_penyetuju,
+                    label_ttd    : m.label_ttd,
+                    posisi_hal   : m.posisi_hal,
+                    posisi_x     : m.posisi_x,
+                    posisi_y     : m.posisi_y,
+                })),
+                mode_paralel: modeTTD === 'paralel'
+            })
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            tampilNotif(err.detail || 'Gagal menyimpan posisi TTD!', 'gagal');
+            return;
+        }
 
-</body>
-</html>
+        tampilNotif('Posisi berhasil disimpan! Surat siap dikirim.', 'sukses');
+        tutupModalPosisi();
+        muatDaftarSurat();
+
+    } catch (err) {
+        tampilNotif('Koneksi gagal!', 'gagal');
+        console.error(err);
+    }
+}
+
+    tampilModalSukses(namaFileUploaded, responsData.kode_pelacakan, responsData.surat_id);
+
+    </script>
+    <script>
+(function () {
+    const sel     = document.getElementById('pilih_jenis_surat');
+    const btn     = document.getElementById('jenisDropdownBtn');
+    const menu    = document.getElementById('jenisDropdownMenu');
+    const wrap    = document.getElementById('jenisDropdown');
+    const label   = document.getElementById('jenisDropdownLabel');
+    const ikon    = document.getElementById('jenisDropdownIkon');
+    const chevron = document.getElementById('jenisDropdownChevron');
+    const items   = menu.querySelectorAll('[data-value]');
+
+    function syncLabel() {
+        const aktif = [...items].find(i => i.dataset.value === sel.value);
+        if (aktif) {
+            label.textContent = aktif.dataset.nama;
+            ikon.textContent  = aktif.dataset.ikon;
+            label.classList.replace('text-gray-500', 'text-gray-900');
+        } else {
+            label.textContent = '-- Pilih Kategori Surat --';
+            ikon.textContent  = 'category';
+            label.classList.replace('text-gray-900', 'text-gray-500');
+        }
+    }
+
+    // Kalau kode lain mengubah sel.value (reset, surat lanjutan), label ikut berubah
+    const descValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+    Object.defineProperty(sel, 'value', {
+        get() { return descValue.get.call(this); },
+        set(v) { descValue.set.call(this, v); syncLabel(); }
+    });
+
+    function buka(on) {
+        menu.classList.toggle('hidden', !on);
+        chevron.classList.toggle('rotate-180', on);
+        btn.setAttribute('aria-expanded', on);
+    }
+
+    btn.addEventListener('click', e => { e.stopPropagation(); buka(menu.classList.contains('hidden')); });
+
+    items.forEach(it => it.addEventListener('click', () => {
+        sel.value = it.dataset.value;
+        sel.dispatchEvent(new Event('change'));   // memicu gantiModeInput()
+        buka(false);
+    }));
+
+    document.addEventListener('click', e => { if (!wrap.contains(e.target)) buka(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') buka(false); });
+
+    syncLabel();
+})();
+</script>

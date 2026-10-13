@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Sistem Kinerja TTE PPNP{% endblock %}</title>
+  <link rel="icon" type="image/webp" href="https://res.cloudinary.com/dvul7dq3b/image/upload/v1755843240/logowebp_bqssky.webp" />
+
+  <meta name="theme-color" content="#205A28">
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet">
+
+   <style>
+    .bg-pola-hijau {
+      background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
+      background-size: 400px 100%;
+      animation: shimmer 1.6s linear infinite;
+    }
+    .material-icons-round { font-family: 'Material Icons Round'; font-size: 22px; line-height: 1; }
+    .menu-aktif { background: rgba(255,255,255,.12); }
+    .menu-aktif::before {
+      content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+      width: 3px; border-radius: 0 3px 3px 0; background: #C9A227;
+    }
+    .animasi-counter { font-variant-numeric: tabular-nums; }
+    .spin-slow { animation: spin 1s linear infinite; }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Penjaga login: halaman dalam hanya boleh dibuka jika sudah login
+    if (!localStorage.getItem('user_ppnp')) {
+      window.location.replace('/');
+    }
+    // Config Tailwind
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: {
+            hijau: {
+              50: '#f0f7f1', 100: '#dcefdf', 200: '#b9dfc0', 300: '#8ac899',
+              400: '#55ab6c', 500: '#338c4d', 600: '#205A28', 700: '#1a4a21',
+              800: '#163b1c', 900: '#102c15'
+            },
+            emas: { 500: '#C9A227', 400: '#d4b246', 300: '#e0c76e' },
+            merah: { 500: '#C72B32', 50: '#fdf2f2', 100: '#fde3e3' }
+          },
+          animation: {
+            'fade-up': 'fadeUp .6s ease-out both',
+            'page-enter': 'pageEnter .45s ease-out both',
+            'shimmer': 'shimmer 1.6s linear infinite',
+            'spin-slow': 'spin 1s linear infinite'
+          },
+          keyframes: {
+            fadeUp: { '0%': { opacity: 0, transform: 'translateY(12px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+            pageEnter: { '0%': { opacity: 0, transform: 'scale(.99)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
+            shimmer: { '0%': { backgroundPosition: '-400px 0' }, '100%': { backgroundPosition: '400px 0' } }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+  <div class="min-h-screen flex">
+
+    <!-- Overlay mobile -->
+    <div id="overlay-sidebar" onclick="tutupSidebar()"
+         class="fixed inset-0 bg-black/40 z-30 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+           class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full lg:translate-x-0 transition-transform duration-300
+                  bg-gradient-to-b from-hijau-600 to-hijau-900 text-white flex flex-col shadow-2xl">
+      
+       <!-- Brand -->
+        <div class="px-6 py-5 border-b border-white/10 text-center">
+            <p class="text-base font-extrabold leading-tight tracking-wide">
+            Sistem Kinerja<br>PPNP
+            </p>
+        </div>
+
+      <!-- Profil -->
+      <div class="px-6 pt-8 pb-6 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-emas-500 text-hijau-900 flex items-center justify-center font-extrabold text-lg">
+            <span id="inisial-user">--</span>
+          </div>
+          <div class="min-w-0">
+            <p id="nama-user" class="font-bold truncate">Memuat...</p>
+            <p id="jabatan-user" class="text-xs text-hijau-100/70 truncate">&nbsp;</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu -->
+      <nav class="flex-1 px-3 py-6 space-y-1">
+        <p class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[.2em] text-hijau-100/60">Menu</p>
+        {% set menu = [
+          ('/dashboard', 'dashboard', 'Dashboard'),
+          ('/surat', 'description', 'Manajemen Surat'),
+          ('/inbox', 'inbox', 'Inbox'),
+          ('/arsip', 'archive', 'Arsip'),
+          ('/profil', 'person', 'Profil')
+        ] %}
+        {% for href, ikon, label in menu %}
+          {% set aktif = request.path.startswith(href) %}
+          <a href="{{ href }}"
+             class="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
+                    hover:bg-white/10 {{ 'menu-aktif font-semibold' if aktif else '' }}">
+            <span class="material-icons-round">{{ ikon }}</span>
+            {{ label }}
+          </a>
+        {% endfor %}
+      </nav>
+
+      <!-- Keluar -->
+      <div class="p-4 border-t border-white/10">
+        <button onclick="keluar()"
+                class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold
+                       bg-merah-500 hover:bg-merah-500/90 transition active:scale-95">
+          <span class="material-icons-round text-[20px]">logout</span>
+          Keluar
+        </button>
+      </div>
+    </aside>
+
+    <!-- Area utama -->
+    <div class="flex-1 lg:ml-64 flex flex-col min-h-screen min-w-0">
+
+      <!-- Topbar -->
+      <header class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-slate-200">
+        <div class="flex items-center justify-between gap-4 px-4 lg:px-8 h-16">
+          <div class="flex items-center gap-3 min-w-0">
+            <button onclick="bukaSidebar()" class="lg:hidden p-2 -ml-2 rounded-lg hover:bg-slate-100">
+              <span class="material-icons-round">menu</span>
+            </button>
+            <h1 class="text-lg font-extrabold text-hijau-600 truncate">{% block page_title %}{% endblock %}</h1>
+          </div>
+          <div class="hidden sm:block text-right">
+            <p id="tanggal-sekarang" class="text-xs font-medium text-slate-500"></p>
+            <p id="jam-sekarang" class="text-sm font-bold text-hijau-600 animasi-counter"></p>
+          </div>
+        </div>
+        <div class="h-0.5 bg-gradient-to-r from-emas-500 via-emas-500/40 to-transparent"></div>
+      </header>
+
+
+      <!-- Konten -->
+      <main class="flex-1 px-4 lg:px-8 py-8 animate-page-enter">
+        {% block content %}{% endblock %}
+      </main>
+
+      <!-- Footer -->
+      <footer class="relative bg-gradient-to-r from-hijau-900 to-hijau-600 text-white/80 text-xs">
+        <div class="absolute inset-x-0 top-0 h-0.5 bg-emas-500"></div>
+        <div class="px-4 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p>&copy; {{ 2026 }} Politeknik Pertanian Negeri Payakumbuh</p>
+          <p class="text-white/60">Kemdiktisaintek</p>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+  <script>
+    // Data pengguna dari localStorage
+    (function isiProfil() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user_ppnp') || '{}');
+        const nama = user.nama || 'Pengguna';
+        document.getElementById('nama-user').textContent = nama;
+        document.getElementById('jabatan-user').textContent = user.jabatan || '';
+        document.getElementById('inisial-user').textContent =
+          nama.split(' ').slice(0, 2).map(s => s[0]).join('').toUpperCase();
+      } catch (e) {}
+    })();
+
+    // Jam dan tanggal
+    function perbaruiWaktu() {
+      const now = new Date();
+      document.getElementById('tanggal-sekarang').textContent =
+        now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('jam-sekarang').textContent =
+        now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+    perbaruiWaktu();
+    setInterval(perbaruiWaktu, 30000);
+
+    // Sidebar mobile
+    function bukaSidebar() {
+      document.getElementById('sidebar').classList.remove('-translate-x-full');
+      document.getElementById('overlay-sidebar').classList.remove('hidden');
+    }
+    function tutupSidebar() {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('overlay-sidebar').classList.add('hidden');
+    }
+
+    // Keluar
+    function keluar() {
+      localStorage.removeItem('user_ppnp');
+      window.location.replace('/');
+    }
+
+    // Dialog konfirmasi kustom. Mengembalikan Promise<boolean>.
+    function konfirmasiKustom(pesan, opsi = {}) {
+      const { judul = 'Konfirmasi', ya = 'Ya', tidak = 'Batal', bahaya = false } = opsi;
+      const warna = bahaya ? '#C72B32' : '#205A28';
+
+      return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText =
+          'position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);' +
+          'z-index:20000;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+        const box = document.createElement('div');
+        box.style.cssText =
+          'background:#fff;border-radius:16px;width:420px;max-width:92vw;' +
+          'box-shadow:0 25px 60px rgba(0,0,0,.3);overflow:hidden;';
+
+        const header = document.createElement('div');
+        header.style.cssText =
+          `padding:16px 22px;color:#fff;font-weight:800;font-size:1.05rem;background:${warna};`;
+        header.textContent = judul;
+
+        const body = document.createElement('div');
+        body.style.cssText = 'padding:20px 22px;color:#334155;font-size:.92rem;line-height:1.6;';
+        body.textContent = pesan;
+
+        const footer = document.createElement('div');
+        footer.style.cssText = 'padding:0 22px 20px;display:flex;justify-content:flex-end;gap:10px;';
+
+        const btnTidak = document.createElement('button');
+        btnTidak.textContent = tidak;
+        btnTidak.style.cssText =
+          'background:#f1f5f9;color:#334155;border:none;border-radius:8px;' +
+          'padding:10px 20px;font-weight:700;cursor:pointer;';
+
+        const btnYa = document.createElement('button');
+        btnYa.textContent = ya;
+        btnYa.style.cssText =
+          `background:${warna};color:#fff;border:none;border-radius:8px;` +
+          'padding:10px 20px;font-weight:700;cursor:pointer;';
+
+        footer.append(btnTidak, btnYa);
+        box.append(header, body, footer);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        const tutup = hasil => {
+          document.removeEventListener('keydown', onKey);
+          overlay.remove();
+          resolve(hasil);
+        };
+        const onKey = e => { if (e.key === 'Escape') tutup(false); };
+
+        btnTidak.onclick = () => tutup(false);
+        btnYa.onclick = () => tutup(true);
+        overlay.addEventListener('click', e => { if (e.target === overlay) tutup(false); });
+        document.addEventListener('keydown', onKey);
+        btnTidak.focus();
+      });
+    }
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Arsip Surat - PPNP</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; display: flex; height: 100vh; }
+
+        /* ---- Sidebar (sama dengan halaman lain) ---- */
+        .sidebar { width: 250px; background-color: #2c3e50; color: white; padding-top: 20px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar h2 { text-align: center; font-size: 1.2rem; margin-bottom: 15px; border-bottom: 1px solid #34495e; padding-bottom: 15px; }
+        .sidebar a { color: #ecf0f1; text-decoration: none; padding: 15px 20px; display: block; border-left: 4px solid transparent; transition: 0.3s; }
+        .sidebar a:hover, .sidebar a.aktif { background-color: #34495e; border-left: 4px solid #3498db; }
+        .logout-btn { margin-top: auto; background-color: #c0392b; text-align: center; padding: 15px; cursor: pointer; transition: 0.3s; }
+        .logout-btn:hover { background-color: #e74c3c; }
+        .user-info-box { margin: 0 15px 20px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px; }
+        .user-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3498db, #2ecc71); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; color: white; flex-shrink: 0; text-transform: uppercase; }
+        .user-detail { overflow: hidden; }
+        .user-detail .user-nama { font-size: 0.85rem; font-weight: 700; color: #ecf0f1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-detail .user-jabatan { font-size: 0.72rem; color: #95a5a6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .user-detail .user-role-badge { display: inline-block; margin-top: 5px; background: rgba(52,152,219,0.3); border: 1px solid rgba(52,152,219,0.5); color: #74b9ff; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+        /* ---- Konten ---- */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .selector-box { background: #e8f4f8; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin-bottom: 20px; }
+        .filter { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter input, .filter select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; font-family: inherit; }
+        .filter input[type=text] { flex: 1; min-width: 200px; }
+        .btn-submit { background-color: #2ecc71; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-submit:hover { background-color: #27ae60; }
+        .btn-sekunder { background: #34495e; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-sekunder:disabled { opacity: 0.4; cursor: default; }
+
+        .judul { font-weight: 700; font-size: 1rem; color: #2c3e50; margin-bottom: 4px; }
+        .meta { font-size: 0.82rem; color: #7f8c8d; line-height: 1.7; }
+        .alasan { background: #f8f9fa; border-left: 4px solid #95a5a6; border-radius: 0 4px 4px 0; padding: 8px 12px; margin-top: 10px; font-size: 0.85rem; color: #2c3e50; }
+        .jalur { font-size: 0.78rem; color: #7f8c8d; margin-top: 8px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; color: white; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; margin-right: 8px; }
+        .aksi a { display: inline-block; margin-top: 10px; padding: 6px 12px; background: #34495e; color: white; text-decoration: none; border-radius: 4px; font-size: 0.82rem; font-weight: 700; }
+        .kosong { text-align: center; color: #95a5a6; padding: 40px; }
+        .nav { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 10px; font-size: 0.88rem; color: #2c3e50; }
+    </style>
+    <link rel="stylesheet" href="/static/tema-ppnp.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Sistem Kinerja<br>PPNP</h2>
+
+        <div class="user-info-box">
+            <div class="user-avatar" id="userAvatar">?</div>
+            <div class="user-detail">
+                <div class="user-nama" id="userNama">Memuat...</div>
+                <div class="user-jabatan" id="userJabatan">—</div>
+                <span class="user-role-badge" id="userRole">—</span>
+            </div>
+        </div>
+
+        <a href="/dashboard">Dashboard Utama</a>
+        <a href="/surat">Manajemen Surat</a>
+        <a href="/inbox">📥 Inbox Disposisi</a>
+        <a href="/arsip" class="aktif">🗄️ Arsip Surat</a>
+        <a href="/profil">👤 Profil & TTE Saya</a>
+        <div class="logout-btn" onclick="logout()">Keluar Aplikasi</div>
+    </div>
+
+    <div class="main-content">
+        <h2>Arsip Surat</h2>
+
+        <div class="selector-box">
+            <strong style="color:#2980b9;">🗄️ Surat yang diarsipkan pada jalur disposisi yang Anda terlibat di dalamnya.</strong>
+            <div style="font-size:0.82rem; color:#7f8c8d; margin-top:4px;">
+                Arsip hanya terlihat oleh pejabat di jalur disposisi, dari Direktur sampai pejabat yang mengarsipkan.
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="filter">
+                <input type="text" id="cari" placeholder="🔍 Cari perihal, asal surat, nomor, atau alasan arsip...">
+                <select id="tahun"><option value="">Semua tahun</option></select>
+                <button class="btn-submit" onclick="muat(1)">Cari</button>
+            </div>
+            <small id="info" style="display:block; margin-top:8px; color:#95a5a6;"></small>
+        </div>
+
+        <div id="daftar"></div>
+
+        <div class="nav">
+            <button class="btn-sekunder" id="btnPrev" onclick="muat(halaman-1)">◀ Sebelumnya</button>
+            <span id="infoHal"></span>
+            <button class="btn-sekunder" id="btnNext" onclick="muat(halaman+1)">Berikutnya ▶</button>
+        </div>
+    </div>
+
+<script>
+    const userStr = localStorage.getItem('user_ppnp');
+    if (!userStr) { window.location.href = '/'; }
+    const user = JSON.parse(userStr);
+    const $ = id => document.getElementById(id);
+    const WARNA = { eksternal: '#2980b9', internal: '#8e44ad', permohonan: '#e67e22' };
+    let halaman = 1, totalHal = 1;
+
+    function logout() { localStorage.removeItem('user_ppnp'); window.location.href = '/'; }
+
+    function renderInfoUser() {
+        const inisial = user.nama ? user.nama.trim().split(' ').slice(0, 2).map(k => k[0]).join('') : '?';
+        const labelRole = {
+            'direktur': '🏛️ Direktur', 'wadir_1': '📌 Wakil Direktur I', 'wadir_2': '📌 Wakil Direktur II',
+            'wadir_3': '📌 Wakil Direktur III', 'kabag': '🗂️ Kepala Bagian', 'kajur': '📚 Ketua Jurusan',
+            'pimpinan': '👔 Pimpinan Unit', 'staf': '👤 Staf'
+        };
+        $('userAvatar').textContent  = inisial;
+        $('userNama').textContent    = user.nama || 'Nama tidak tersedia';
+        $('userJabatan').textContent = user.jabatan || 'Jabatan tidak tersedia';
+        $('userRole').textContent    = labelRole[user.role_ppnp] || user.role_ppnp || 'Pengguna';
+    }
+    renderInfoUser();
+
+    const th = new Date().getFullYear();
+    for (let t = th; t >= th - 5; t--) {
+        const o = document.createElement('option'); o.value = t; o.textContent = t;
+        $('tahun').appendChild(o);
+    }
+    $('cari').addEventListener('keydown', e => { if (e.key === 'Enter') muat(1); });
+
+    function el(tag, cls, teks) {
+        const x = document.createElement(tag);
+        if (cls) x.className = cls;
+        if (teks !== undefined) x.textContent = teks;
+        return x;
+    }
+
+    async function muat(hal) {
+        halaman = Math.max(1, hal);
+        const p = new URLSearchParams({ nip: user.nip, q: $('cari').value.trim(), halaman, per_halaman: 10 });
+        if ($('tahun').value) p.set('tahun', $('tahun').value);
+
+        $('daftar').innerHTML = '<div class="kosong">⏳ Memuat...</div>';
+        try {
+            const res = await fetch('/api/arsip?' + p);
+            if (!res.ok) throw new Error();
+            const d = await res.json();
+            totalHal = Math.max(1, Math.ceil(d.total / d.per_halaman));
+            render(d);
+        } catch (e) {
+            $('daftar').innerHTML = '<div class="kosong" style="color:#e74c3c;">Gagal memuat arsip.</div>';
+        }
+    }
+
+    function render(d) {
+        $('info').textContent = d.total + ' surat diarsipkan';
+        $('infoHal').textContent = 'Halaman ' + d.halaman + ' / ' + totalHal;
+        $('btnPrev').disabled = d.halaman <= 1;
+        $('btnNext').disabled = d.halaman >= totalHal;
+
+        const wadah = $('daftar');
+        wadah.innerHTML = '';
+        if (!d.item.length) { wadah.appendChild(el('div', 'kosong', 'Tidak ada arsip yang ditemukan.')); return; }
+
+        d.item.forEach(a => {
+            const k = el('div', 'card');
+            const j = el('div', 'judul');
+            const b = el('span', 'badge', a.jenis_surat.toUpperCase());
+            b.style.background = WARNA[a.jenis_surat] || '#34495e';
+            j.append(b, document.createTextNode(a.perihal));
+            k.appendChild(j);
+
+            const m = el('div', 'meta');
+            m.textContent = [
+                a.asal_surat ? 'Asal: ' + a.asal_surat : null,
+                a.nomor_surat ? 'Nomor: ' + a.nomor_surat : null,
+                a.tanggal_diterima ? 'Diterima: ' + a.tanggal_diterima : null,
+                'Diarsipkan oleh ' + a.pengarsip + ' pada ' + (a.tanggal_arsip || '-') + ' WIB'
+            ].filter(Boolean).join(' • ');
+            k.appendChild(m);
+
+            k.appendChild(el('div', 'alasan', 'Alasan arsip: ' + (a.alasan || '-')));
+            k.appendChild(el('div', 'jalur', 'Jalur disposisi: ' + a.jalur.join(' → ')));
+
+            if (a.url_berkas) {
+                const aksi = el('div', 'aksi');
+                const l = el('a', '', '📄 Lihat Surat');
+                l.href = a.url_berkas; l.target = '_blank';
+                aksi.appendChild(l); k.appendChild(aksi);
+            }
+            wadah.appendChild(k);
+        });
+    }
+
+    muat(1);
+</script>
+</body>
+</html>

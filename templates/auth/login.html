@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masuk — Sistem Kinerja PPNP</title>
+  <link rel="icon" type="image/webp" href="https://res.cloudinary.com/dvul7dq3b/image/upload/v1755843240/logowebp_bqssky.webp" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            hijau: {
+              DEFAULT: '#205A28', 50: '#f0f7f1', 100: '#d9ecdb', 200: '#b5d9b9',
+              300: '#84be8b', 400: '#519d5a', 500: '#2f7d39', 600: '#205A28',
+              700: '#1a4820', 800: '#163a1b', 900: '#122f17',
+            },
+            emas: {
+              DEFAULT: '#C9A227', 50: '#fdf9e9', 100: '#faf0c8', 400: '#dcb53f', 500: '#C9A227', 600: '#a8841c',
+            },
+            merah: { DEFAULT: '#C72B32', 600: '#C72B32', 700: '#a82028' },
+          },
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fade-up { animation: fadeUp .6s ease-out both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    .goyang { animation: goyang .4s ease-in-out; }
+    @keyframes goyang {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .pola {
+      background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen antialiased bg-gradient-to-br from-hijau-900 via-hijau-700 to-hijau-600 flex flex-col">
+
+  <!-- Hiasan latar -->
+  <div class="pointer-events-none fixed inset-0 pola"></div>
+  <div class="pointer-events-none fixed -top-32 -right-32 h-96 w-96 rounded-full bg-emas-500/10 blur-3xl"></div>
+  <div class="pointer-events-none fixed -bottom-32 -left-32 h-96 w-96 rounded-full bg-white/5 blur-3xl"></div>
+
+  <main class="relative flex-1 flex items-center justify-center p-4 sm:p-6">
+    <div class="w-full max-w-md fade-up">
+
+      <!-- Kartu login -->
+      <div id="kartu" class="bg-white rounded-3xl shadow-2xl shadow-black/30 overflow-hidden">
+
+        <!-- Kepala -->
+        <div class="relative px-8 pt-10 pb-8 text-center">
+          <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-hijau-700 via-emas-500 to-hijau-700"></div>
+          <img src="https://res.cloudinary.com/dvul7dq3b/image/upload/v1755843240/logowebp_bqssky.webp"
+               alt="Logo PPNP" class="mx-auto h-20 w-20 object-contain drop-shadow-md" />
+          <h1 class="mt-4 text-2xl font-extrabold text-hijau-700 tracking-tight">Sistem Kinerja TTE</h1>
+          <p class="mt-1 text-sm text-gray-500">Politeknik Pertanian Negeri Payakumbuh</p>
+        </div>
+
+        <!-- Form -->
+        <form id="formLogin" class="px-8 pb-8 space-y-5" novalidate>
+
+          <div>
+            <label for="nip" class="block text-sm font-semibold text-gray-700 mb-1.5">Nomor Induk Pegawai (NIP)</label>
+            <div class="relative">
+              <span class="material-icons-round pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-gray-400">badge</span>
+              <input type="text" id="nip" name="nip" autocomplete="username" inputmode="numeric"
+                     placeholder="Masukkan NIP Anda" required
+                     class="w-full rounded-xl border border-gray-300 bg-gray-50 py-3 pl-11 pr-4 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-hijau-500 focus:ring-4 focus:ring-hijau-100 outline-none transition-all" />
+            </div>
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+            <div class="relative">
+              <span class="material-icons-round pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-gray-400">lock</span>
+              <input type="password" id="password" name="password" autocomplete="current-password"
+                     placeholder="Masukkan Password" required
+                     class="w-full rounded-xl border border-gray-300 bg-gray-50 py-3 pl-11 pr-12 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-hijau-500 focus:ring-4 focus:ring-hijau-100 outline-none transition-all" />
+              <button type="button" id="btnLihat" aria-label="Tampilkan password"
+                      class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-hijau-700 hover:bg-hijau-50 transition-all">
+                <span class="material-icons-round text-[20px]" id="ikonLihat">visibility</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Pesan error -->
+          <div id="pesanError" class="hidden items-start gap-2 rounded-xl bg-red-50 ring-1 ring-red-200 px-4 py-3 text-sm text-red-700">
+            <span class="material-icons-round text-[18px]">error</span>
+            <span id="teksError">NIP atau Password Salah!</span>
+          </div>
+
+          <button type="submit" id="btnSubmit"
+                  class="w-full flex items-center justify-center gap-2 rounded-xl bg-hijau-600 hover:bg-hijau-700 active:scale-[.98] text-white font-bold py-3 shadow-lg shadow-hijau-600/30 transition-all disabled:opacity-70 disabled:cursor-wait">
+            <span class="material-icons-round text-[20px]" id="ikonSubmit">login</span>
+            <span id="teksSubmit">Masuk</span>
+          </button>
+        </form>
+
+        <!-- Lacak surat -->
+        <div class="bg-hijau-50/70 border-t border-hijau-100 px-8 py-5 text-center">
+          <p class="text-sm text-gray-600">Pengirim surat dari luar PPNP?</p>
+          <a href="/lacak"
+             class="mt-2 inline-flex items-center gap-1.5 text-sm font-bold text-hijau-700 hover:text-hijau-800 transition-colors">
+            <span class="material-icons-round text-[18px]">manage_search</span> Lacak Surat Anda
+            <span class="material-icons-round text-[16px]">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+
+      <p class="mt-6 text-center text-xs text-green-200">
+        &copy; <span id="tahunIni"></span> Politeknik Pertanian Negeri Payakumbuh
+      </p>
+    </div>
+  </main>
+
+  <script>
+    const form     = document.getElementById('formLogin');
+    const btn      = document.getElementById('btnSubmit');
+    const teks     = document.getElementById('teksSubmit');
+    const ikon     = document.getElementById('ikonSubmit');
+    const pesan    = document.getElementById('pesanError');
+    const teksErr  = document.getElementById('teksError');
+    const kartu    = document.getElementById('kartu');
+    const pass     = document.getElementById('password');
+    const btnLihat = document.getElementById('btnLihat');
+
+    document.getElementById('tahunIni').textContent = new Date().getFullYear();
+
+    // Sudah login? Langsung ke halaman utama
+    if (localStorage.getItem('user_ppnp')) {
+      window.location.href = '/surat';
+    }
+
+    // Tampilkan / sembunyikan password
+    btnLihat.addEventListener('click', () => {
+      const lihat = pass.type === 'password';
+      pass.type = lihat ? 'text' : 'password';
+      document.getElementById('ikonLihat').textContent = lihat ? 'visibility_off' : 'visibility';
+      btnLihat.setAttribute('aria-label', lihat ? 'Sembunyikan password' : 'Tampilkan password');
+    });
+
+    function tampilError(isi) {
+      teksErr.textContent = isi;
+      pesan.classList.remove('hidden');
+      pesan.classList.add('flex');
+      kartu.classList.remove('goyang');
+      void kartu.offsetWidth; // paksa animasi ulang
+      kartu.classList.add('goyang');
+    }
+
+    function sembunyikanError() {
+      pesan.classList.add('hidden');
+      pesan.classList.remove('flex');
+    }
+
+    function setMemuat(aktif) {
+      btn.disabled = aktif;
+      teks.textContent = aktif ? 'Memeriksa...' : 'Masuk';
+      ikon.textContent = aktif ? 'hourglass_top' : 'login';
+      ikon.classList.toggle('animate-spin', aktif);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      sembunyikanError();
+
+      const nip = document.getElementById('nip').value.trim();
+      const kataSandi = pass.value;
+      if (!nip || !kataSandi) { tampilError('NIP dan password wajib diisi.'); return; }
+
+      setMemuat(true);
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nip, password: kataSandi })
+        });
+
+        if (response.ok) {
+          const dataUser = await response.json();
+          localStorage.setItem('user_ppnp', JSON.stringify(dataUser));
+          teks.textContent = 'Berhasil';
+          ikon.textContent = 'check_circle';
+          ikon.classList.remove('animate-spin');
+          setTimeout(() => { window.location.href = '/surat'; }, 400);
+        } else {
+          tampilError('NIP atau Password Salah!');
+          setMemuat(false);
+        }
+      } catch (err) {
+        tampilError('Koneksi ke server gagal. Periksa jaringan Anda.');
+        setMemuat(false);
+      }
+    });
+  </script>
+</body>
+</html>
