@@ -92,19 +92,19 @@
 
       <!-- Profil -->
       <div class="px-6 pt-8 pb-6 border-b border-white/10">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-2xl bg-emas-500 text-hijau-900 flex items-center justify-center font-extrabold text-lg">
+        <div class="flex items-start gap-3">
+          <div class="w-12 h-12 shrink-0 rounded-2xl bg-emas-500 text-hijau-900 flex items-center justify-center font-extrabold text-lg">
             <span id="inisial-user">--</span>
           </div>
-          <div class="min-w-0">
-            <p id="nama-user" class="font-bold truncate">Memuat...</p>
-            <p id="jabatan-user" class="text-xs text-hijau-100/70 truncate">&nbsp;</p>
+          <div class="min-w-0 flex-1">
+            <p id="nama-user" class="font-bold text-sm leading-snug break-words">Memuat...</p>
+            <p id="jabatan-user" class="mt-0.5 text-xs leading-snug text-hijau-100/70 break-words">&nbsp;</p>
           </div>
         </div>
       </div>
 
       <!-- Menu -->
-      <nav class="flex-1 px-3 py-6 space-y-1">
+      <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
         <p class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[.2em] text-hijau-100/60">Menu</p>
         {% set menu = [
           ('/dashboard', 'dashboard', 'Dashboard'),

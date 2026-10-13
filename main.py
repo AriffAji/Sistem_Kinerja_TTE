@@ -5461,7 +5461,7 @@ def _fmt_wib(dt) -> Optional[str]:
 
 @app.get("/lacak", response_class=HTMLResponse)
 def halaman_lacak(request: Request):
-    return templates.TemplateResponse(request=request, name="lacak.html")
+    return templates.TemplateResponse(request=request, name="publik/lacak.html")
 
 def hasil_akhir_publik(ids: list, db: Session) -> dict:
     """
