@@ -1,11 +1,10 @@
-{% extends "base.html" %}
-
-{% block title %}Profil & Registrasi TTE — Sistem Kendali Kinerja PPNP{% endblock %}
-
-{% block page_title %}Profil & Registrasi TTE{% endblock %}
-
-{% block extra_head %}
-<link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+{% extends "base.html" %} {% block title %}Profil & Registrasi TTE — Sistem
+Kendali Kinerja PPNP{% endblock %} {% block page_title %}Profil & Registrasi
+TTE{% endblock %} {% block extra_head %}
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+  rel="stylesheet"
+/>
 
 <style type="text/tailwindcss">
   .pin-digit {
@@ -14,24 +13,54 @@
   .btn-primary {
     @apply w-full rounded-xl bg-hijau-600 px-8 py-3 font-bold text-white shadow-md transition hover:bg-hijau-700 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none;
   }
-</style>
-
-<style>
   .section-title {
-    font-size: .7rem; text-transform: uppercase; letter-spacing: .08em;
-    color: #94a3b8; font-weight: 700; margin-bottom: 12px; display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: block;
   }
 
   /* Status badge TTE (className ditimpa JS, jadi pakai CSS biasa) */
-  .tte-status { display:inline-flex; align-items:center; gap:8px; padding:8px 18px; border-radius:9999px; font-weight:700; font-size:.9rem; border:2px solid; }
-  .tte-status.aktif { background:#f0f7f1; color:#205A28; border-color:#338c4d; }
-  .tte-status.belum { background:#fef9e7; color:#b7791f; border-color:#f39c12; }
+  .tte-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 2px solid;
+  }
+  .tte-status.aktif {
+    background: #f0f7f1;
+    color: #205a28;
+    border-color: #338c4d;
+  }
+  .tte-status.belum {
+    background: #fef9e7;
+    color: #b7791f;
+    border-color: #f39c12;
+  }
 
   /* Ditambahkan JS saat gambar TTD diupload */
-  .ada-gambar { border-style:solid !important; border-color:#338c4d !important; background:#f0f7f1 !important; }
+  .ada-gambar {
+    border-style: solid !important;
+    border-color: #338c4d !important;
+    background: #f0f7f1 !important;
+  }
 
   /* Skeleton shimmer */
-  @keyframes skelShimmer { 0% { background-position:-400px 0; } 100% { background-position:400px 0; } }
+  @keyframes skelShimmer {
+    0% {
+      background-position: -400px 0;
+    }
+    100% {
+      background-position: 400px 0;
+    }
+  }
   .skel-shimmer {
     background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
     background-size: 400px 100%;
@@ -39,44 +68,90 @@
   }
 
   /* Toast notifikasi (dibuat JS secara dinamis) */
-  #notif-container { position:fixed; top:20px; right:20px; z-index:10000; display:flex; flex-direction:column; gap:10px; }
-  .notif { display:flex; align-items:center; gap:10px; padding:12px 20px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,.15); font-weight:600; font-size:.9rem; min-width:250px; color:#fff; animation:slideIn .3s ease; }
-  .notif.sukses { background:#338c4d; }
-  .notif.gagal  { background:#C72B32; }
-  @keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+  #notif-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .notif {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-width: 250px;
+    color: #fff;
+    animation: slideIn 0.3s ease;
+  }
+  .notif.sukses {
+    background: #338c4d;
+  }
+  .notif.gagal {
+    background: #c72b32;
+  }
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
 </style>
-{% endblock %}
+{% endblock %} {% block content %}
 
-{% block content %}
 <div id="notif-container"></div>
 
 <div class="space-y-6">
-
-    <!-- Banner info -->
-    <section data-aos="fade-up"
-            class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-hijau-600 to-hijau-800 text-white p-6 shadow-lg">
+  <!-- Banner info -->
+  <section
+    data-aos="fade-up"
+    class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-hijau-600 to-hijau-800 text-white p-6 shadow-lg"
+  >
     <div class="absolute inset-0 bg-pola-hijau"></div>
     <div class="absolute -right-6 -bottom-8 opacity-10">
-        <span class="material-icons-round" style="font-size:160px">draw</span>
+      <span class="material-icons-round" style="font-size: 160px">draw</span>
     </div>
     <div class="relative flex items-start gap-4">
-        <div class="w-12 h-12 shrink-0 rounded-xl bg-emas-500 text-hijau-900 flex items-center justify-center">
+      <div
+        class="w-12 h-12 shrink-0 rounded-xl bg-emas-500 text-hijau-900 flex items-center justify-center"
+      >
         <span class="material-icons-round">draw</span>
-        </div>
-        <div>
-        <h2 class="text-lg font-extrabold leading-tight">Aktifkan TTE untuk menandatangani surat secara digital</h2>
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold leading-tight">
+          Aktifkan TTE untuk menandatangani surat secara digital
+        </h2>
         <p class="text-sm text-white/75 mt-1">
-            Upload gambar tanda tangan lalu buat PIN 6 digit. PIN ini wajib dimasukkan setiap kali Anda menandatangani dokumen, dan dapat diganti setelah TTE aktif.
+          Upload gambar tanda tangan lalu buat PIN 6 digit. PIN ini wajib
+          dimasukkan setiap kali Anda menandatangani dokumen, dan dapat diganti
+          setelah TTE aktif.
         </p>
-        </div>
+      </div>
     </div>
-    </section>
+  </section>
 
   <!-- Card Identitas ASN -->
-  <section class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200" data-aos="fade-up">
-    <header class="bg-gradient-to-r from-hijau-600 to-hijau-800 px-6 py-5 text-white">
+  <section
+    class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+    data-aos="fade-up"
+  >
+    <header
+      class="bg-gradient-to-r from-hijau-600 to-hijau-800 px-6 py-5 text-white"
+    >
       <h3 class="font-bold">👤 Identitas ASN</h3>
-      <p class="mt-1 text-xs text-hijau-100/70">Data diambil dari database kepegawaian PPNP</p>
+      <p class="mt-1 text-xs text-hijau-100/70">
+        Data diambil dari database kepegawaian PPNP
+      </p>
     </header>
 
     <div class="p-6">
@@ -99,9 +174,11 @@
         </div>
       </div>
 
-      <hr class="my-6 border-slate-100">
+      <hr class="my-6 border-slate-100" />
 
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div>
           <span class="section-title">Status TTE Saya</span>
           <div id="badgeTTE" class="tte-status belum">⏳ Belum Terdaftar</div>
@@ -111,10 +188,14 @@
           <!-- Skeleton preview TTD: hilang saat data muncul atau maksimal 5 detik -->
           <div id="skeletonTTD" class="h-24 w-48 rounded-xl skel-shimmer"></div>
 
-          <div id="infoTTDPreview" style="display:none;" class="text-center">
+          <div id="infoTTDPreview" style="display: none" class="text-center">
             <span class="section-title">Tanda Tangan Terdaftar</span>
-            <img id="imgTTDTerdaftar" src="" alt="TTD"
-                 class="max-h-20 max-w-[200px] rounded-xl border border-slate-200 bg-white p-2 object-contain">
+            <img
+              id="imgTTDTerdaftar"
+              src=""
+              alt="TTD"
+              class="max-h-20 max-w-[200px] rounded-xl border border-slate-200 bg-white p-2 object-contain"
+            />
           </div>
         </div>
       </div>
@@ -122,59 +203,189 @@
   </section>
 
   <!-- Card Registrasi TTD -->
-  <section id="cardRegistrasi" class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200" data-aos="fade-up" data-aos-delay="100">
-    <header class="bg-gradient-to-r from-hijau-600 to-hijau-800 px-6 py-5 text-white">
+  <section
+    id="cardRegistrasi"
+    class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+    data-aos="fade-up"
+    data-aos-delay="100"
+  >
+    <header
+      class="bg-gradient-to-r from-hijau-600 to-hijau-800 px-6 py-5 text-white"
+    >
       <h3 class="font-bold">✍️ Daftarkan Tanda Tangan Digital</h3>
-      <p class="mt-1 text-xs text-hijau-100/70">Upload gambar tanda tangan dan buat PIN 6 digit untuk aktivasi TTE</p>
+      <p class="mt-1 text-xs text-hijau-100/70">
+        Upload gambar tanda tangan dan buat PIN 6 digit untuk aktivasi TTE
+      </p>
     </header>
 
     <div class="p-6">
       <!-- Langkah 1 -->
       <span class="section-title">Langkah 1 — Upload Gambar Tanda Tangan</span>
-      <div id="uploadArea" onclick="document.getElementById('inputFileTTD').click()"
-           class="relative cursor-pointer rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center transition hover:border-hijau-500 hover:bg-hijau-50">
-        <input type="file" id="inputFileTTD" accept=".png,.jpg,.jpeg"
-               onchange="handleUploadTTD(event)"
-               class="absolute inset-0 h-full w-full cursor-pointer opacity-0">
+      <div
+        id="uploadArea"
+        onclick="document.getElementById('inputFileTTD').click()"
+        class="relative cursor-pointer rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center transition hover:border-hijau-500 hover:bg-hijau-50"
+      >
+        <input
+          type="file"
+          id="inputFileTTD"
+          accept=".png,.jpg,.jpeg"
+          onchange="handleUploadTTD(event)"
+          class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        />
         <div id="ttdPlaceholder" class="text-slate-400">
           <span class="block text-5xl mb-2">✍️</span>
-          <p class="text-sm"><strong class="text-slate-600">Klik untuk upload</strong> gambar tanda tangan</p>
-          <p class="mt-1.5 text-xs">Format: PNG/JPG — Background transparan lebih baik</p>
+          <p class="text-sm">
+            <strong class="text-slate-600">Klik untuk upload</strong> gambar
+            tanda tangan
+          </p>
+          <p class="mt-1.5 text-xs">
+            Format: PNG/JPG — Background transparan lebih baik
+          </p>
         </div>
-        <img id="ttdPreviewImg" src="" alt="" class="mx-auto max-h-[150px] object-contain" style="display:none;">
+        <img
+          id="ttdPreviewImg"
+          src=""
+          alt=""
+          class="mx-auto max-h-[150px] object-contain"
+          style="display: none"
+        />
       </div>
       <p id="namaFileTTD" class="mt-2 text-center text-xs text-slate-500"></p>
 
-      <hr class="my-6 border-slate-100">
+      <hr class="my-6 border-slate-100" />
 
       <!-- Langkah 2 -->
       <span class="section-title">Langkah 2 — Buat PIN TTE (6 Digit)</span>
-      <p class="mb-4 text-sm text-slate-500">PIN ini wajib dimasukkan setiap kali Anda menandatangani dokumen.</p>
+      <p class="mb-4 text-sm text-slate-500">
+        PIN ini wajib dimasukkan setiap kali Anda menandatangani dokumen.
+      </p>
 
-      <label class="mb-2 block text-sm font-bold text-slate-700">Masukkan PIN:</label>
+      <label class="mb-2 block text-sm font-bold text-slate-700"
+        >Masukkan PIN:</label
+      >
       <div class="my-3 flex justify-center gap-2.5" id="pinInputWrap">
-        <input class="pin-digit" id="p1" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'p2')">
-        <input class="pin-digit" id="p2" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'p3')" onkeydown="hapusPin(event,this,'p1')">
-        <input class="pin-digit" id="p3" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'p4')" onkeydown="hapusPin(event,this,'p2')">
-        <input class="pin-digit" id="p4" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'p5')" onkeydown="hapusPin(event,this,'p3')">
-        <input class="pin-digit" id="p5" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'p6')" onkeydown="hapusPin(event,this,'p4')">
-        <input class="pin-digit" id="p6" maxlength="1" type="password" inputmode="numeric"
-               oninput="cekFormLengkap()" onkeydown="hapusPin(event,this,'p5')">
+        <input
+          class="pin-digit"
+          id="p1"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'p2')"
+        />
+        <input
+          class="pin-digit"
+          id="p2"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'p3')"
+          onkeydown="hapusPin(event, this, 'p1')"
+        />
+        <input
+          class="pin-digit"
+          id="p3"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'p4')"
+          onkeydown="hapusPin(event, this, 'p2')"
+        />
+        <input
+          class="pin-digit"
+          id="p4"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'p5')"
+          onkeydown="hapusPin(event, this, 'p3')"
+        />
+        <input
+          class="pin-digit"
+          id="p5"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'p6')"
+          onkeydown="hapusPin(event, this, 'p4')"
+        />
+        <input
+          class="pin-digit"
+          id="p6"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="cekFormLengkap()"
+          onkeydown="hapusPin(event, this, 'p5')"
+        />
       </div>
 
-      <label class="mb-2 mt-5 block text-sm font-bold text-slate-700">Konfirmasi PIN:</label>
+      <label class="mb-2 mt-5 block text-sm font-bold text-slate-700"
+        >Konfirmasi PIN:</label
+      >
       <div class="my-3 flex justify-center gap-2.5" id="pinKonfirmasiWrap">
-        <input class="pin-digit" id="k1" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'k2')">
-        <input class="pin-digit" id="k2" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'k3')" onkeydown="hapusPin(event,this,'k1')">
-        <input class="pin-digit" id="k3" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'k4')" onkeydown="hapusPin(event,this,'k2')">
-        <input class="pin-digit" id="k4" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'k5')" onkeydown="hapusPin(event,this,'k3')">
-        <input class="pin-digit" id="k5" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'k6')" onkeydown="hapusPin(event,this,'k4')">
-        <input class="pin-digit" id="k6" maxlength="1" type="password" inputmode="numeric"
-               oninput="cekFormLengkap()" onkeydown="hapusPin(event,this,'k5')">
+        <input
+          class="pin-digit"
+          id="k1"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'k2')"
+        />
+        <input
+          class="pin-digit"
+          id="k2"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'k3')"
+          onkeydown="hapusPin(event, this, 'k1')"
+        />
+        <input
+          class="pin-digit"
+          id="k3"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'k4')"
+          onkeydown="hapusPin(event, this, 'k2')"
+        />
+        <input
+          class="pin-digit"
+          id="k4"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'k5')"
+          onkeydown="hapusPin(event, this, 'k3')"
+        />
+        <input
+          class="pin-digit"
+          id="k5"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="pindahPin(this, 'k6')"
+          onkeydown="hapusPin(event, this, 'k4')"
+        />
+        <input
+          class="pin-digit"
+          id="k6"
+          maxlength="1"
+          type="password"
+          inputmode="numeric"
+          oninput="cekFormLengkap()"
+          onkeydown="hapusPin(event, this, 'k5')"
+        />
       </div>
 
       <div class="mt-6">
-        <button class="btn-primary" id="btnDaftar" onclick="simpanRegistrasi()" disabled>
+        <button
+          class="btn-primary"
+          id="btnDaftar"
+          onclick="simpanRegistrasi()"
+          disabled
+        >
           🔐 Aktifkan TTE Saya
         </button>
       </div>
@@ -182,10 +393,18 @@
   </section>
 
   <!-- Card Ganti PIN (muncul jika sudah terdaftar) -->
-  <section id="cardGantiPin" class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200" style="display:none;">
-    <header class="bg-gradient-to-r from-hijau-600 to-hijau-800 px-6 py-5 text-white">
+  <section
+    id="cardGantiPin"
+    class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+    style="display: none"
+  >
+    <header
+      class="bg-gradient-to-r from-hijau-600 to-hijau-800 px-6 py-5 text-white"
+    >
       <h3 class="font-bold">🔑 Ganti PIN TTE</h3>
-      <p class="mt-1 text-xs text-hijau-100/70">Ganti PIN TTE Anda jika diperlukan</p>
+      <p class="mt-1 text-xs text-hijau-100/70">
+        Ganti PIN TTE Anda jika diperlukan
+      </p>
     </header>
 
     <div class="p-6">
@@ -193,34 +412,172 @@
         <div>
           <span class="section-title">PIN Lama</span>
           <div class="flex gap-1.5">
-            <input class="pin-digit" id="gl1" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gl2')">
-            <input class="pin-digit" id="gl2" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gl3')" onkeydown="hapusPin(event,this,'gl1')">
-            <input class="pin-digit" id="gl3" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gl4')" onkeydown="hapusPin(event,this,'gl2')">
-            <input class="pin-digit" id="gl4" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gl5')" onkeydown="hapusPin(event,this,'gl3')">
-            <input class="pin-digit" id="gl5" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gl6')" onkeydown="hapusPin(event,this,'gl4')">
-            <input class="pin-digit" id="gl6" maxlength="1" type="password" inputmode="numeric" onkeydown="hapusPin(event,this,'gl5')">
+            <input
+              class="pin-digit"
+              id="gl1"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gl2')"
+            />
+            <input
+              class="pin-digit"
+              id="gl2"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gl3')"
+              onkeydown="hapusPin(event, this, 'gl1')"
+            />
+            <input
+              class="pin-digit"
+              id="gl3"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gl4')"
+              onkeydown="hapusPin(event, this, 'gl2')"
+            />
+            <input
+              class="pin-digit"
+              id="gl4"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gl5')"
+              onkeydown="hapusPin(event, this, 'gl3')"
+            />
+            <input
+              class="pin-digit"
+              id="gl5"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gl6')"
+              onkeydown="hapusPin(event, this, 'gl4')"
+            />
+            <input
+              class="pin-digit"
+              id="gl6"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              onkeydown="hapusPin(event, this, 'gl5')"
+            />
           </div>
         </div>
         <div>
           <span class="section-title">PIN Baru</span>
           <div class="flex gap-1.5">
-            <input class="pin-digit" id="gb1" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gb2')">
-            <input class="pin-digit" id="gb2" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gb3')" onkeydown="hapusPin(event,this,'gb1')">
-            <input class="pin-digit" id="gb3" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gb4')" onkeydown="hapusPin(event,this,'gb2')">
-            <input class="pin-digit" id="gb4" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gb5')" onkeydown="hapusPin(event,this,'gb3')">
-            <input class="pin-digit" id="gb5" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gb6')" onkeydown="hapusPin(event,this,'gb4')">
-            <input class="pin-digit" id="gb6" maxlength="1" type="password" inputmode="numeric" onkeydown="hapusPin(event,this,'gb5')">
+            <input
+              class="pin-digit"
+              id="gb1"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gb2')"
+            />
+            <input
+              class="pin-digit"
+              id="gb2"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gb3')"
+              onkeydown="hapusPin(event, this, 'gb1')"
+            />
+            <input
+              class="pin-digit"
+              id="gb3"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gb4')"
+              onkeydown="hapusPin(event, this, 'gb2')"
+            />
+            <input
+              class="pin-digit"
+              id="gb4"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gb5')"
+              onkeydown="hapusPin(event, this, 'gb3')"
+            />
+            <input
+              class="pin-digit"
+              id="gb5"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gb6')"
+              onkeydown="hapusPin(event, this, 'gb4')"
+            />
+            <input
+              class="pin-digit"
+              id="gb6"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              onkeydown="hapusPin(event, this, 'gb5')"
+            />
           </div>
         </div>
         <div>
           <span class="section-title">Konfirmasi PIN Baru</span>
           <div class="flex gap-1.5">
-            <input class="pin-digit" id="gk1" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gk2')">
-            <input class="pin-digit" id="gk2" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gk3')" onkeydown="hapusPin(event,this,'gk1')">
-            <input class="pin-digit" id="gk3" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gk4')" onkeydown="hapusPin(event,this,'gk2')">
-            <input class="pin-digit" id="gk4" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gk5')" onkeydown="hapusPin(event,this,'gk3')">
-            <input class="pin-digit" id="gk5" maxlength="1" type="password" inputmode="numeric" oninput="pindahPin(this,'gk6')" onkeydown="hapusPin(event,this,'gk4')">
-            <input class="pin-digit" id="gk6" maxlength="1" type="password" inputmode="numeric" onkeydown="hapusPin(event,this,'gk5')">
+            <input
+              class="pin-digit"
+              id="gk1"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gk2')"
+            />
+            <input
+              class="pin-digit"
+              id="gk2"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gk3')"
+              onkeydown="hapusPin(event, this, 'gk1')"
+            />
+            <input
+              class="pin-digit"
+              id="gk3"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gk4')"
+              onkeydown="hapusPin(event, this, 'gk2')"
+            />
+            <input
+              class="pin-digit"
+              id="gk4"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gk5')"
+              onkeydown="hapusPin(event, this, 'gk3')"
+            />
+            <input
+              class="pin-digit"
+              id="gk5"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              oninput="pindahPin(this, 'gk6')"
+              onkeydown="hapusPin(event, this, 'gk4')"
+            />
+            <input
+              class="pin-digit"
+              id="gk6"
+              maxlength="1"
+              type="password"
+              inputmode="numeric"
+              onkeydown="hapusPin(event, this, 'gk5')"
+            />
           </div>
         </div>
       </div>
@@ -232,282 +589,314 @@
       </div>
     </div>
   </section>
-
 </div>
-{% endblock %}
 
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 <script>
   // AOS: animasi scroll-in untuk kartu
   if (window.AOS) {
-    AOS.init({ duration: 600, easing: 'ease-out-cubic', once: true, offset: 40 });
+    AOS.init({
+      duration: 600,
+      easing: "ease-out-cubic",
+      once: true,
+      offset: 40,
+    });
   }
-   // Skeleton TTD: hilang saat preview TTD muncul, atau maksimal 5 detik
+  // Skeleton TTD: hilang saat preview TTD muncul, atau maksimal 5 detik
   (function () {
-    const skel    = document.getElementById('skeletonTTD');
-    const preview = document.getElementById('infoTTDPreview');
+    const skel = document.getElementById("skeletonTTD");
+    const preview = document.getElementById("infoTTDPreview");
     if (!skel || !preview) return;
 
     const observer = new MutationObserver(() => {
-      if (preview.style.display && preview.style.display !== 'none') sembunyikan();
+      if (preview.style.display && preview.style.display !== "none")
+        sembunyikan();
     });
 
     function sembunyikan() {
-      skel.classList.add('hidden');
+      skel.classList.add("hidden");
       observer.disconnect();
     }
 
-    observer.observe(preview, { attributes: true, attributeFilter: ['style'] });
+    observer.observe(preview, { attributes: true, attributeFilter: ["style"] });
     setTimeout(sembunyikan, 5000);
   })();
 
-   // ============================================================
-    // GUARD LOGIN
-    // ============================================================
-    const userDataStr = localStorage.getItem('user_ppnp');
-    if (!userDataStr) { window.location.href = '/'; }
-    const user = JSON.parse(userDataStr);
+  // ============================================================
+  // GUARD LOGIN
+  // ============================================================
+  const userDataStr = localStorage.getItem("user_ppnp");
+  if (!userDataStr) {
+    window.location.href = "/";
+  }
+  const user = JSON.parse(userDataStr);
 
-    let namaFileTTDUploaded = null;
+  let namaFileTTDUploaded = null;
 
-    // ============================================================
-    // INISIALISASI
-    // ============================================================
-    window.addEventListener('load', async function () {
-        renderSidebar();
-        await muatProfil();
-    });
+  // ============================================================
+  // INISIALISASI
+  // ============================================================
+  window.addEventListener("load", async function () {
+    renderSidebar();
+    await muatProfil();
+  });
 
-    function renderSidebar() {
-        const inisial = user.nama
-            ? user.nama.trim().split(' ').slice(0,2).map(k => k[0]).join('')
-            : '?';
-        const labelRole = {
-            'direktur': '🏛️ Direktur', 'wadir_1': '📌 Wadir I',
-            'wadir_2': '📌 Wadir II',  'wadir_3': '📌 Wadir III',
-            'kabag':   '🗂️ Kabag',     'kajur':   '📚 Kajur',
-            'pimpinan':'👔 Pimpinan',  'staf':    '👤 Staf',
-        };
-        document.getElementById('userAvatar').textContent  = inisial;
-        document.getElementById('userNama').textContent    = user.nama    || '—';
-        document.getElementById('userJabatan').textContent = user.jabatan || '—';
-        document.getElementById('userRole').textContent    = labelRole[user.role_ppnp] || user.role_ppnp || '—';
-    }
+  function renderSidebar() {
+    const inisial = user.nama
+      ? user.nama
+          .trim()
+          .split(" ")
+          .slice(0, 2)
+          .map((k) => k[0])
+          .join("")
+      : "?";
+    const labelRole = {
+      direktur: "🏛️ Direktur",
+      wadir_1: "📌 Wadir I",
+      wadir_2: "📌 Wadir II",
+      wadir_3: "📌 Wadir III",
+      kabag: "🗂️ Kabag",
+      kajur: "📚 Kajur",
+      pimpinan: "👔 Pimpinan",
+      staf: "👤 Staf",
+    };
+    document.getElementById("userAvatar").textContent = inisial;
+    document.getElementById("userNama").textContent = user.nama || "—";
+    document.getElementById("userJabatan").textContent = user.jabatan || "—";
+    document.getElementById("userRole").textContent =
+      labelRole[user.role_ppnp] || user.role_ppnp || "—";
+  }
 
-    // ============================================================
-    // MUAT PROFIL
-    // ============================================================
-    async function muatProfil() {
-        try {
-            const res  = await fetch(`/api/profil?nip=${user.nip}`);
-            const data = await res.json();
+  // ============================================================
+  // MUAT PROFIL
+  // ============================================================
+  async function muatProfil() {
+    try {
+      const res = await fetch(`/api/profil?nip=${user.nip}`);
+      const data = await res.json();
 
-            document.getElementById('infoNama').textContent    = data.nama    || '—';
-            document.getElementById('infoNip').textContent     = data.nip     || '—';
-            document.getElementById('infoJabatan').textContent = data.jabatan || '—';
-            document.getElementById('infoUnit').textContent    = data.nama_unit || '—';
+      document.getElementById("infoNama").textContent = data.nama || "—";
+      document.getElementById("infoNip").textContent = data.nip || "—";
+      document.getElementById("infoJabatan").textContent = data.jabatan || "—";
+      document.getElementById("infoUnit").textContent = data.nama_unit || "—";
 
-            if (data.tte_aktif) {
-                // Sudah terdaftar
-                document.getElementById('badgeTTE').className   = 'tte-status aktif';
-                document.getElementById('badgeTTE').textContent = '✅ TTE Aktif';
+      if (data.tte_aktif) {
+        // Sudah terdaftar
+        document.getElementById("badgeTTE").className = "tte-status aktif";
+        document.getElementById("badgeTTE").textContent = "✅ TTE Aktif";
 
-                // Tampilkan preview TTD terdaftar
-                if (data.file_ttd) {
-                    document.getElementById('infoTTDPreview').style.display = 'block';
-                    document.getElementById('imgTTDTerdaftar').src =
-                        `/uploads/ttd/${data.file_ttd}`;
-                }
-
-                // Sembunyikan form registrasi, tampilkan ganti PIN
-                document.getElementById('cardRegistrasi').style.display = 'none';
-                document.getElementById('cardGantiPin').style.display   = 'block';
-            }
-        } catch (e) {
-            console.error('Gagal muat profil:', e);
+        // Tampilkan preview TTD terdaftar
+        if (data.file_ttd) {
+          document.getElementById("infoTTDPreview").style.display = "block";
+          document.getElementById("imgTTDTerdaftar").src =
+            `/uploads/ttd/${data.file_ttd}`;
         }
+
+        // Sembunyikan form registrasi, tampilkan ganti PIN
+        document.getElementById("cardRegistrasi").style.display = "none";
+        document.getElementById("cardGantiPin").style.display = "block";
+      }
+    } catch (e) {
+      console.error("Gagal muat profil:", e);
     }
+  }
 
-    // ============================================================
-    // UPLOAD TTD
-    // ============================================================
-    async function handleUploadTTD(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+  // ============================================================
+  // UPLOAD TTD
+  // ============================================================
+  async function handleUploadTTD(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-        // Preview lokal dulu
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img       = document.getElementById('ttdPreviewImg');
-            const area      = document.getElementById('uploadArea');
-            img.src         = e.target.result;
-            img.style.display = 'block';
-            document.getElementById('ttdPlaceholder').style.display = 'none';
-            area.classList.add('ada-gambar');
-        };
-        reader.readAsDataURL(file);
+    // Preview lokal dulu
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = document.getElementById("ttdPreviewImg");
+      const area = document.getElementById("uploadArea");
+      img.src = e.target.result;
+      img.style.display = "block";
+      document.getElementById("ttdPlaceholder").style.display = "none";
+      area.classList.add("ada-gambar");
+    };
+    reader.readAsDataURL(file);
 
-        // Upload ke server
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('nip',  user.nip);
+    // Upload ke server
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("nip", user.nip);
 
-        try {
-            const res  = await fetch('/api/upload/ttd', { method:'POST', body:formData });
-            if (res.ok) {
-                const data          = await res.json();
-                namaFileTTDUploaded = data.nama_file;
-                document.getElementById('namaFileTTD').textContent = `✅ File: ${data.nama_file}`;
-                cekFormLengkap();
-            } else {
-                tampilNotif('Gagal upload gambar TTD!', 'gagal');
-            }
-        } catch (e) {
-            tampilNotif('Koneksi gagal saat upload!', 'gagal');
-        }
-    }
-
-    // ============================================================
-    // PIN INPUT — Auto pindah & hapus
-    // ============================================================
-    function pindahPin(el, idBerikut) {
-        if (el.value.length === 1 && idBerikut) {
-            document.getElementById(idBerikut)?.focus();
-        }
+    try {
+      const res = await fetch("/api/upload/ttd", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        namaFileTTDUploaded = data.nama_file;
+        document.getElementById("namaFileTTD").textContent =
+          `✅ File: ${data.nama_file}`;
         cekFormLengkap();
+      } else {
+        tampilNotif("Gagal upload gambar TTD!", "gagal");
+      }
+    } catch (e) {
+      tampilNotif("Koneksi gagal saat upload!", "gagal");
+    }
+  }
+
+  // ============================================================
+  // PIN INPUT — Auto pindah & hapus
+  // ============================================================
+  function pindahPin(el, idBerikut) {
+    if (el.value.length === 1 && idBerikut) {
+      document.getElementById(idBerikut)?.focus();
+    }
+    cekFormLengkap();
+  }
+
+  function hapusPin(event, el, idSebelum) {
+    if (event.key === "Backspace" && el.value === "" && idSebelum) {
+      document.getElementById(idSebelum)?.focus();
+    }
+  }
+
+  function ambilPin(prefiks) {
+    return ["1", "2", "3", "4", "5", "6"]
+      .map((n) => document.getElementById(prefiks + n)?.value || "")
+      .join("");
+  }
+
+  function cekFormLengkap() {
+    const pin = ambilPin("p");
+    const konfirmasi = ambilPin("k");
+    const btn = document.getElementById("btnDaftar");
+    btn.disabled = !(
+      namaFileTTDUploaded &&
+      pin.length === 6 &&
+      konfirmasi.length === 6
+    );
+  }
+
+  // ============================================================
+  // SIMPAN REGISTRASI TTD
+  // ============================================================
+  async function simpanRegistrasi() {
+    const pin = ambilPin("p");
+    const konfirmasi = ambilPin("k");
+
+    if (pin !== konfirmasi) {
+      tampilNotif("PIN dan konfirmasi PIN tidak cocok!", "gagal");
+      // Reset PIN konfirmasi
+      ["k1", "k2", "k3", "k4", "k5", "k6"].forEach((id) => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("k1").focus();
+      return;
     }
 
-    function hapusPin(event, el, idSebelum) {
-        if (event.key === 'Backspace' && el.value === '' && idSebelum) {
-            document.getElementById(idSebelum)?.focus();
-        }
+    if (!pin.match(/^\d{6}$/)) {
+      tampilNotif("PIN harus 6 digit angka!", "gagal");
+      return;
     }
 
-    function ambilPin(prefiks) {
-        return ['1','2','3','4','5','6']
-            .map(n => document.getElementById(prefiks + n)?.value || '')
-            .join('');
+    const btn = document.getElementById("btnDaftar");
+    btn.textContent = "⏳ Menyimpan...";
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("nip", user.nip);
+    formData.append("pin", pin);
+    formData.append("file_ttd", namaFileTTDUploaded);
+
+    try {
+      const res = await fetch("/api/registrasi-ttd", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        tampilNotif(data.message, "sukses");
+        // Reload profil setelah 1.5 detik
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        tampilNotif(err.detail || "Gagal registrasi!", "gagal");
+        btn.textContent = "🔐 Aktifkan TTE Saya";
+        btn.disabled = false;
+      }
+    } catch (e) {
+      tampilNotif("Koneksi gagal!", "gagal");
+      btn.textContent = "🔐 Aktifkan TTE Saya";
+      btn.disabled = false;
+    }
+  }
+
+  // ============================================================
+  // GANTI PIN
+  // ============================================================
+  async function gantiPin() {
+    const pinLama = ambilPin("gl");
+    const pinBaru = ambilPin("gb");
+    const konfirmasi = ambilPin("gk");
+
+    if (pinLama.length !== 6 || pinBaru.length !== 6) {
+      tampilNotif("Semua PIN harus 6 digit!", "gagal");
+      return;
+    }
+    if (pinBaru !== konfirmasi) {
+      tampilNotif("PIN baru dan konfirmasi tidak cocok!", "gagal");
+      return;
     }
 
-    function cekFormLengkap() {
-        const pin       = ambilPin('p');
-        const konfirmasi = ambilPin('k');
-        const btn       = document.getElementById('btnDaftar');
-        btn.disabled    = !(namaFileTTDUploaded && pin.length === 6 && konfirmasi.length === 6);
+    const formData = new FormData();
+    formData.append("nip", user.nip);
+    formData.append("pin_lama", pinLama);
+    formData.append("pin_baru", pinBaru);
+
+    try {
+      const res = await fetch("/api/ganti-pin", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        tampilNotif("PIN berhasil diubah!", "sukses");
+        ["gl", "gb", "gk"].forEach((p) => {
+          ["1", "2", "3", "4", "5", "6"].forEach((n) => {
+            const el = document.getElementById(p + n);
+            if (el) el.value = "";
+          });
+        });
+      } else {
+        const err = await res.json().catch(() => ({}));
+        tampilNotif(err.detail || "Gagal ganti PIN!", "gagal");
+      }
+    } catch (e) {
+      tampilNotif("Koneksi gagal!", "gagal");
     }
+  }
 
-    // ============================================================
-    // SIMPAN REGISTRASI TTD
-    // ============================================================
-    async function simpanRegistrasi() {
-        const pin        = ambilPin('p');
-        const konfirmasi = ambilPin('k');
+  // ============================================================
+  // NOTIF & LOGOUT
+  // ============================================================
+  function tampilNotif(pesan, tipe = "sukses") {
+    const container = document.getElementById("notif-container");
+    const notif = document.createElement("div");
+    notif.className = `notif ${tipe}`;
+    notif.innerHTML = `<span>ℹ️</span><span>${pesan}</span>`;
+    container.appendChild(notif);
+    setTimeout(() => {
+      notif.remove();
+    }, 3000);
+  }
 
-        if (pin !== konfirmasi) {
-            tampilNotif('PIN dan konfirmasi PIN tidak cocok!', 'gagal');
-            // Reset PIN konfirmasi
-            ['k1','k2','k3','k4','k5','k6'].forEach(id => {
-                document.getElementById(id).value = '';
-            });
-            document.getElementById('k1').focus();
-            return;
-        }
-
-        if (!pin.match(/^\d{6}$/)) {
-            tampilNotif('PIN harus 6 digit angka!', 'gagal');
-            return;
-        }
-
-        const btn       = document.getElementById('btnDaftar');
-        btn.textContent = '⏳ Menyimpan...';
-        btn.disabled    = true;
-
-        const formData = new FormData();
-        formData.append('nip',      user.nip);
-        formData.append('pin',      pin);
-        formData.append('file_ttd', namaFileTTDUploaded);
-
-        try {
-            const res = await fetch('/api/registrasi-ttd', {
-                method: 'POST',
-                body:   formData
-            });
-            if (res.ok) {
-                const data = await res.json();
-                tampilNotif(data.message, 'sukses');
-                // Reload profil setelah 1.5 detik
-                setTimeout(() => { window.location.reload(); }, 1500);
-            } else {
-                const err = await res.json().catch(() => ({}));
-                tampilNotif(err.detail || 'Gagal registrasi!', 'gagal');
-                btn.textContent = '🔐 Aktifkan TTE Saya';
-                btn.disabled    = false;
-            }
-        } catch (e) {
-            tampilNotif('Koneksi gagal!', 'gagal');
-            btn.textContent = '🔐 Aktifkan TTE Saya';
-            btn.disabled    = false;
-        }
-    }
-
-    // ============================================================
-    // GANTI PIN
-    // ============================================================
-    async function gantiPin() {
-        const pinLama    = ambilPin('gl');
-        const pinBaru    = ambilPin('gb');
-        const konfirmasi = ambilPin('gk');
-
-        if (pinLama.length !== 6 || pinBaru.length !== 6) {
-            tampilNotif('Semua PIN harus 6 digit!', 'gagal');
-            return;
-        }
-        if (pinBaru !== konfirmasi) {
-            tampilNotif('PIN baru dan konfirmasi tidak cocok!', 'gagal');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('nip',      user.nip);
-        formData.append('pin_lama', pinLama);
-        formData.append('pin_baru', pinBaru);
-
-        try {
-            const res = await fetch('/api/ganti-pin', { method:'POST', body:formData });
-            if (res.ok) {
-                tampilNotif('PIN berhasil diubah!', 'sukses');
-                ['gl','gb','gk'].forEach(p => {
-                    ['1','2','3','4','5','6'].forEach(n => {
-                        const el = document.getElementById(p+n);
-                        if (el) el.value = '';
-                    });
-                });
-            } else {
-                const err = await res.json().catch(() => ({}));
-                tampilNotif(err.detail || 'Gagal ganti PIN!', 'gagal');
-            }
-        } catch (e) {
-            tampilNotif('Koneksi gagal!', 'gagal');
-        }
-    }
-
-    // ============================================================
-    // NOTIF & LOGOUT
-    // ============================================================
-    function tampilNotif(pesan, tipe = 'sukses') {
-        const container = document.getElementById('notif-container');
-        const notif     = document.createElement('div');
-        notif.className = `notif ${tipe}`;
-        notif.innerHTML = `<span>ℹ️</span><span>${pesan}</span>`;
-        container.appendChild(notif);
-        setTimeout(() => { notif.remove(); }, 3000);
-    }
-
-    function logout() {
-        localStorage.removeItem('user_ppnp');
-        window.location.href = '/';
-    }
+  function logout() {
+    localStorage.removeItem("user_ppnp");
+    window.location.href = "/";
+  }
 </script>
 
 {% endblock %}

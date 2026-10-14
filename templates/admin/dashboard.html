@@ -1,524 +1,929 @@
-{% extends "base.html" %}
-
-{% block title %}Dashboard · Sistem Kendali Kinerja PPNP{% endblock %}
-{% block page_title %}Dashboard Utama{% endblock %}
-
-{% block extra_head %}
-  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
-  <style type="text/tailwindcss">
-    @layer components {
-      /* Kartu umum */
-      .kartu { @apply bg-white rounded-xl border border-slate-100 shadow-sm p-5 mb-5; }
-      .label-seksi { @apply text-xs font-bold uppercase tracking-[.12em] text-slate-500 mb-3; }
-      .ikon-kotak { @apply w-10 h-10 rounded-lg flex items-center justify-center shrink-0; }
-      .stat { @apply bg-white rounded-xl border border-slate-100 shadow-sm p-5 no-underline text-slate-800 block hover:shadow-md transition; }
-      .stat .angka { @apply text-[2rem] font-extrabold leading-none mt-5 text-slate-900; }
-      .stat .label { @apply text-xs text-slate-500 mt-1.5; }
-      .stat .ket { @apply text-[.7rem] text-slate-400 mt-0.5 min-h-[1em]; }
-
-      /* Banner (className di-set ulang oleh JS) */
-      .banner { @apply border border-amber-200 bg-amber-50 text-amber-800 rounded-xl px-4 py-3 mb-4 text-sm leading-relaxed; }
-      .banner.merah { @apply border-red-200 bg-red-50 text-red-800; }
-      .banner a { @apply font-bold underline; }
-
-      /* Baris daftar (dipakai JS, tampil seperti baris tabel) */
-      .baris { @apply flex justify-between items-center gap-3 px-1 py-3 border-t border-slate-100 first:border-t-0; }
-      .baris .judul { @apply font-medium text-sm text-slate-800 [overflow-wrap:anywhere]; }
-      .baris .ket { @apply text-xs text-slate-400 mt-0.5 [overflow-wrap:anywhere]; }
-      .kosong { @apply text-center py-6 px-2.5 text-slate-400 text-sm leading-relaxed; }
-      .lainnya { @apply text-xs text-slate-400 pt-3 border-t border-slate-100; }
-      .memuat { @apply text-slate-400 text-sm py-3.5 text-center; }
-      .tunggu-item { @apply py-2.5 border-t border-slate-100 text-sm leading-normal first:border-t-0; }
-      .hari { @apply text-red-600 font-bold; }
-      .bintang { @apply text-amber-400 tracking-[2px]; }
-
-      /* Chip */
-      .chip { @apply inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 no-underline hover:bg-sky-100 transition; }
-
-      /* Tag status */
-      .tag { @apply inline-block px-2.5 py-0.5 rounded-full text-[.7rem] font-bold text-white whitespace-nowrap; }
-      .tag.merah  { @apply bg-red-500; }
-      .tag.oranye { @apply bg-orange-500; }
-      .tag.hijau  { @apply bg-emerald-500; }
-      .tag.abu    { @apply bg-slate-400; }
-      .tag.biru   { @apply bg-sky-500; }
-      .tag.ungu   { @apply bg-violet-500; }
-
-      /* Tombol */
-      .btn { @apply inline-block px-3 py-1.5 rounded-lg bg-sky-500 text-white text-xs font-bold whitespace-nowrap no-underline cursor-pointer border-none hover:bg-sky-600 transition; }
-      .btn.hijau { @apply bg-emerald-500 hover:bg-emerald-600; }
-      .btn.abu   { @apply bg-slate-500 hover:bg-slate-600; }
-
-      /* Bar chart */
-      .bar-baris { @apply flex items-center gap-2.5 text-sm mb-2.5; }
-      .bar-baris .nama { @apply w-24 shrink-0 text-slate-600; }
-      .bar-baris .jml { @apply w-6 text-right font-bold text-slate-800; }
-      .bar { @apply flex-1 h-2 bg-slate-100 rounded-full overflow-hidden; }
-      .bar > span { @apply block h-full bg-sky-500 rounded-full; }
+{% extends "base.html" %} {% block title %}Dashboard · Sistem Kendali Kinerja
+PPNP{% endblock %} {% block page_title %}Dashboard Utama{% endblock %} {% block
+extra_head %}
+<link
+  href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css"
+  rel="stylesheet"
+/>
+<style type="text/tailwindcss">
+  @layer components {
+    /* Kartu umum */
+    .kartu {
+      @apply bg-white rounded-xl border border-slate-100 shadow-sm p-5 mb-5;
     }
-  </style>
-{% endblock %}
+    .label-seksi {
+      @apply text-xs font-bold uppercase tracking-[.12em] text-slate-500 mb-3;
+    }
+    .ikon-kotak {
+      @apply w-10 h-10 rounded-lg flex items-center justify-center shrink-0;
+    }
+    .stat {
+      @apply bg-white rounded-xl border border-slate-100 shadow-sm p-5 no-underline text-slate-800 block hover:shadow-md transition;
+    }
+    .stat .angka {
+      @apply text-[2rem] font-extrabold leading-none mt-5 text-slate-900;
+    }
+    .stat .label {
+      @apply text-xs text-slate-500 mt-1.5;
+    }
+    .stat .ket {
+      @apply text-[.7rem] text-slate-400 mt-0.5 min-h-[1em];
+    }
 
-{% block content %}
-  
-  <!-- Banner info -->
-  <section data-aos="fade-up"
-          class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-hijau-600 to-hijau-800 text-white p-6 shadow-lg mb-8">
-    <div class="absolute inset-0 bg-pola-hijau"></div>
-    <div class="absolute -right-6 -bottom-8 opacity-10">
-      <span class="material-icons-round" style="font-size:160px">dashboard</span>
-    </div>
-    <div class="relative flex items-start gap-4">
-      <div class="w-12 h-12 shrink-0 rounded-xl bg-emas-500 text-hijau-900 flex items-center justify-center">
-        <span class="material-icons-round">dashboard</span>
-      </div>
-      <div>
-        <h2 class="text-lg font-extrabold leading-tight">Ringkasan pekerjaan Anda hari ini</h2>
-        <p class="text-sm text-white/75 mt-1">
-          Pantau surat yang perlu ditindak, tugas, rapat, dan nilai kinerja Anda dalam satu tempat.
-        </p>
-      </div>
-    </div>
-  </section>
-  
+    /* Banner (className di-set ulang oleh JS) */
+    .banner {
+      @apply border border-amber-200 bg-amber-50 text-amber-800 rounded-xl px-4 py-3 mb-4 text-sm leading-relaxed;
+    }
+    .banner.merah {
+      @apply border-red-200 bg-red-50 text-red-800;
+    }
+    .banner a {
+      @apply font-bold underline;
+    }
 
-  <!-- Statistik -->
-  <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8" data-aos="fade-up">
-    <a href="/inbox?tab=perlutindakan" class="stat">
-      <div class="ikon-kotak bg-sky-50 text-sky-600"><span class="material-icons-round">inbox</span></div>
-      <div class="angka" id="rkTindakan">–</div>
-      <div class="label">Perlu tindakan</div>
-      <div class="ket" id="rkTindakanKet"></div>
-    </a>
-    <a href="/inbox?tab=perlutindakan&filter=tugas_lapor" class="stat">
-      <div class="ikon-kotak bg-orange-50 text-orange-500"><span class="material-icons-round">assignment</span></div>
-      <div class="angka" id="rkTugas">–</div>
-      <div class="label">Tugas aktif</div>
-      <div class="ket" id="rkTugasKet"></div>
-    </a>
-    <a href="/inbox?tab=perlutindakan&filter=tugas_lapor" class="stat">
-      <div class="ikon-kotak bg-violet-50 text-violet-600"><span class="material-icons-round">groups</span></div>
-      <div class="angka" id="rkRapat">–</div>
-      <div class="label">Rapat berjalan</div>
-      <div class="ket" id="rkRapatKet"></div>
-    </a>
-    <div class="stat">
-      <div class="ikon-kotak bg-emerald-50 text-emerald-600"><span class="material-icons-round">grade</span></div>
-      <div class="angka" id="rkNilai">–</div>
-      <div class="label">Rata-rata nilai tugas</div>
-      <div class="ket" id="rkNilaiKet">skala 4</div>
+    /* Baris daftar (dipakai JS, tampil seperti baris tabel) */
+    .baris {
+      @apply flex justify-between items-center gap-3 px-1 py-3 border-t border-slate-100 first:border-t-0;
+    }
+    .baris .judul {
+      @apply font-medium text-sm text-slate-800 [overflow-wrap:anywhere];
+    }
+    .baris .ket {
+      @apply text-xs text-slate-400 mt-0.5 [overflow-wrap:anywhere];
+    }
+    .kosong {
+      @apply text-center py-6 px-2.5 text-slate-400 text-sm leading-relaxed;
+    }
+    .lainnya {
+      @apply text-xs text-slate-400 pt-3 border-t border-slate-100;
+    }
+    .memuat {
+      @apply text-slate-400 text-sm py-3.5 text-center;
+    }
+    .tunggu-item {
+      @apply py-2.5 border-t border-slate-100 text-sm leading-normal first:border-t-0;
+    }
+    .hari {
+      @apply text-red-600 font-bold;
+    }
+    .bintang {
+      @apply text-amber-400 tracking-[2px];
+    }
+
+    /* Chip */
+    .chip {
+      @apply inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 no-underline hover:bg-sky-100 transition;
+    }
+
+    /* Tag status */
+    .tag {
+      @apply inline-block px-2.5 py-0.5 rounded-full text-[.7rem] font-bold text-white whitespace-nowrap;
+    }
+    .tag.merah {
+      @apply bg-red-500;
+    }
+    .tag.oranye {
+      @apply bg-orange-500;
+    }
+    .tag.hijau {
+      @apply bg-emerald-500;
+    }
+    .tag.abu {
+      @apply bg-slate-400;
+    }
+    .tag.biru {
+      @apply bg-sky-500;
+    }
+    .tag.ungu {
+      @apply bg-violet-500;
+    }
+
+    /* Tombol */
+    .btn {
+      @apply inline-block px-3 py-1.5 rounded-lg bg-sky-500 text-white text-xs font-bold whitespace-nowrap no-underline cursor-pointer border-none hover:bg-sky-600 transition;
+    }
+    .btn.hijau {
+      @apply bg-emerald-500 hover:bg-emerald-600;
+    }
+    .btn.abu {
+      @apply bg-slate-500 hover:bg-slate-600;
+    }
+
+    /* Bar chart */
+    .bar-baris {
+      @apply flex items-center gap-2.5 text-sm mb-2.5;
+    }
+    .bar-baris .nama {
+      @apply w-24 shrink-0 text-slate-600;
+    }
+    .bar-baris .jml {
+      @apply w-6 text-right font-bold text-slate-800;
+    }
+    .bar {
+      @apply flex-1 h-2 bg-slate-100 rounded-full overflow-hidden;
+    }
+    .bar > span {
+      @apply block h-full bg-sky-500 rounded-full;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+
+<!-- Banner info -->
+<section
+  data-aos="fade-up"
+  class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-hijau-600 to-hijau-800 text-white p-6 shadow-lg mb-8"
+>
+  <div class="absolute inset-0 bg-pola-hijau"></div>
+  <div class="absolute -right-6 -bottom-8 opacity-10">
+    <span class="material-icons-round" style="font-size: 160px">dashboard</span>
+  </div>
+  <div class="relative flex items-start gap-4">
+    <div
+      class="w-12 h-12 shrink-0 rounded-xl bg-emas-500 text-hijau-900 flex items-center justify-center"
+    >
+      <span class="material-icons-round">dashboard</span>
     </div>
-    <div class="stat">
-      <div class="ikon-kotak bg-pink-50 text-pink-600"><span class="material-icons-round">schedule</span></div>
-      <div class="angka" id="rkTepat">–</div>
-      <div class="label">Lapor tepat waktu</div>
-      <div class="ket" id="rkTepatKet"></div>
+    <div>
+      <h2 class="text-lg font-extrabold leading-tight">
+        Ringkasan pekerjaan Anda hari ini
+      </h2>
+      <p class="text-sm text-white/75 mt-1">
+        Pantau surat yang perlu ditindak, tugas, rapat, dan nilai kinerja Anda
+        dalam satu tempat.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Statistik -->
+<div
+  class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8"
+  data-aos="fade-up"
+>
+  <a href="/inbox?tab=perlutindakan" class="stat">
+    <div class="ikon-kotak bg-sky-50 text-sky-600">
+      <span class="material-icons-round">inbox</span>
+    </div>
+    <div class="angka" id="rkTindakan">–</div>
+    <div class="label">Perlu tindakan</div>
+    <div class="ket" id="rkTindakanKet"></div>
+  </a>
+  <a href="/inbox?tab=perlutindakan&filter=tugas_lapor" class="stat">
+    <div class="ikon-kotak bg-orange-50 text-orange-500">
+      <span class="material-icons-round">assignment</span>
+    </div>
+    <div class="angka" id="rkTugas">–</div>
+    <div class="label">Tugas aktif</div>
+    <div class="ket" id="rkTugasKet"></div>
+  </a>
+  <a href="/inbox?tab=perlutindakan&filter=tugas_lapor" class="stat">
+    <div class="ikon-kotak bg-violet-50 text-violet-600">
+      <span class="material-icons-round">groups</span>
+    </div>
+    <div class="angka" id="rkRapat">–</div>
+    <div class="label">Rapat berjalan</div>
+    <div class="ket" id="rkRapatKet"></div>
+  </a>
+  <div class="stat">
+    <div class="ikon-kotak bg-emerald-50 text-emerald-600">
+      <span class="material-icons-round">grade</span>
+    </div>
+    <div class="angka" id="rkNilai">–</div>
+    <div class="label">Rata-rata nilai tugas</div>
+    <div class="ket" id="rkNilaiKet">skala 4</div>
+  </div>
+  <div class="stat">
+    <div class="ikon-kotak bg-pink-50 text-pink-600">
+      <span class="material-icons-round">schedule</span>
+    </div>
+    <div class="angka" id="rkTepat">–</div>
+    <div class="label">Lapor tepat waktu</div>
+    <div class="ket" id="rkTepatKet"></div>
+  </div>
+</div>
+
+<div
+  class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] gap-8 items-start"
+>
+  <!-- Kolom kiri -->
+  <div>
+    <p class="label-seksi" data-aos="fade-up">Perlu tindakan</p>
+    <div class="kartu" data-aos="fade-up">
+      <div class="flex justify-between items-center gap-2 mb-1">
+        <h3 class="font-bold text-slate-900">Perlu tindakan Anda</h3>
+        <a
+          class="text-xs text-sky-600 font-semibold hover:underline whitespace-nowrap"
+          href="/inbox?tab=perlutindakan"
+          >Buka Inbox</a
+        >
+      </div>
+      <p class="text-xs text-slate-400 mb-3">
+        Dikelompokkan menurut jenis. Lima item terlama ditampilkan.
+      </p>
+      <div class="flex flex-wrap gap-2 mb-3" id="chipTindakan">
+        <span class="skeleton inline-block h-6 w-24 rounded-full"></span>
+        <span class="skeleton inline-block h-6 w-20 rounded-full"></span>
+      </div>
+      <div id="daftarTindakan">
+        {% for i in range(3) %}
+        <div
+          class="flex justify-between items-center gap-3 py-3 border-t border-slate-100 first:border-t-0"
+        >
+          <div class="flex-1 space-y-2">
+            <div class="skeleton h-3 w-3/4"></div>
+            <div class="skeleton h-2.5 w-1/2"></div>
+          </div>
+          <div class="skeleton h-7 w-16 rounded-lg"></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <p class="label-seksi" data-aos="fade-up">Rapat</p>
+    <div class="kartu" data-aos="fade-up">
+      <p class="text-xs text-slate-400 mb-3">Undangan yang belum selesai</p>
+      <div id="daftarRapat">
+        {% for i in range(2) %}
+        <div
+          class="flex justify-between items-center gap-3 py-3 border-t border-slate-100 first:border-t-0"
+        >
+          <div class="flex-1 space-y-2">
+            <div class="skeleton h-3 w-3/4"></div>
+            <div class="skeleton h-2.5 w-1/2"></div>
+          </div>
+          <div class="skeleton h-7 w-20 rounded-lg"></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <p class="label-seksi" data-aos="fade-up">Nilai</p>
+    <div class="kartu" data-aos="fade-up">
+      <h3 class="font-bold text-slate-900 mb-0.5">Nilai yang saya terima</h3>
+      <p class="text-xs text-slate-400 mb-3">
+        Dari penilaian tugas oleh atasan
+      </p>
+      <div id="sebaranNilai">
+        {% for i in range(4) %}
+        <div class="flex items-center gap-2.5 mb-2.5">
+          <div class="skeleton h-3 w-20"></div>
+          <div class="skeleton h-2 flex-1 rounded-full"></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="border-t border-slate-100 mt-3.5 pt-3" id="layananBox"></div>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] gap-8 items-start">
-    <!-- Kolom kiri -->
-    <div>
-      <p class="label-seksi" data-aos="fade-up">Perlu tindakan</p>
-      <div class="kartu" data-aos="fade-up">
-        <div class="flex justify-between items-center gap-2 mb-1">
-          <h3 class="font-bold text-slate-900">Perlu tindakan Anda</h3>
-          <a class="text-xs text-sky-600 font-semibold hover:underline whitespace-nowrap" href="/inbox?tab=perlutindakan">Buka Inbox</a>
-        </div>
-        <p class="text-xs text-slate-400 mb-3">Dikelompokkan menurut jenis. Lima item terlama ditampilkan.</p>
-        <div class="flex flex-wrap gap-2 mb-3" id="chipTindakan">
-          <span class="skeleton inline-block h-6 w-24 rounded-full"></span>
-          <span class="skeleton inline-block h-6 w-20 rounded-full"></span>
-        </div>
-        <div id="daftarTindakan">
-          {% for i in range(3) %}
-          <div class="flex justify-between items-center gap-3 py-3 border-t border-slate-100 first:border-t-0">
-            <div class="flex-1 space-y-2"><div class="skeleton h-3 w-3/4"></div><div class="skeleton h-2.5 w-1/2"></div></div>
-            <div class="skeleton h-7 w-16 rounded-lg"></div>
-          </div>
-          {% endfor %}
+  <!-- Kolom kanan -->
+  <div>
+    <p class="label-seksi" data-aos="fade-up">Tugas</p>
+    <div class="kartu p-0 overflow-hidden" data-aos="fade-up">
+      <div class="px-5 py-4 flex justify-between items-baseline gap-3">
+        <div>
+          <h3 class="font-bold text-slate-900">Tugas saya</h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Tugas yang masih berjalan, diurutkan dari batas lapor terdekat
+          </p>
         </div>
       </div>
-
-      <p class="label-seksi" data-aos="fade-up">Rapat</p>
-      <div class="kartu" data-aos="fade-up">
-        <p class="text-xs text-slate-400 mb-3">Undangan yang belum selesai</p>
-        <div id="daftarRapat">
-          {% for i in range(2) %}
-          <div class="flex justify-between items-center gap-3 py-3 border-t border-slate-100 first:border-t-0">
-            <div class="flex-1 space-y-2"><div class="skeleton h-3 w-3/4"></div><div class="skeleton h-2.5 w-1/2"></div></div>
-            <div class="skeleton h-7 w-20 rounded-lg"></div>
-          </div>
-          {% endfor %}
-        </div>
+      <div
+        class="px-5 bg-slate-50 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-y border-slate-100 hidden md:flex justify-between"
+      >
+        <span>Judul</span><span>Batas</span>
       </div>
-
-      <p class="label-seksi" data-aos="fade-up">Nilai</p>
-      <div class="kartu" data-aos="fade-up">
-        <h3 class="font-bold text-slate-900 mb-0.5">Nilai yang saya terima</h3>
-        <p class="text-xs text-slate-400 mb-3">Dari penilaian tugas oleh atasan</p>
-        <div id="sebaranNilai">
-          {% for i in range(4) %}
-          <div class="flex items-center gap-2.5 mb-2.5">
-            <div class="skeleton h-3 w-20"></div>
-            <div class="skeleton h-2 flex-1 rounded-full"></div>
+      <div class="px-5" id="daftarTugas">
+        {% for i in range(3) %}
+        <div
+          class="flex justify-between items-center gap-3 py-3 border-t border-slate-100 first:border-t-0"
+        >
+          <div class="flex-1 space-y-2">
+            <div class="skeleton h-3 w-2/3"></div>
+            <div class="skeleton h-2.5 w-1/3"></div>
           </div>
-          {% endfor %}
+          <div class="skeleton h-5 w-20 rounded-full"></div>
         </div>
-        <div class="border-t border-slate-100 mt-3.5 pt-3" id="layananBox"></div>
+        {% endfor %}
       </div>
     </div>
 
-    <!-- Kolom kanan -->
-    <div>
-      <p class="label-seksi" data-aos="fade-up">Tugas</p>
-      <div class="kartu p-0 overflow-hidden" data-aos="fade-up">
-        <div class="px-5 py-4 flex justify-between items-baseline gap-3">
-          <div>
-            <h3 class="font-bold text-slate-900">Tugas saya</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Tugas yang masih berjalan, diurutkan dari batas lapor terdekat</p>
-          </div>
-        </div>
-        <div class="px-5 bg-slate-50 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-y border-slate-100 hidden md:flex justify-between">
-          <span>Judul</span><span>Batas</span>
-        </div>
-        <div class="px-5" id="daftarTugas">
-          {% for i in range(3) %}
-          <div class="flex justify-between items-center gap-3 py-3 border-t border-slate-100 first:border-t-0">
-            <div class="flex-1 space-y-2"><div class="skeleton h-3 w-2/3"></div><div class="skeleton h-2.5 w-1/3"></div></div>
-            <div class="skeleton h-5 w-20 rounded-full"></div>
-          </div>
-          {% endfor %}
-        </div>
+    <div
+      class="kartu"
+      id="cardDiberikan"
+      style="display: none"
+      data-aos="fade-up"
+    >
+      <div class="flex justify-between items-baseline gap-2.5">
+        <h3 class="font-bold text-slate-900">Tugas yang saya berikan</h3>
+        <a
+          class="text-xs text-sky-600 font-semibold hover:underline whitespace-nowrap"
+          href="/inbox?tab=riwayat"
+          >Lihat di Riwayat</a
+        >
       </div>
+      <p class="text-xs text-slate-400 mt-0.5 mb-3" id="diberikanRingkas">
+        <span class="skeleton inline-block h-3 w-72"></span>
+      </p>
+      <div id="daftarDiberikan"></div>
+    </div>
 
-      <div class="kartu" id="cardDiberikan" style="display:none;" data-aos="fade-up">
-        <div class="flex justify-between items-baseline gap-2.5">
-          <h3 class="font-bold text-slate-900">Tugas yang saya berikan</h3>
-          <a class="text-xs text-sky-600 font-semibold hover:underline whitespace-nowrap" href="/inbox?tab=riwayat">Lihat di Riwayat</a>
-        </div>
-        <p class="text-xs text-slate-400 mt-0.5 mb-3" id="diberikanRingkas">
-          <span class="skeleton inline-block h-3 w-72"></span>
-        </p>
-        <div id="daftarDiberikan"></div>
+    <p class="label-seksi" data-aos="fade-up">Kasus</p>
+    <div class="kartu" id="cardKasusSaya" data-aos="fade-up">
+      <h3 class="font-bold text-slate-900">Kasus saya yang tertahan</h3>
+      <p class="text-xs text-slate-400 mt-0.5 mb-3">
+        Siapa menunggu apa, dan sudah berapa hari. Dimuat saat diminta karena
+        cukup berat.
+      </p>
+      <div id="isiKasusSaya">
+        <button class="btn abu" onclick="muatKasusSaya()">
+          Muat kasus saya
+        </button>
       </div>
+    </div>
 
-      <p class="label-seksi" data-aos="fade-up">Kasus</p>
-      <div class="kartu" id="cardKasusSaya" data-aos="fade-up">
-        <h3 class="font-bold text-slate-900">Kasus saya yang tertahan</h3>
-        <p class="text-xs text-slate-400 mt-0.5 mb-3">Siapa menunggu apa, dan sudah berapa hari. Dimuat saat diminta karena cukup berat.</p>
-        <div id="isiKasusSaya">
-          <button class="btn abu" onclick="muatKasusSaya()">Muat kasus saya</button>
-        </div>
+    <!-- Khusus Direktur -->
+    <div class="kartu" id="cardKasus" style="display: none" data-aos="fade-up">
+      <div class="flex justify-between items-baseline gap-2.5">
+        <h3 class="font-bold text-slate-900">Seluruh kasus: yang tertahan</h3>
+        <a
+          class="text-xs text-sky-600 font-semibold hover:underline whitespace-nowrap"
+          href="/inbox?tab=semuakasus"
+          >Buka tab Semua Kasus</a
+        >
       </div>
-
-      <!-- Khusus Direktur -->
-      <div class="kartu" id="cardKasus" style="display:none;" data-aos="fade-up">
-        <div class="flex justify-between items-baseline gap-2.5">
-          <h3 class="font-bold text-slate-900">Seluruh kasus: yang tertahan</h3>
-          <a class="text-xs text-sky-600 font-semibold hover:underline whitespace-nowrap" href="/inbox?tab=semuakasus">Buka tab Semua Kasus</a>
-        </div>
-        <p class="text-xs text-slate-400 mt-0.5 mb-3" id="kasusRingkas">Memuat...</p>
-        <div id="daftarKasus"></div>
-      </div>
+      <p class="text-xs text-slate-400 mt-0.5 mb-3" id="kasusRingkas">
+        Memuat...
+      </p>
+      <div id="daftarKasus"></div>
     </div>
   </div>
-{% endblock %}
-
-{% block extra_js %}
+</div>
+{% endblock %} {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script>
-    AOS.init({ duration: 600, once: true, offset: 40, easing: 'ease-out-cubic' });
+  AOS.init({ duration: 600, once: true, offset: 40, easing: "ease-out-cubic" });
 
-    // ---------- Data user (sudah dipakai base.html untuk sidebar) ----------
-    const user = JSON.parse(localStorage.getItem('user_ppnp') || '{}');
+  // =====================================================================
+  // KONSTANTA & DATA USER
+  // =====================================================================
+  // Data user (sudah dipakai base.html untuk sidebar)
+  const user = JSON.parse(localStorage.getItem("user_ppnp") || "{}");
 
-    const MAP_SKALA   = { sangat_baik: 4, baik: 3, cukup: 2, kurang: 1 };
-    const LABEL_SKALA = { sangat_baik: 'Sangat baik', baik: 'Baik', cukup: 'Cukup', kurang: 'Kurang' };
-    const LABEL_TIPE  = {
-        tte: 'TTE / Paraf', notulen_ttd: 'TTE notulensi', disposisi_baru: 'Disposisi baru',
-        disposisi_lanjut: 'Disposisi lanjutan', tugas_lapor: 'Tugas / rapat', tugas_nilai: 'Perlu dinilai'
-    };
+  const MAP_SKALA = { sangat_baik: 4, baik: 3, cukup: 2, kurang: 1 };
+  const LABEL_SKALA = {
+    sangat_baik: "Sangat baik",
+    baik: "Baik",
+    cukup: "Cukup",
+    kurang: "Kurang",
+  };
+  const LABEL_TIPE = {
+    tte: "TTE / Paraf",
+    notulen_ttd: "TTE notulensi",
+    disposisi_baru: "Disposisi baru",
+    disposisi_lanjut: "Disposisi lanjutan",
+    tugas_lapor: "Tugas / rapat",
+    tugas_nilai: "Perlu dinilai",
+  };
 
-    const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    const el  = id => document.getElementById(id);
+  // Jumlah maksimal item yang ditampilkan per kartu
+  const BATAS = {
+    tindakan: 5,
+    tugas: 6,
+    rapat: 5,
+    diberikan: 6,
+    kasus: 6,
+    kasusSaya: 5,
+  };
 
-    async function ambil(url) {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(url + ' ' + res.status);
-        return res.json();
+  const isStaf = user.role_ppnp === "staf";
+
+  // =====================================================================
+  // HELPER UMUM
+  // =====================================================================
+  const el = (id) => document.getElementById(id);
+
+  const esc = (t) =>
+    String(t ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  async function ambil(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(url + " " + res.status);
+    return res.json();
+  }
+
+  // ---------- Helper markup ----------
+  const tag = (warna, teks) => `<span class="tag ${warna}">${teks}</span>`;
+  const kosong = (pesan) => `<div class="kosong">${pesan}</div>`;
+  const lainnya = (teks) => `<div class="lainnya">${teks}</div>`;
+  const judul = (teks) => `<div class="judul">${esc(teks)}</div>`;
+  const ket = (html, kelas = "") =>
+    `<div class="ket${kelas ? " " + kelas : ""}">${html}</div>`;
+  const baris = (kiri, kanan = "") =>
+    `<div class="baris"><div class="min-w-0">${kiri}</div>${kanan}</div>`;
+
+  const gagal = (id, pesan) => {
+    el(id).innerHTML = `<div class="kosong text-red-500">${pesan}</div>`;
+  };
+
+  function banner(idEl, html, merah) {
+    const b = el(idEl);
+    b.innerHTML = html;
+    b.className = "banner" + (merah ? " merah" : "");
+    b.style.display = "block";
+  }
+
+  // ---------- Util tanggal ----------
+  function sisaHari(deadlineStr) {
+    if (!deadlineStr) return null;
+    const d = new Date(String(deadlineStr).replace(" ", "T"));
+    if (isNaN(d)) return null;
+
+    const hariIni = new Date();
+    hariIni.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return Math.round((d - hariIni) / 86400000);
+  }
+
+  function tagDeadline(deadline) {
+    const s = sisaHari(deadline);
+    if (s === null) return tag("abu", "Tanpa batas lapor");
+    if (s < 0) return tag("merah", `Lewat ${-s} hari`);
+    if (s === 0) return tag("merah", "Hari ini");
+    if (s <= 3) return tag("oranye", `${s} hari lagi`);
+    return tag("hijau", `${s} hari lagi`);
+  }
+
+  // =====================================================================
+  // RENDER: SAPAAN
+  // =====================================================================
+  function renderInfoUser() {
+    const jam = new Date().getHours();
+    const salam =
+      jam < 11
+        ? "Selamat pagi"
+        : jam < 15
+          ? "Selamat siang"
+          : jam < 18
+            ? "Selamat sore"
+            : "Selamat malam";
+    const nama = (user.nama || "").trim();
+    const depan = nama.split(/\s+/)[0] || "";
+
+    el("judulSapaan").textContent =
+      `Selamat datang${depan ? ", " + depan : ""}! 👋`;
+
+    // Nama bergelar sering berakhir dengan titik (mis. "M.Si."), jangan ditambah titik lagi
+    const titik = nama.endsWith(".") ? "" : ".";
+    el("sapaan").textContent =
+      `${salam}${nama ? ", " + nama : ""}${titik} Ini ringkasan pekerjaan Anda.`;
+  }
+
+  // =====================================================================
+  // RENDER: PERLU TINDAKAN
+  // =====================================================================
+  function renderTindakan(semua) {
+    // Sama dengan Inbox: item bertipe "tugas" tidak dihitung
+    const data = semua.filter((i) => i.tipe_aksi !== "tugas");
+    el("rkTindakan").textContent = data.length;
+    el("rkTindakanKet").textContent = data.length
+      ? "menunggu Anda"
+      : "semua beres";
+
+    // Chip per jenis, tiap chip membuka Inbox dengan filter yang sesuai
+    const hitung = {};
+    data.forEach((i) => {
+      hitung[i.tipe_aksi] = (hitung[i.tipe_aksi] || 0) + 1;
+    });
+    el("chipTindakan").innerHTML = Object.keys(hitung)
+      .map(
+        (k) =>
+          `<a class="chip" href="/inbox?tab=perlutindakan&filter=${encodeURIComponent(k)}">${esc(LABEL_TIPE[k] || k)}<b>${hitung[k]}</b></a>`,
+      )
+      .join("");
+
+    const wrap = el("daftarTindakan");
+    if (data.length === 0) {
+      wrap.innerHTML = kosong("Tidak ada yang menunggu. Semua sudah beres.");
+      return;
     }
 
-    function renderInfoUser() {
-        const jam = new Date().getHours();
-        const salam = jam < 11 ? 'Selamat pagi' : jam < 15 ? 'Selamat siang' : jam < 18 ? 'Selamat sore' : 'Selamat malam';
-        const nama = (user.nama || '').trim();
-        const depan = nama.split(/\s+/)[0] || '';
-        el('judulSapaan').textContent = `Selamat datang${depan ? ', ' + depan : ''}! 👋`;
-        // Nama bergelar sering berakhir dengan titik (mis. "M.Si."), jangan ditambah titik lagi
-        const titik = nama.endsWith('.') ? '' : '.';
-        el('sapaan').textContent = `${salam}${nama ? ', ' + nama : ''}${titik} Ini ringkasan pekerjaan Anda.`;
+    const terlama = [...data]
+      .sort((a, b) => (a.tanggal || "").localeCompare(b.tanggal || ""))
+      .slice(0, BATAS.tindakan);
+
+    wrap.innerHTML =
+      terlama
+        .map((x) =>
+          baris(
+            judul(x.perihal) +
+              ket(
+                `${esc(x.label_aksi)} • dari ${esc(x.pihak_terkait || "—")} • ${esc((x.tanggal || "").split(" ")[0])}`,
+              ),
+            `<a class="btn" href="/inbox?tab=perlutindakan&filter=${encodeURIComponent(x.tipe_aksi)}">Tangani</a>`,
+          ),
+        )
+        .join("") +
+      (data.length > BATAS.tindakan
+        ? lainnya(`dan ${data.length - BATAS.tindakan} lainnya di Inbox`)
+        : "");
+  }
+
+  // =====================================================================
+  // RENDER: TUGAS SAYA
+  // =====================================================================
+  function statusTugas(t) {
+    if (t.sudah_lapor) return tag("biru", "Menunggu nilai");
+    if (t.saya_sudah_ttd) return tag("biru", "Menunggu TTE peserta lain");
+    if (t.jenis_tugas === "perjalanan_dinas")
+      return tag("ungu", "Perjalanan dinas");
+    return tag("abu", "Belum lapor");
+  }
+
+  function renderKetepatanLapor(tugas) {
+    // Laporan yang punya batas lapor, dibandingkan tanggalnya
+    const adaBatas = tugas.filter(
+      (t) => t.sudah_lapor && t.deadline && t.tanggal_lapor,
+    );
+    if (adaBatas.length === 0) {
+      el("rkTepat").textContent = "–";
+      el("rkTepatKet").textContent = "belum ada data";
+      return;
+    }
+    const tepat = adaBatas.filter(
+      (t) =>
+        String(t.tanggal_lapor).slice(0, 10) <= String(t.deadline).slice(0, 10),
+    ).length;
+    el("rkTepat").textContent =
+      Math.round((tepat / adaBatas.length) * 100) + "%";
+    el("rkTepatKet").textContent = `${tepat} dari ${adaBatas.length} laporan`;
+  }
+
+  function renderTugas(tugas) {
+    const aktif = tugas.filter(
+      (t) => t.status === "proses" && t.jenis_tugas !== "rapat",
+    );
+    const perluAksi = aktif.filter((t) => !t.sudah_lapor && !t.saya_sudah_ttd);
+
+    el("rkTugas").textContent = aktif.length;
+    el("rkTugasKet").textContent = aktif.length
+      ? `${perluAksi.length} belum dilaporkan`
+      : "tidak ada";
+
+    renderKetepatanLapor(tugas);
+
+    // Urutkan dari deadline terdekat; tanpa deadline paling bawah
+    aktif.sort((a, b) => {
+      const sa = sisaHari(a.deadline),
+        sb = sisaHari(b.deadline);
+      return (sa === null ? 9999 : sa) - (sb === null ? 9999 : sb);
+    });
+
+    const wrap = el("daftarTugas");
+    if (aktif.length === 0) {
+      wrap.innerHTML = kosong("Tidak ada tugas aktif saat ini.");
+      return;
     }
 
-    // ---------- Util tanggal ----------
-    function sisaHari(deadlineStr) {
-        if (!deadlineStr) return null;
-        const d = new Date(String(deadlineStr).replace(' ', 'T'));
-        if (isNaN(d)) return null;
-        const hariIni = new Date(); hariIni.setHours(0, 0, 0, 0);
-        d.setHours(0, 0, 0, 0);
-        return Math.round((d - hariIni) / 86400000);
-    }
-    function tagDeadline(deadline) {
-        const s = sisaHari(deadline);
-        if (s === null) return '<span class="tag abu">Tanpa batas lapor</span>';
-        if (s < 0)   return `<span class="tag merah">Lewat ${-s} hari</span>`;
-        if (s === 0) return '<span class="tag merah">Hari ini</span>';
-        if (s <= 3)  return `<span class="tag oranye">${s} hari lagi</span>`;
-        return `<span class="tag hijau">${s} hari lagi</span>`;
-    }
-    const gagal = (id, pesan) => { el(id).innerHTML = `<div class="kosong text-red-500">${pesan}</div>`; };
-    function banner(idEl, html, merah) {
-        const b = el(idEl);
-        b.innerHTML = html;
-        b.className = 'banner' + (merah ? ' merah' : '');
-        b.style.display = 'block';
-    }
+    wrap.innerHTML =
+      aktif
+        .slice(0, BATAS.tugas)
+        .map((t) =>
+          baris(
+            judul(t.perihal) +
+              ket(`Dari ${esc(t.nama_pemberi)} &nbsp;${statusTugas(t)}`),
+            `<div class="text-right shrink-0">${t.sudah_lapor ? "" : tagDeadline(t.deadline)}</div>`,
+          ),
+        )
+        .join("") +
+      (aktif.length > BATAS.tugas
+        ? lainnya(`dan ${aktif.length - BATAS.tugas} tugas lainnya di Inbox`)
+        : "");
+  }
 
-    // ---------- Render ----------
-    function renderTindakan(semua) {
-        // Sama dengan Inbox: item bertipe "tugas" tidak dihitung
-        const data = semua.filter(i => i.tipe_aksi !== 'tugas');
-        el('rkTindakan').textContent = data.length;
-        el('rkTindakanKet').textContent = data.length ? 'menunggu Anda' : 'semua beres';
+  // =====================================================================
+  // RENDER: RAPAT
+  // =====================================================================
+  const URL_TUGAS_LAPOR = "/inbox?tab=perlutindakan&filter=tugas_lapor";
 
-        // Chip per jenis, tiap chip membuka Inbox dengan filter yang sesuai
-        const hitung = {};
-        data.forEach(i => { hitung[i.tipe_aksi] = (hitung[i.tipe_aksi] || 0) + 1; });
-        el('chipTindakan').innerHTML = Object.keys(hitung).map(k =>
-            `<a class="chip" href="/inbox?tab=perlutindakan&filter=${encodeURIComponent(k)}">${esc(LABEL_TIPE[k] || k)}<b>${hitung[k]}</b></a>`).join('');
-
-        const wrap = el('daftarTindakan');
-        if (data.length === 0) { wrap.innerHTML = '<div class="kosong">Tidak ada yang menunggu. Semua sudah beres.</div>'; return; }
-        const lama = [...data].sort((a, b) => (a.tanggal || '').localeCompare(b.tanggal || '')).slice(0, 5);
-        wrap.innerHTML = lama.map(x => `
-            <div class="baris">
-                <div class="min-w-0">
-                    <div class="judul">${esc(x.perihal)}</div>
-                    <div class="ket">${esc(x.label_aksi)} • dari ${esc(x.pihak_terkait || '—')} • ${esc((x.tanggal || '').split(' ')[0])}</div>
-                </div>
-                <a class="btn" href="/inbox?tab=perlutindakan&filter=${encodeURIComponent(x.tipe_aksi)}">Tangani</a>
-            </div>`).join('') +
-            (data.length > 5 ? `<div class="lainnya">dan ${data.length - 5} lainnya di Inbox</div>` : '');
+  function aksiRapat(t) {
+    // Belum absen
+    if (t.rapat_status_saya === "belum") {
+      return t.rapat_absen_buka
+        ? `<a class="btn hijau" href="${URL_TUGAS_LAPOR}">Absen sekarang</a>`
+        : `<span class="tag abu" title="${esc(t.rapat_ket_absen || "")}">Absen belum dibuka</span>`;
     }
 
-    function renderTugas(tugas) {
-        const aktif = tugas.filter(t => t.status === 'proses' && t.jenis_tugas !== 'rapat');
-        const perluAksi = aktif.filter(t => !t.sudah_lapor && !t.saya_sudah_ttd);
-        el('rkTugas').textContent = aktif.length;
-        el('rkTugasKet').textContent = aktif.length ? `${perluAksi.length} belum dilaporkan` : 'tidak ada';
-
-        // Ketepatan lapor: laporan yang punya batas lapor, dibandingkan tanggalnya
-        const adaBatas = tugas.filter(t => t.sudah_lapor && t.deadline && t.tanggal_lapor);
-        if (adaBatas.length) {
-            const tepat = adaBatas.filter(t => String(t.tanggal_lapor).slice(0, 10) <= String(t.deadline).slice(0, 10)).length;
-            el('rkTepat').textContent = Math.round(tepat / adaBatas.length * 100) + '%';
-            el('rkTepatKet').textContent = `${tepat} dari ${adaBatas.length} laporan`;
-        } else { el('rkTepat').textContent = '–'; el('rkTepatKet').textContent = 'belum ada data'; }
-
-        aktif.sort((a, b) => {
-            const sa = sisaHari(a.deadline), sb = sisaHari(b.deadline);
-            return (sa === null ? 9999 : sa) - (sb === null ? 9999 : sb);
-        });
-        const wrap = el('daftarTugas');
-        if (aktif.length === 0) { wrap.innerHTML = '<div class="kosong">Tidak ada tugas aktif saat ini.</div>'; return; }
-        wrap.innerHTML = aktif.slice(0, 6).map(t => {
-            let status = '<span class="tag abu">Belum lapor</span>';
-            if (t.sudah_lapor) status = '<span class="tag biru">Menunggu nilai</span>';
-            else if (t.saya_sudah_ttd) status = '<span class="tag biru">Menunggu TTE peserta lain</span>';
-            else if (t.jenis_tugas === 'perjalanan_dinas') status = '<span class="tag ungu">Perjalanan dinas</span>';
-            return `
-            <div class="baris">
-                <div class="min-w-0">
-                    <div class="judul">${esc(t.perihal)}</div>
-                    <div class="ket">Dari ${esc(t.nama_pemberi)} &nbsp;${status}</div>
-                </div>
-                <div class="text-right shrink-0">${t.sudah_lapor ? '' : tagDeadline(t.deadline)}</div>
-            </div>`;
-        }).join('') +
-        (aktif.length > 6 ? `<div class="lainnya">dan ${aktif.length - 6} tugas lainnya di Inbox</div>` : '');
+    // Hadir dan menjadi notulen
+    if (t.rapat_notulen && t.rapat_status_saya === "hadir") {
+      const st = t.rapat_laporan_status;
+      if (st === "menunggu_ttd") return tag("biru", "Notulensi menunggu TTE");
+      if (st === "revisi")
+        return `<a class="btn" style="background:#dc2626;" href="${URL_TUGAS_LAPOR}">Revisi notulensi</a>`;
+      return `<a class="btn" style="background:#7c3aed;" href="${URL_TUGAS_LAPOR}">Susun notulensi</a>`;
     }
 
-    function renderRapat(tugas) {
-        const rapat = tugas.filter(t => t.jenis_tugas === 'rapat' && t.status === 'proses');
-        el('rkRapat').textContent = rapat.length;
-        el('rkRapatKet').textContent = rapat.length ? `${rapat.filter(t => t.rapat_status_saya === 'belum').length} belum absen` : 'tidak ada';
-        const wrap = el('daftarRapat');
-        if (rapat.length === 0) { wrap.innerHTML = '<div class="kosong">Tidak ada rapat yang perlu Anda urus.</div>'; return; }
+    return tag("hijau", "Sudah absen");
+  }
 
-        wrap.innerHTML = rapat.slice(0, 5).map(t => {
-            let aksi;
-            if (t.rapat_status_saya === 'belum') {
-                aksi = t.rapat_absen_buka
-                    ? '<a class="btn hijau" href="/inbox?tab=perlutindakan&filter=tugas_lapor">Absen sekarang</a>'
-                    : `<span class="tag abu" title="${esc(t.rapat_ket_absen || '')}">Absen belum dibuka</span>`;
-            } else if (t.rapat_notulen && t.rapat_status_saya === 'hadir') {
-                const st = t.rapat_laporan_status;
-                if (st === 'menunggu_ttd') aksi = '<span class="tag biru">Notulensi menunggu TTE</span>';
-                else if (st === 'revisi')  aksi = '<a class="btn" style="background:#dc2626;" href="/inbox?tab=perlutindakan&filter=tugas_lapor">Revisi notulensi</a>';
-                else aksi = '<a class="btn" style="background:#7c3aed;" href="/inbox?tab=perlutindakan&filter=tugas_lapor">Susun notulensi</a>';
-            } else aksi = '<span class="tag hijau">Sudah absen</span>';
-            return `
-            <div class="baris">
-                <div class="min-w-0">
-                    <div class="judul">${esc(t.perihal)}</div>
-                    <div class="ket">${esc(t.rapat_ket_waktu || '')}${t.rapat_notulen ? ' • Anda notulen' : ''}</div>
-                    ${t.rapat_catatan_jadwal ? '<div class="ket text-teal-600">🕐 Jadwal pernah diubah</div>' : ''}
-                </div>
-                <div class="shrink-0">${aksi}</div>
-            </div>`;
-        }).join('');
+  function renderRapat(tugas) {
+    const rapat = tugas.filter(
+      (t) => t.jenis_tugas === "rapat" && t.status === "proses",
+    );
+    const belumAbsen = rapat.filter(
+      (t) => t.rapat_status_saya === "belum",
+    ).length;
+
+    el("rkRapat").textContent = rapat.length;
+    el("rkRapatKet").textContent = rapat.length
+      ? `${belumAbsen} belum absen`
+      : "tidak ada";
+
+    const wrap = el("daftarRapat");
+    if (rapat.length === 0) {
+      wrap.innerHTML = kosong("Tidak ada rapat yang perlu Anda urus.");
+      return;
     }
 
-    function renderNilai(tugas) {
-        const dinilai = tugas.filter(t => t.sudah_dinilai && MAP_SKALA[t.skala_nilai]);
-        const wrap = el('sebaranNilai');
-        if (dinilai.length === 0) {
-            el('rkNilai').textContent = '–';
-            el('rkNilaiKet').textContent = 'belum ada penilaian';
-            wrap.innerHTML = '<div class="kosong">Belum ada tugas yang dinilai.</div>';
-            return;
-        }
-        const rata = dinilai.reduce((s, t) => s + MAP_SKALA[t.skala_nilai], 0) / dinilai.length;
-        el('rkNilai').textContent = rata.toFixed(1);
-        el('rkNilaiKet').textContent = `skala 4, ${dinilai.length} tugas`;
-        wrap.innerHTML = Object.keys(LABEL_SKALA).map(k => {
-            const n = dinilai.filter(t => t.skala_nilai === k).length;
-            const pct = Math.round(n / dinilai.length * 100);
-            return `<div class="bar-baris"><span class="nama">${LABEL_SKALA[k]}</span>
+    wrap.innerHTML = rapat
+      .slice(0, BATAS.rapat)
+      .map((t) =>
+        baris(
+          judul(t.perihal) +
+            ket(
+              `${esc(t.rapat_ket_waktu || "")}${t.rapat_notulen ? " • Anda notulen" : ""}`,
+            ) +
+            (t.rapat_catatan_jadwal
+              ? ket("🕐 Jadwal pernah diubah", "text-teal-600")
+              : ""),
+          `<div class="shrink-0">${aksiRapat(t)}</div>`,
+        ),
+      )
+      .join("");
+  }
+
+  // =====================================================================
+  // RENDER: NILAI & LAYANAN
+  // =====================================================================
+  function renderNilai(tugas) {
+    const dinilai = tugas.filter(
+      (t) => t.sudah_dinilai && MAP_SKALA[t.skala_nilai],
+    );
+    const wrap = el("sebaranNilai");
+
+    if (dinilai.length === 0) {
+      el("rkNilai").textContent = "–";
+      el("rkNilaiKet").textContent = "belum ada penilaian";
+      wrap.innerHTML = kosong("Belum ada tugas yang dinilai.");
+      return;
+    }
+
+    const rata =
+      dinilai.reduce((s, t) => s + MAP_SKALA[t.skala_nilai], 0) /
+      dinilai.length;
+    el("rkNilai").textContent = rata.toFixed(1);
+    el("rkNilaiKet").textContent = `skala 4, ${dinilai.length} tugas`;
+
+    wrap.innerHTML = Object.keys(LABEL_SKALA)
+      .map((k) => {
+        const n = dinilai.filter((t) => t.skala_nilai === k).length;
+        const pct = Math.round((n / dinilai.length) * 100);
+        return `<div class="bar-baris"><span class="nama">${LABEL_SKALA[k]}</span>
                     <div class="bar"><span style="width:${pct}%"></span></div><span class="jml">${n}</span></div>`;
-        }).join('');
+      })
+      .join("");
+  }
+
+  function renderLayanan(data) {
+    const box = el("layananBox");
+    if (!data.length) {
+      box.innerHTML =
+        '<div class="text-xs text-slate-400">Belum ada penilaian layanan surat.</div>';
+      return;
     }
 
-    function renderLayanan(data) {
-        const box = el('layananBox');
-        if (!data.length) { box.innerHTML = '<div class="text-xs text-slate-400">Belum ada penilaian layanan surat.</div>'; return; }
-        const rata = data.reduce((s, x) => s + x.bintang, 0) / data.length;
-        const penuh = Math.round(rata);
-        box.innerHTML = `<div class="text-xs text-slate-500">Penilaian layanan surat (${data.length} utas)</div>
-            <div class="mt-1"><span class="bintang">${'★'.repeat(penuh)}${'☆'.repeat(5 - penuh)}</span>
+    const rata = data.reduce((s, x) => s + x.bintang, 0) / data.length;
+    const penuh = Math.round(rata);
+    box.innerHTML = `<div class="text-xs text-slate-500">Penilaian layanan surat (${data.length} utas)</div>
+            <div class="mt-1"><span class="bintang">${"★".repeat(penuh)}${"☆".repeat(5 - penuh)}</span>
             <strong class="ml-1.5">${rata.toFixed(1)}</strong> <span class="text-xs text-slate-500">/ 5</span></div>`;
+  }
+
+  // =====================================================================
+  // RENDER: PEJABAT (tugas diberikan & kasus)
+  // =====================================================================
+  // Tugas yang saya berikan kepada orang lain
+  function renderDiberikan(data) {
+    if (data.length === 0 && isStaf) return; // staf tidak memberi tugas
+    el("cardDiberikan").style.display = "block";
+
+    const proses = data.filter((t) => t.status === "proses");
+    const menungguLapor = proses.filter((t) => !t.sudah_lapor);
+    const perluNilai = proses.filter((t) => t.sudah_lapor && !t.sudah_dinilai);
+    const lewat = menungguLapor.filter((t) => {
+      const s = sisaHari(t.deadline);
+      return s !== null && s < 0;
+    });
+    const sudahDinilai = data.filter((t) => t.sudah_dinilai).length;
+
+    el("diberikanRingkas").textContent =
+      `${menungguLapor.length} menunggu laporan (${lewat.length} lewat batas), ${perluNilai.length} perlu Anda nilai, ${sudahDinilai} sudah dinilai.`;
+
+    // Prioritas: lewat batas, perlu dinilai, lalu sisanya
+    const urut = [
+      ...lewat,
+      ...perluNilai,
+      ...menungguLapor.filter((t) => !lewat.includes(t)),
+    ].slice(0, BATAS.diberikan);
+
+    el("daftarDiberikan").innerHTML =
+      urut.length === 0
+        ? kosong("Tidak ada tugas yang sedang berjalan.")
+        : urut
+            .map((t) =>
+              baris(
+                judul(t.perihal) +
+                  ket(
+                    `Kepada ${esc(t.nama_penerima)}${t.terlambat ? " • melapor terlambat" : ""}`,
+                  ),
+                `<div class="text-right shrink-0">${t.sudah_lapor ? tag("ungu", "Perlu dinilai") : tagDeadline(t.deadline)}</div>`,
+              ),
+            )
+            .join("");
+  }
+
+  function renderKasusDirektur(kasus) {
+    el("cardKasus").style.display = "block";
+
+    const berjalan = kasus.filter((k) => k.status_kasus === "berjalan");
+    const macet = berjalan.filter((k) => k.jumlah_menunggu > 0);
+
+    el("kasusRingkas").textContent =
+      `${berjalan.length} kasus berjalan dari ${kasus.length}. ${macet.length} masih menunggu seseorang bertindak.`;
+
+    el("daftarKasus").innerHTML =
+      macet.length === 0
+        ? kosong("Tidak ada kasus yang tertahan.")
+        : macet
+            .slice(0, BATAS.kasus)
+            .map((k) =>
+              baris(
+                judul(k.judul) + ket(esc(k.menunggu_utama || "")),
+                tag("oranye", `${k.jumlah_menunggu} menunggu`),
+              ),
+            )
+            .join("");
+  }
+
+  async function muatKasusSaya() {
+    const box = el("isiKasusSaya");
+    box.innerHTML = '<div class="memuat">Memuat...</div>';
+
+    try {
+      const data = await ambil(`/api/riwayat-kasus?nip=${user.nip}`);
+      const tertahan = data.filter(
+        (g) => g.status_kasus === "berjalan" && (g.menunggu || []).length,
+      );
+
+      if (tertahan.length === 0) {
+        box.innerHTML = kosong("Tidak ada kasus Anda yang sedang tertahan.");
+        return;
+      }
+
+      box.innerHTML =
+        tertahan
+          .slice(0, BATAS.kasusSaya)
+          .map((g) => {
+            const h = g.menunggu[0];
+            return `<div class="tunggu-item"><strong>${esc(g.judul)}</strong><br>
+                    ${esc(h.nama)}: ${esc(h.apa)}${h.hari !== null ? ` <span class="hari">• ${h.hari} hari</span>` : ""}
+                    ${g.menunggu.length > 1 ? `<span class="text-slate-400"> (+${g.menunggu.length - 1} lainnya)</span>` : ""}</div>`;
+          })
+          .join("") +
+        lainnya(
+          '<a class="text-xs text-sky-600 font-semibold hover:underline" href="/inbox?tab=riwayat">Buka Riwayat Saya</a>',
+        );
+    } catch (e) {
+      box.innerHTML =
+        '<div class="kosong text-red-500">Gagal memuat. <button class="btn abu" onclick="muatKasusSaya()">Coba lagi</button></div>';
     }
+  }
 
-    // Pejabat: tugas yang saya berikan kepada orang lain
-    function renderDiberikan(data) {
-        if (data.length === 0 && user.role_ppnp === 'staf') return;   // staf tidak memberi tugas
-        el('cardDiberikan').style.display = 'block';
-        const proses = data.filter(t => t.status === 'proses');
-        const menungguLapor = proses.filter(t => !t.sudah_lapor);
-        const perluNilai = proses.filter(t => t.sudah_lapor && !t.sudah_dinilai);
-        const lewat = menungguLapor.filter(t => { const s = sisaHari(t.deadline); return s !== null && s < 0; });
-        el('diberikanRingkas').textContent =
-            `${menungguLapor.length} menunggu laporan (${lewat.length} lewat batas), ${perluNilai.length} perlu Anda nilai, ${data.filter(t => t.sudah_dinilai).length} sudah dinilai.`;
+  // =====================================================================
+  // MUAT DATA
+  // Tiap bagian tampil begitu datanya datang
+  // =====================================================================
+  async function muatSemua() {
+    const btn = el("btnSegar");
+    if (btn) btn.disabled = true;
+    el("bannerTTE").style.display = "none";
+    el("bannerDelegasi").style.display = "none";
 
-        const urut = [...lewat, ...perluNilai, ...menungguLapor.filter(t => !lewat.includes(t))].slice(0, 6);
-        el('daftarDiberikan').innerHTML = urut.length === 0
-            ? '<div class="kosong">Tidak ada tugas yang sedang berjalan.</div>'
-            : urut.map(t => {
-                const tag = t.sudah_lapor ? '<span class="tag ungu">Perlu dinilai</span>' : tagDeadline(t.deadline);
-                return `<div class="baris">
-                    <div class="min-w-0"><div class="judul">${esc(t.perihal)}</div>
-                    <div class="ket">Kepada ${esc(t.nama_penerima)}${t.terlambat ? ' • melapor terlambat' : ''}</div></div>
-                    <div class="text-right shrink-0">${tag}</div></div>`;
-            }).join('');
+    // Level unit menentukan Direktur (sama seperti inbox.html), bukan teks role
+    const unit = await ambil(
+      `/api/unit-info?kode_unit=${encodeURIComponent(user.kode_unit)}`,
+    ).catch(() => ({}));
+    const direktur = unit.level === 1;
+
+    const tugasP = ambil(`/api/tugas-saya?nip=${user.nip}`)
+      .then((t) => {
+        renderTugas(t);
+        renderRapat(t);
+        renderNilai(t);
+      })
+      .catch(() => {
+        gagal("daftarTugas", "Gagal memuat tugas.");
+        gagal("daftarRapat", "Gagal memuat rapat.");
+        gagal("sebaranNilai", "Gagal memuat nilai.");
+        ["rkTugas", "rkRapat", "rkNilai", "rkTepat"].forEach(
+          (i) => (el(i).textContent = "!"),
+        );
+      });
+
+    const tindakanP = ambil(`/api/perlu-tindakan?nip=${user.nip}`)
+      .then(renderTindakan)
+      .catch(() => {
+        gagal("daftarTindakan", "Gagal memuat. Coba muat ulang.");
+        el("rkTindakan").textContent = "!";
+      });
+
+    const layananP = ambil(`/api/penilaian-layanan-diterima?nip=${user.nip}`)
+      .then(renderLayanan)
+      .catch(() => {});
+
+    const profilP = ambil(`/api/profil?nip=${user.nip}`)
+      .then((p) => {
+        if (!p.tte_aktif)
+          banner(
+            "bannerTTE",
+            "🔏 <strong>TTE Anda belum aktif.</strong> Anda belum bisa paraf, tanda tangan, atau absen rapat. " +
+              '<a href="/profil">Daftarkan TTE di halaman Profil</a>.',
+            true,
+          );
+      })
+      .catch(() => {});
+
+    const delegasiP = isStaf
+      ? ambil(`/api/delegasi-saya?nip=${user.nip}`)
+          .then((d) => {
+            if (d.punya_delegasi === false)
+              banner(
+                "bannerDelegasi",
+                "📭 Anda belum mendapat delegasi manajemen surat. Anda tetap bisa menerima tugas, mengirim laporan, " +
+                  'dan mengikuti rapat lewat <a href="/inbox">Inbox</a>. Hubungi atasan langsung (Level 4) untuk meminta delegasi.',
+              );
+          })
+          .catch(() => {})
+      : Promise.resolve();
+
+    const diberikanP = !isStaf
+      ? ambil(`/api/tugas-diberikan?nip=${user.nip}`)
+          .then(renderDiberikan)
+          .catch(() => {})
+      : Promise.resolve();
+
+    // Paling berat, jadi ditampilkan belakangan tanpa menahan bagian lain
+    const kasusP = direktur
+      ? ambil(`/api/semua-kasus?nip=${user.nip}`)
+          .then(renderKasusDirektur)
+          .catch(() => {
+            el("cardKasus").style.display = "block";
+            el("kasusRingkas").textContent = "Gagal memuat data kasus.";
+          })
+      : Promise.resolve();
+
+    await Promise.allSettled([
+      tugasP,
+      tindakanP,
+      layananP,
+      profilP,
+      delegasiP,
+      diberikanP,
+      kasusP,
+    ]);
+
+    if (el("waktuMuat")) {
+      el("waktuMuat").textContent =
+        "Diperbarui " +
+        new Date().toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
     }
+    if (btn) btn.disabled = false;
+    AOS.refreshHard();
+  }
 
-    function renderKasusDirektur(kasus) {
-        el('cardKasus').style.display = 'block';
-        const berjalan = kasus.filter(k => k.status_kasus === 'berjalan');
-        const macet = berjalan.filter(k => k.jumlah_menunggu > 0);
-        el('kasusRingkas').textContent =
-            `${berjalan.length} kasus berjalan dari ${kasus.length}. ${macet.length} masih menunggu seseorang bertindak.`;
-        el('daftarKasus').innerHTML = macet.length === 0
-            ? '<div class="kosong">Tidak ada kasus yang tertahan.</div>'
-            : macet.slice(0, 6).map(k => `
-                <div class="baris">
-                    <div class="min-w-0"><div class="judul">${esc(k.judul)}</div><div class="ket">${esc(k.menunggu_utama || '')}</div></div>
-                    <span class="tag oranye">${k.jumlah_menunggu} menunggu</span>
-                </div>`).join('');
-    }
-
-    async function muatKasusSaya() {
-        const box = el('isiKasusSaya');
-        box.innerHTML = '<div class="memuat">Memuat...</div>';
-        try {
-            const data = await ambil(`/api/riwayat-kasus?nip=${user.nip}`);
-            const tertahan = data.filter(g => g.status_kasus === 'berjalan' && (g.menunggu || []).length);
-            if (tertahan.length === 0) { box.innerHTML = '<div class="kosong">Tidak ada kasus Anda yang sedang tertahan.</div>'; return; }
-            box.innerHTML = tertahan.slice(0, 5).map(g => {
-                const h = g.menunggu[0];
-                return `<div class="tunggu-item"><strong>${esc(g.judul)}</strong><br>
-                    ${esc(h.nama)}: ${esc(h.apa)}${h.hari !== null ? ` <span class="hari">• ${h.hari} hari</span>` : ''}
-                    ${g.menunggu.length > 1 ? `<span class="text-slate-400"> (+${g.menunggu.length - 1} lainnya)</span>` : ''}</div>`;
-            }).join('') + '<div class="lainnya"><a class="text-xs text-sky-600 font-semibold hover:underline" href="/inbox?tab=riwayat">Buka Riwayat Saya</a></div>';
-        } catch (e) {
-            box.innerHTML = '<div class="kosong text-red-500">Gagal memuat. <button class="btn abu" onclick="muatKasusSaya()">Coba lagi</button></div>';
-        }
-    }
-
-    // ---------- Muat semua; tiap bagian tampil begitu datanya datang ----------
-    async function muatSemua() {
-        const btn = el('btnSegar');
-        if (btn) btn.disabled = true;
-        el('bannerTTE').style.display = 'none';
-        el('bannerDelegasi').style.display = 'none';
-
-        // Level unit menentukan Direktur (sama seperti inbox.html), bukan teks role
-        const unit = await ambil(`/api/unit-info?kode_unit=${encodeURIComponent(user.kode_unit)}`).catch(() => ({}));
-        const direktur = unit.level === 1;
-
-        const tugasP = ambil(`/api/tugas-saya?nip=${user.nip}`).then(t => { renderTugas(t); renderRapat(t); renderNilai(t); })
-            .catch(() => {
-                gagal('daftarTugas', 'Gagal memuat tugas.'); gagal('daftarRapat', 'Gagal memuat rapat.'); gagal('sebaranNilai', 'Gagal memuat nilai.');
-                ['rkTugas', 'rkRapat', 'rkNilai', 'rkTepat'].forEach(i => el(i).textContent = '!');
-            });
-
-        const tindakanP = ambil(`/api/perlu-tindakan?nip=${user.nip}`).then(renderTindakan)
-            .catch(() => { gagal('daftarTindakan', 'Gagal memuat. Coba muat ulang.'); el('rkTindakan').textContent = '!'; });
-
-        const layananP  = ambil(`/api/penilaian-layanan-diterima?nip=${user.nip}`).then(renderLayanan).catch(() => {});
-
-        const profilP = ambil(`/api/profil?nip=${user.nip}`).then(p => {
-            if (!p.tte_aktif) banner('bannerTTE',
-                '🔏 <strong>TTE Anda belum aktif.</strong> Anda belum bisa paraf, tanda tangan, atau absen rapat. ' +
-                '<a href="/profil">Daftarkan TTE di halaman Profil</a>.', true);
-        }).catch(() => {});
-
-        const delegasiP = user.role_ppnp === 'staf'
-            ? ambil(`/api/delegasi-saya?nip=${user.nip}`).then(d => {
-                if (d.punya_delegasi === false) banner('bannerDelegasi',
-                    '📭 Anda belum mendapat delegasi manajemen surat. Anda tetap bisa menerima tugas, mengirim laporan, ' +
-                    'dan mengikuti rapat lewat <a href="/inbox">Inbox</a>. Hubungi atasan langsung (Level 4) untuk meminta delegasi.');
-            }).catch(() => {})
-            : Promise.resolve();
-
-        const diberikanP = user.role_ppnp !== 'staf'
-            ? ambil(`/api/tugas-diberikan?nip=${user.nip}`).then(renderDiberikan).catch(() => {})
-            : Promise.resolve();
-
-        // Paling berat, jadi ditampilkan belakangan tanpa menahan bagian lain
-        const kasusP = direktur
-            ? ambil(`/api/semua-kasus?nip=${user.nip}`).then(renderKasusDirektur)
-                .catch(() => { el('cardKasus').style.display = 'block'; el('kasusRingkas').textContent = 'Gagal memuat data kasus.'; })
-            : Promise.resolve();
-
-        await Promise.allSettled([tugasP, tindakanP, layananP, profilP, delegasiP, diberikanP, kasusP]);
-        const sekarang = new Date();
-        if (el('waktuMuat')) el('waktuMuat').textContent = 'Diperbarui ' + sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        if (btn) btn.disabled = false;
-        AOS.refreshHard();
-    }
-
-    window.addEventListener('load', () => { renderInfoUser(); muatSemua(); });
+  // =====================================================================
+  // INIT
+  // =====================================================================
+  window.addEventListener("load", () => {
+    renderInfoUser();
+    muatSemua();
+  });
 </script>
 {% endblock %}
